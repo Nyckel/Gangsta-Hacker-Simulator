@@ -1,0 +1,34 @@
+{
+	"levels":{
+		"white":{
+			"1":{
+				"label":"naive",
+				"next": 30
+			},
+			"2":{
+				"label":"intern",
+				"next": 50
+			}
+		},
+		"grey":{
+			"1":{
+				"label":"dreamer",
+				"next":30
+			},
+			"2":{
+				"label":"manifestant",
+				"next":50
+			}
+		},
+		"black":{
+			"1":{
+				"label":"script kiddy",
+				"next":30
+			},
+			"2":{
+				"label":"mean boy",
+				"next":50
+			}
+		}
+	}
+}
