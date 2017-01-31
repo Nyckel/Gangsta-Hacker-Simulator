@@ -19,13 +19,21 @@ private:
 	////std::vector<sf::RectangleShape, int> shapes;
 	//std::map<sf::RectangleShape,int> shapes;
 
+	void updateShapeSize();
+
 public:
 
 	BackgroundShape(sf::Text* pText, int pPaddingX, int pPaddingY, sf::Color pColor);
+
+	BackgroundShape(sf::Vector2f pSize, sf::Vector2f pPadding, sf::Vector2f pPosition, sf::Color pColor);
+
 	~BackgroundShape();
 
 	void draw(sf::RenderWindow* pWindow);
 	void setPosition(int x, int y);
+	void setColor(sf::Color pColor);
+	void setSize(sf::Vector2f pSize);
+	void setSizeWithoutPadding(sf::Vector2f pSize);
 	//void setPadding(int pPadding);
 	//int getPadding();
 

@@ -6,13 +6,15 @@
 
 class Label : public Component
 {
-private:
+protected:
 	sf::Text text;
+	sf::Text overText;
 	sf::Font font;
+	sf::Color color;
 	Background background;
+	Background overState;
 	int paddingX;
 	int paddingY;
-
 
 public:
 	Label();
@@ -24,14 +26,26 @@ public:
 
 	~Label();
 
-	void draw(sf::RenderWindow *pWindow);
+	virtual void draw(sf::RenderWindow *pWindow);
+
 	void addBackgroundRect();
+	void addBackgroundRect(sf::Color pBack, sf::Color pRect);
+	void setBackgroundColors(sf::Color  pBack, sf::Color pRect);
+
+	void addHoverState();
+	void addHoverState(sf::Color pBack, sf::Color pRect);
+	void addHoverState(sf::Color pFontColor, sf::Color pBack, sf::Color pRect);
+	void setHoverColors(sf::Color  pBack, sf::Color pRect);
+	void setHoverColors(sf::Color pTextColor, sf::Color  pBack, sf::Color pRect);
+
 	void setPosition(float x, float y);
 	sf::Vector2f getPosition();
 	sf::Vector2f getPadding();
 	void setPadding(int x, int y);
+	std::string getText();
 
-	bool isCursorHover(sf::Vector2f pCursorPosition);
+
+	virtual bool isCursorHover(sf::Vector2f pCursorPosition);
 
 };
 

@@ -1,49 +1,41 @@
-#include <iostream>
-#include <string>
-#include <stdlib.h>
-#include <fstream>
-#include <json.h>
-
-#include "Character.h"
-#include "Game.h"
-#include "MainWindow.h"
 #include "Main.h"
-
-
-
 
 /*Prototypes*/
 void createNewGame();
-void displayConsoleMenu();
-void displayGraphicalMenu();
 
 
 //const std::string DISPLAY = "Graphical";
 
 //Here I load Software option from config file (display settings, ...)
 int main() {
+	Main gameManager;
+	return EXIT_SUCCESS;
+}
+
+	
+Main::Main(){
 	//Need to create a Singleton for the renderWindow object
-
-
 	if (DISPLAY == "Graphical") {
 		MainWindow window;
 		Game::setDisplay(&window);
+
 		int menuChoice = window.showMainMenu();
 		std::cout << "MenuChoice: " << menuChoice << std::endl;
-		system("pause");
-		/*switch (menuChoice) {
-		case 0:
-			//std::cout << "Starting new Game" << std::endl;
-			//system("pause");
-			//Game *myGame = Game::getInstance();
-			break;
+		switch (menuChoice) {
+			case 1:
+				std::cout << "Starting new Game" << std::endl;
+				//Game *myGame = Game::getInstance();
+					system("pause");
+				 //Game->startNew();
+				break;
 
-		}*/
+			}
 		// - Game.loadFromFileSave()
 		// - Game.startNew()
 		// - Other options...
-		//run();
 		
+		Game *game = Game::getInstance();
+
 	}
 	else if (DISPLAY == "Console") {
 		displayConsoleMenu();
@@ -51,7 +43,20 @@ int main() {
 
 	}
 
-	return 0;
+	//Now I have my Game object game
+	/*
+	game.changeState(gameStates[introState]);	
+	while(game.isRunning()){
+		if(isTimeToUpdate()){
+			game.handleEvents();
+			game.update();
+			if(hasTimeToDraw()){
+				game.draw();
+			}
+		} else {
+			waitUntilTime();
+		}
+	}*/
 
 }
 
@@ -62,11 +67,11 @@ void createNewGame() {
 }
 
 
-void displayGraphicalMenu() {
+void Main::displayGraphicalMenu() {
 	MainWindow mainWindow;
 }
 
-void displayConsoleMenu() {
+void Main::displayConsoleMenu() {
 	//system("color 0c");
 	//system("color 4e");
 	system("color d");
@@ -118,5 +123,9 @@ void displayConsoleMenu() {
 
 		}
 	}
+}
+
+void Main::runGame(Game* pGame) {
+
 }
 
