@@ -11,8 +11,6 @@ private:
 	sf::Vector2f position;
 	sf::Vector2f textPosition;
 
-	void(UIButton::*click)(void);
-
 public:
 	//void clickAction(UIButton*)();
 	UIButton();

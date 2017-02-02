@@ -5,12 +5,9 @@
 
 #include "Character.h"
 #include "Attribute.h"
-#include "Mission.h"
 #include "Entity.h"
 
 #include "TechTree.h"
-
-class Mission;
 
 class Company : public Entity //Compagny data for other than targets will be loaded in data files
 {

@@ -2,11 +2,13 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <thread>
 
 #include "Character.h"
 #include "Company.h"
 #include "Mission.h"
 #include "MainWindow.h"
+#include "TechTreeElement.h"
 
 
 class Game

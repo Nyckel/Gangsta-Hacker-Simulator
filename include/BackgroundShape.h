@@ -1,7 +1,9 @@
 #pragma once
 #include <map>
+#include <iostream>
 #include "SFML\Graphics.hpp"
 #include "Component.h"
+
 
 class BackgroundShape : public Component
 {

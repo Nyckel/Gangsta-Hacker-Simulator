@@ -1,8 +1,4 @@
 #include "Character.h"
-#include "Mission.h"
-#include "Attribute.h"
-#include "Activity.h"
-#include <fstream>
 
 
 Character::Character(bool pPlayable){

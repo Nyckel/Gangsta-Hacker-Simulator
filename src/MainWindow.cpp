@@ -1,12 +1,5 @@
 #include "MainWindow.h"
-#include "SFML\Graphics.hpp"
-#include "Component.h"
-#include "Label.h"
-#include <iostream>
-#include <stdlib.h>
-#include <vector>
 
-#include "Menu.h"
 
 
 
@@ -75,16 +68,26 @@ int MainWindow::showMainMenu() {
 	title.setName("Title");
 	addComponent(&title);
 
-	sf::Vector2f buttonSize = sf::Vector2f(window->getSize().x - 100, window->getSize().y / 6);
+	dummyComponent = new Component();
 
+	sf::Vector2f buttonSize = sf::Vector2f(window->getSize().x - 100, window->getSize().y / 6);
 	//Start Menu
-	std::vector<std::string> menuOptions;
-	menuOptions.push_back("Play");
-	menuOptions.push_back("Options");
-	menuOptions.push_back("Exit");
-	Menu* startMenu = new Menu(menuOptions, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window->getSize().y * 1 / 3));
+	//std::vector<std::string> menuOptions;
+	std::vector<std::pair<std::string, std::function<void()>>> menuParams;
+
+	std::function<void()> func = [this]() { hoveredClickableComponent->printName(); };
+	std::function<void()> funcExit = [this]() { std::cout << "Exiting game" << std::endl; };
+	std::function<void()> funcPlay = [this]() { std::cout << "Playing game" << std::endl; };
+	menuParams.push_back({"Play", funcPlay });
+	menuParams.push_back({ "Options", func });
+	menuParams.push_back({ "Exit", funcExit });
+	
+	//menuOptions.push_back("Play");
+	//menuOptions.push_back("Options");
+	//menuOptions.push_back("Exit");
+	//Menu* startMenu = new Menu(menuOptions, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window->getSize().y * 1 / 3));
+	Menu* startMenu = new Menu(menuParams, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window->getSize().y * 1 / 3));
 	startMenu->setName("Main Game Menu");
-	//startMenu->bindButtonFunction("Play", func);
 	addComponent(startMenu);
 
 	int choice = 0;
@@ -119,6 +122,9 @@ void MainWindow::handleEvents() {
 					else {
 						++it;
 					}
+					if (!hoveredClickableComponent->isCursorHover(mousePosition)) {
+						hoveredClickableComponent = dummyComponent;
+					}
 				}
 
 				bool hoveredElementFound = false;
@@ -148,13 +154,14 @@ void MainWindow::handleEvents() {
 			}
 		
 			case sf::Event::MouseButtonReleased: {
-				std::cout << "Clicked" << std::endl;
 				if (hoveredClickableComponent != nullptr) {
-					hoveredClickableComponent->click = &(hoveredClickableComponent->printName);
-					hoveredClickableComponent->click;
-					
-					//hoveredClickableComponent->click = [hoveredClickableComponent]() {hoveredClickableComponent->printName(); };
-					//std::cout << "Clicked " << hoveredClickableComponent->clickAction << std::endl;
+					//hoveredClickableComponent->click = &(hoveredClickableComponent->printName);
+					if (hoveredClickableComponent != dummyComponent) {
+						std::cout << "Clicked on " << hoveredClickableComponent->getName() << std::endl;
+						/*hoveredClickableComponent->click = [this]() { hoveredClickableComponent->printName(); };*/
+						hoveredClickableComponent->click();
+					}
+
 				}
 				else {
 					std::cout << "hoverClickableComponent is null" << std::endl;

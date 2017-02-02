@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <iostream>
+
 #include "Component.h"
 #include "Background.h"
 #include "SFML\Graphics.hpp"

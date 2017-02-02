@@ -1,5 +1,4 @@
 #include "Mission.h"
-#include <iostream>
 class Character;
 class Company;
 

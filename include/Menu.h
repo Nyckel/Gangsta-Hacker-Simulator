@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <functional>
 
 #include "Component.h"
 #include "Label.h"
@@ -24,6 +25,9 @@ private:
 public:
 	Menu();
 	Menu(std::vector<std::string> pMap, std::string pMenuName, sf::Font pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition);
+	Menu(std::vector<std::pair<std::string, std::function<void()>>> pMap, std::string pMenuName, sf::Font pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition);
+
+	
 	~Menu();
 
 	virtual void draw(sf::RenderWindow* pWindow);

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "Company.h"
 #include "Character.h"
@@ -17,7 +18,7 @@
 
 //Have to put a list of all things to discover or discovered
 
-class Company;
+//class Company;
 
 class Mission
 {

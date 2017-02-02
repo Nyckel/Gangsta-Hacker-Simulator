@@ -3,10 +3,12 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <fstream>
 
 #include "Attribute.h"
 #include "Activity.h"
-//#include "Level.h"
+#include "Entity.h"
+
 
 
 //Ajouter un truc pour gérer le sommeil et la fatigue et un truc pour voir ses mails
@@ -15,7 +17,7 @@ enum eGender { Male, Female };
 class Mission;
 class Activity;
 
-class Character
+class Character : public Entity
 {
 private:
 	//Skin 

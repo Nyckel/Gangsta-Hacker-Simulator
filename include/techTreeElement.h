@@ -1,5 +1,8 @@
 #pragma once
 #include <vector>
+#include <iostream>
+#include <string>
+
 class TechTreeElement
 {
 	//Will be created from json file

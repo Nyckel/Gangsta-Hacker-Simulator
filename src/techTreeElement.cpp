@@ -1,6 +1,4 @@
 #include "TechTreeElement.h"
-#include <iostream>
-#include <string>
 
 TechTreeElement::TechTreeElement()
 {

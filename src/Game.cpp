@@ -1,15 +1,4 @@
-
 #include "Game.h"
-#include "Character.h"
-#include "Mission.h"
-#include "Company.h"
-#include "TechTreeElement.h"
-#include "Activity.h"
-#include "MainWindow.h"
-
-#include <chrono>
-#include <string>
-#include <thread>
 
 Game* Game::instance = nullptr;
 MainWindow* Game::display = nullptr;

@@ -1,5 +1,4 @@
 #include "Label.h"
-#include <iostream>
 
 
 Label::Label() {

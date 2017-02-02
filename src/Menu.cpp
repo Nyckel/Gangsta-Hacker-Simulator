@@ -26,6 +26,27 @@ Menu::Menu(std::vector<std::string> pMap, std::string pMenuName, sf::Font pFont,
 	}
 }
 
+Menu::Menu(std::vector<std::pair<std::string, std::function<void()>>> pMap, std::string pMenuName, sf::Font pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition){
+	position = pPosition;
+	buttonSize = pSize;
+	sf::Vector2f buttonPosition = position;
+	interButtonPadding = pPadding;
+	menuSize.x = buttonSize.x;
+	menuSize.y = buttonSize.y*pMap.size() + interButtonPadding * (pMap.size() - 1);
+
+	for (int i = 0; i < pMap.size(); i++) {
+		UIButton* currentUIButton;
+		if (i > 0)
+			buttonPosition.y += (buttonSize.y + interButtonPadding);
+
+		currentUIButton = new UIButton(pFont, pColor, buttonPosition, buttonSize, pMap.at(i).first, pCharacterSize);
+		std::cout << "In menu.cpp >> [0]:" << pMap.at(i).first << " [1]:" << &pMap[i].second << std::endl;
+		currentUIButton->setName(pMap.at(i).first);
+		currentUIButton->click = pMap[i].second;
+		childElements.push_back(currentUIButton);
+	}
+}
+
 Menu::~Menu()
 {
 }

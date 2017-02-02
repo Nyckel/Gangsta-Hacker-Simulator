@@ -16,7 +16,7 @@ class Component
 
 public:
 	//std::string(Component::*clickAction)(void) = &Component::getName;
-	std::function<void(const Component&)> click;// = &Component::printName;
+	std::function<void()> click;// = &Component::printName;
 	//std::function<void()> click;
 	Component();
 	~Component();

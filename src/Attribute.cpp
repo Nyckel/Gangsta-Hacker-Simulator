@@ -1,10 +1,4 @@
-#include <fstream>
-#include <iostream>
-#include <json.h>
-
 #include "Attribute.h"
-#include "Character.h"
-#include "Level.h"
 
 
 Attribute::Attribute()

@@ -42,8 +42,6 @@ UIButton::UIButton(sf::Font pFont, sf::Color pColor, sf::Vector2f pPosition, sf:
 	std::cout << "Init font adress : " << &font << std::endl;
 	std::cout << "Font Family From UIButton : " << pFont.getInfo().family << " / " << text.getFont()->getInfo().family << std::endl;*/
 	addHoverState(sf::Color(113, 248, 192), sf::Color::Black, sf::Color(113, 248, 192));
-
-	click = &UIButton::printName;
 }
 
 UIButton::~UIButton()

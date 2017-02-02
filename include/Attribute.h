@@ -1,11 +1,12 @@
 #pragma once
 #include <vector>
 #include <json.h>
+#include <fstream>
+#include <iostream>
 
 #include "Entity.h"
 #include "Level.h"
-
-
+//#include "Character.h"
 
 enum eType {integer, string, level, money};
 
