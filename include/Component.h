@@ -10,23 +10,24 @@ class Component
 	protected:std::string name;
 	protected:bool hashoverstate = false;
 	protected:bool isinhoverstate = false;
-	protected:bool clickable;
+	protected:bool clickable = false;
 	protected:unsigned int zIndex;
 	protected:std::vector<Component*> childElements;
 
 public:
 	//std::string(Component::*clickAction)(void) = &Component::getName;
-	std::function<void()> click;// = &Component::printName;
+	std::function<void()>* click;// = &Component::printName;
+	void(Component:: *click2)(void) = &Component::printName;
 	//std::function<void()> click;
 	Component();
 	~Component();
 
-	virtual bool hasHoverState();
 	virtual void hoverState();
 	virtual void normalState();
 
 	virtual bool isInHoverState();
 	virtual bool isCursorHover(sf::Vector2f pCursorPosition);
+	bool hasHoverState();
 	bool isClickable();
 	void setClickable(bool pClickable);
 

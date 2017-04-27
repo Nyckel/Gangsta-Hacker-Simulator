@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "Company.h"
 #include "Character.h"
@@ -29,7 +30,7 @@ private:
 
 	Character *assignedTo;
 	Character *applicant;
-	std::vector<Company> targetArray;
+	std::vector<std::shared_ptr<Company>> targetArray;
 	std::vector<Company*> companiesDoing; // Can be shared for COOP 
 
 	int securityLevel;
@@ -42,14 +43,14 @@ private:
 
 public:
 	Mission();
-	Mission(std::string pTitle, std::string pDescription, Company* pTarget, int pLevel, int pW, int pG, int pB);
+	Mission(std::string pTitle, std::string pDescription, std::shared_ptr<Company> pTarget, int pLevel, int pW, int pG, int pB);
 	~Mission();
 
 
 	void headLines();
 	void details();
 	void displayAllTargetsStatistics();
-	void addTarget(Company* newTarget);
+	void addTarget(std::shared_ptr<Company> newTarget);
 
 	void assignToCharacter(Character* pChar);
 	void assignToCompany(Company* pCompany);

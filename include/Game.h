@@ -9,7 +9,8 @@
 #include "Mission.h"
 #include "MainWindow.h"
 #include "TechTreeElement.h"
-
+#include "GameState.h"
+#include "MainMenuState.h"
 
 class Game
 {
@@ -18,6 +19,7 @@ private:
 
 	static MainWindow *display;
 	static Game *instance;
+	GameState* currentState = nullptr;
 
 	std::string saveFilename; //Changed when saved in a new file
 	std::vector<Company>playerCompanies; //Can put a character in another company (time to change...)
@@ -40,8 +42,9 @@ private:
 public:
 	~Game();
 
-	Company Game::createCompany();
+	Company createCompany();
 	//void run(Company* pMainCompany);
+	void startNew();
 	void run();
 	//Start scenario ?
 	//void pause();
@@ -50,8 +53,6 @@ public:
 	void computeDeltaTime();
 	//void updateActivities(long long elapsed);
 	void updateActivities(std::chrono::microseconds elapsed);
-	/*bool isInstantiated();
-	static Game getGame();*/
 
 	Mission* getCurrentMissionOf(Character *pChar);
 	void setCurrentMissionOf(Character *pChar, Mission *pMission);
@@ -59,6 +60,12 @@ public:
 
 	int getNbOfMissionsFor(Character *pChar);
 	int getNbOfMissionsFor(Company *pCompany);
+	void handleEvents();
+	void update(std::chrono::microseconds elapsed);
+	void draw();
+	void changeState(GameState* newState);
+	bool isRunning();
+
 
 	static void setDisplay(MainWindow* pWindow);
 	static Game* getInstance();

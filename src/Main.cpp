@@ -14,49 +14,61 @@ int main() {
 
 	
 Main::Main(){
-	//Need to create a Singleton for the renderWindow object
-	if (DISPLAY == "Graphical") {
-		MainWindow window;
-		Game::setDisplay(&window);
+	//Need to create a Singleton for the renderWindow 
 
-		int menuChoice = window.showMainMenu();
-		std::cout << "MenuChoice: " << menuChoice << std::endl;
-		switch (menuChoice) {
-			case 1:
-				std::cout << "Starting new Game" << std::endl;
-				//Game *myGame = Game::getInstance();
-					system("pause");
-				 //Game->startNew();
-				break;
+	//if (DISPLAY == "Graphical") {
+	//	MainWindow window;
+	//	Game::setDisplay(&window);
 
-			}
-		// - Game.loadFromFileSave()
-		// - Game.startNew()
-		// - Other options...
-		
-		Game *game = Game::getInstance();
+	//	int menuChoice = window.createMainMenu();
+	//	std::cout << "MenuChoice: " << menuChoice << std::endl;
+	//	switch (menuChoice) {
+	//		case 1:
+	//			std::cout << "Starting new Game" << std::endl;
+	//			//Game *myGame = Game::getInstance();
+	//				system("pause");
+	//			 //Game->startNew();
+	//			break;
 
-	}
-	else if (DISPLAY == "Console") {
-		displayConsoleMenu();
-		Game::getInstance()->run();
+	//		}
+	//	// - Game.loadFromFileSave()
+	//	// - Game.startNew()
+	//	// - Other options...
+	//	
+	//	game = Game::getInstance();
 
-	}
+	//}
+	//else if (DISPLAY == "Console") {
+	//	displayConsoleMenu();
+	//	Game::getInstance()->run();
+
+	//}
 
 	//Now I have my Game object game
-	/*
-	game.changeState(gameStates[introState]);	
-	while(game.isRunning()){
+	MainWindow window;
+	game = Game::getInstance();
+	Game::setDisplay(&window);
+	game->changeState(new MainMenuState(&window));
+	
+	maxFps = 60;
+	computeDeltaTime();
+	start = std::chrono::steady_clock::now();
+	end = std::chrono::steady_clock::now();
+	//Why not as an object attribute
+	//Or multipliate the timer for every action (code, research,...) by a speed coef -> but wouldn't speed up animations 
+	elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+	while(game->isRunning()){
 		if(isTimeToUpdate()){
-			game.handleEvents();
-			game.update();
+			game->handleEvents();
+			game->update(elapsed);
 			if(hasTimeToDraw()){
-				game.draw();
+				game->draw();
 			}
 		} else {
 			waitUntilTime();
 		}
-	}*/
+	}
 
 }
 
@@ -129,3 +141,25 @@ void Main::runGame(Game* pGame) {
 
 }
 
+bool Main::isTimeToUpdate() {
+	end = std::chrono::steady_clock::now();
+	elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	if (elapsed.count() >= deltaTime) {
+		start = std::chrono::steady_clock::now();
+		return true;
+	}
+	return false;
+}
+
+bool Main::hasTimeToDraw() {
+	return true;
+}
+
+void Main::waitUntilTime() {
+	//TODO: write function
+	std::this_thread::sleep_for(std::chrono::microseconds((deltaTime-elapsed.count())-3000));
+}
+
+void Main::computeDeltaTime() {
+	deltaTime = 1000000 / maxFps;
+}

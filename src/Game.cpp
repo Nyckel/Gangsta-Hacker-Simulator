@@ -9,11 +9,12 @@ Game::Game() //Replace by a singleton
 	//Create a new Game
 
 	/*Company newCompany;*/
-	system("cls");
-	std::cout << std::endl << "\tCreating new game..." << std::endl;
-	playerCompanies.push_back(createCompany());
-	std::cout << "\tCompany created" << std::endl;
-	playerCompanies.at(0).createTechTree();
+	//system("cls");
+	//std::cout << std::endl << "\tCreating new game..." << std::endl;
+	//playerCompanies.push_back(createCompany());
+	//std::cout << "\tCompany created" << std::endl;
+	//playerCompanies.at(0).createTechTree();
+	running = true;
 }
 
 Game::Game(std::string saveFilename) {
@@ -50,6 +51,14 @@ Company Game::createCompany() {
 	return newCompany;
 }
 
+void Game::startNew() {
+	system("cls");
+	std::cout << std::endl << "\tCreating new game..." << std::endl;
+	playerCompanies.push_back(createCompany());
+	std::cout << "\tCompany created" << std::endl;
+	playerCompanies.at(0).createTechTree();
+}
+
 void Game::run() {
 	running = true;
 	quit = false;
@@ -70,9 +79,9 @@ void Game::run() {
 		Company *goodGuys = new Company("ThegoodGuys",1,0);
 		goodGuys->addCharacter(&goodGuysDirector);
 		
-		Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", goodGuys, 0, 0, 0, 100);
+		Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", std::make_shared<Company>(*goodGuys), 0, 0, 0, 100);
 		attack.setApplicant(&badGuysDirector);
-		Mission defend("Protect bob", "X company has reasons to believe that someone is trying to hack them, they ask for help", goodGuys, 1, 100, 0, 0);
+		Mission defend("Protect bob", "X company has reasons to believe that someone is trying to hack them, they ask for help", std::make_shared<Company>(*goodGuys), 1, 100, 0, 0);
 		defend.setApplicant(&goodGuysDirector);
 		
 		Company *mainCompany = &(playerCompanies.at(0));
@@ -166,7 +175,7 @@ void Game::updateActivities(std::chrono::microseconds elapsed) {
 }
 
 Mission* Game::getCurrentMissionOf(Character *pChar) {
-	Mission* current = NULL;
+	Mission* current = nullptr;
 	for (int i = 0; i < missions.size(); i++) {
 		if (missions.at(i)->getCharacterAssigned() == pChar && missions.at(i)->isCurrent()) {
 			current = missions.at(i);
@@ -178,14 +187,14 @@ Mission* Game::getCurrentMissionOf(Character *pChar) {
 
 void Game::setCurrentMissionOf(Character *pChar, Mission *pMission) {
 	Mission *old = getCurrentMissionOf(pChar);
-	if (old != NULL)
+	if (old != nullptr)
 		old->setCurrent(false);
 	
 	pMission->setCurrent(true);
 }
 void Game::displayMissionsOfCharacter(Character *pChar) {
 	Mission *current = getCurrentMissionOf(pChar);
-	if (current != NULL) {
+	if (current != nullptr) {
 		std::cout << "Current mission : " << std::endl;
 		std::cout << "\t";
 		current->headLines();
@@ -218,4 +227,31 @@ int Game::getNbOfMissionsFor(Company *pCompany) {
 			nbMissions++;
 	}
 	return nbMissions;
+}
+
+
+bool Game::isRunning() {
+	return running;
+}
+
+void Game::draw() {
+	display->update();
+}
+
+void Game::update(std::chrono::microseconds elapsed) {
+	// Things happening here (delegate to state)
+	GameState* newState = currentState->update(elapsed);
+	if (newState != nullptr) {
+		changeState(newState);//Manage deletion of old state somewhere, and see how I do with those to keep in memory
+	}
+}
+
+void Game::handleEvents() {
+	//Will be delegated to state
+	currentState->handleEvents();
+}
+
+void Game::changeState(GameState* newState) {
+	delete(currentState);
+	currentState = newState;
 }

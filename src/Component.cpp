@@ -4,6 +4,7 @@
 
 Component::Component()
 {
+	name = "Dummy";
 }
 
 
@@ -37,13 +38,14 @@ void Component::setClickable(bool pClickable) { clickable = pClickable; }
 void Component::draw(sf::RenderWindow * pWindow)
 {
 	//For debug purpose
-	std::cout << "In function draw of Component" << std::endl;
+	//std::cout << "In function draw of Component" << std::endl;
 }
 
 std::string Component::getName() {
 	return name;
 }
 void Component::setName(std::string pName) {
+	std::cout << "Setting name of elt to " << pName << std::endl;
 	name = pName;
 }
 void Component::setColor(sf::Color pColor) {

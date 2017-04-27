@@ -10,7 +10,9 @@ Activity::Activity()
 	xp = 15;
 	orientation = Black;
 	allowed = false;
-	duration = std::chrono::seconds(5);
+	duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(5));
+	std::cout << "Activity will last " << duration.count() << std::endl;
+	//system("pause");
 }
 
 
@@ -20,10 +22,14 @@ Activity::~Activity()
 
 void Activity::start() {//Add computation of duration...
 	startTime = std::chrono::steady_clock::now();
+	//std::cout << "Starting activity" << std::endl;
 	elapsed = std::chrono::microseconds(0);
 }
-void Activity::update(std::chrono::microseconds  pElapsed) {
-	elapsed += pElapsed;
+void Activity::update(std::chrono::microseconds pElapsed) {
+	elapsed += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startTime);
+	//elapsed += pElapsed;
+	std::cout << "Updating activity  (+" << pElapsed.count() << ") to " << elapsed.count() << std::endl;
+	//system("pause");
 	//Random things that can happen in the activity, bug in dev, new thing discovered while recon...
 	
 
@@ -66,3 +72,4 @@ bool Activity::isResearch() { return (typeAct == Research); }
 bool Activity::isDev() { return (typeAct == dev); }
 bool Activity::isHardWare() { return (typeAct == hardwareInstall); }
 bool Activity::isConference() { return (typeAct == conf); }
+std::chrono::microseconds Activity::getTimeElapsed() { return elapsed; }

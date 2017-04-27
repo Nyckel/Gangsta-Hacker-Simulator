@@ -13,16 +13,16 @@ Label::Label(sf::Vector2f pPosition, std::string pString, int characterSize) {
 	paddingX = 0;
 	paddingY = 0;
 	
-	font = sf::Font();
-	font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
-	text = sf::Text(pString, font);
-	text.setFont(font);
+	font = new sf::Font();
+	//font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
+	text = sf::Text(pString, *font);
+	text.setFont(*font);
 	text.setFillColor(sf::Color::Black);
 	text.setPosition(pPosition);
 	std::cout << "115 Font adress from draw : " << &font << std::endl;
 
 }
-Label::Label(sf::Font pFont, sf::Vector2f pPosition, std::string pString, int characterSize) {
+Label::Label(sf::Font* pFont, sf::Vector2f pPosition, std::string pString, int characterSize) {
 	//background = NULL;
 	//overState = NULL;
 	isinhoverstate = false;
@@ -30,15 +30,15 @@ Label::Label(sf::Font pFont, sf::Vector2f pPosition, std::string pString, int ch
 	paddingX = 0;
 	paddingY = 0;
 	
-	font = sf::Font(pFont);
-	font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
-	text = sf::Text(pString, font);
-	text.setFont(font);
+	font = pFont;
+	//font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
+	text = sf::Text(pString, *font);
+	text.setFont(*font);
 	text.setCharacterSize(characterSize);
 	text.setPosition(pPosition);
 	std::cout << "114 Font adress from draw : " << &font << std::endl;
 }
-Label::Label(sf::Font pFont, sf::Color pColor, sf::Vector2f pPosition, std::string pString, int characterSize) {
+Label::Label(sf::Font *pFont, sf::Color pColor, sf::Vector2f pPosition, std::string pString, int characterSize) {
 	//background = NULL;
 	//overState = NULL;
 	isinhoverstate = false;
@@ -46,18 +46,18 @@ Label::Label(sf::Font pFont, sf::Color pColor, sf::Vector2f pPosition, std::stri
 	paddingX = 0;
 	paddingY = 0;
 
-	font = sf::Font(pFont);
-	font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
+	font = pFont;
+	//font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
 	color = sf::Color(pColor);
-	text = sf::Text(pString, font);
-	text.setFont(font);
+	text = sf::Text(pString, *font);
+	text.setFont(*font);
 	text.setFillColor(color);
 	text.setCharacterSize(characterSize);
 	text.setPosition(pPosition);
 	std::cout << pString << std::endl;
 	std::cout << "113 Font adress from draw : " << &font << std::endl;
 }
-Label::Label(sf::Font pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow) {
+Label::Label(sf::Font* pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow) {
 	/*background = NULL;
 	overState = NULL;*/
 	isinhoverstate = false;
@@ -65,15 +65,15 @@ Label::Label(sf::Font pFont, sf::Color pColor, std::string pString, int characte
 	paddingX = 0;
 	paddingY = 0;
 	
-	font = sf::Font(pFont);
-	font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
-	text = sf::Text(pString, font);
-	text.setFont(font);
+	font = pFont;
+	//font.loadFromFile("ressources/fonts/nasalization-rg.ttf");
+	text = sf::Text(pString, *font);
+	text.setFont(*font);
 	text.setFillColor(pColor);
 	text.setCharacterSize(characterSize);
 
-	int positionX = pWindow->getSize().x / 2 - text.getGlobalBounds().width / 2;
-	int positionY = pWindow->getSize().y / 2 - text.getGlobalBounds().height / 2;
+	int positionX = (int) pWindow->getSize().x / 2 - text.getGlobalBounds().width / 2;
+	int positionY = (int) pWindow->getSize().y / 2 - text.getGlobalBounds().height / 2;
 
 	text.setPosition(positionX, positionY);
 	std::cout << "112 Font adress from draw : " << &font << std::endl;
@@ -95,11 +95,11 @@ void Label::draw(sf::RenderWindow *pWindow) {
 		}
 		if (!text.getString().isEmpty() && &text != nullptr) {
 			if (isinhoverstate && &overText != nullptr) {
-				overText.setFont(font);
+				overText.setFont(*font);
 				pWindow->draw(overText);
 			}
 			else {
-				text.setFont(font);
+				text.setFont(*font);
 				//std::cout << "text: "<< std::string(text.getString()) << std::endl;
 				/*std::cout << ">///" << font.getInfo().family << std::endl;
 				std::cout << "??? Font adress from draw : " << &font << std::endl;

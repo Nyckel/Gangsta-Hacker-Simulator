@@ -4,10 +4,10 @@
 
 Menu::Menu()
 {
-	title = Label(sf::Vector2f(100, 100));
+	//title = Label(sf::Vector2f(100, 100));
 }
 
-Menu::Menu(std::vector<std::string> pMap, std::string pMenuName, sf::Font pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition) {
+Menu::Menu(std::vector<std::string> pMap, std::string pMenuName, sf::Font *pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition) {
 	position = pPosition;
 	buttonSize = pSize;
 	sf::Vector2f buttonPosition = position;
@@ -26,7 +26,7 @@ Menu::Menu(std::vector<std::string> pMap, std::string pMenuName, sf::Font pFont,
 	}
 }
 
-Menu::Menu(std::vector<std::pair<std::string, std::function<void()>>> pMap, std::string pMenuName, sf::Font pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition){
+Menu::Menu(std::vector<std::pair<std::string, std::function<void()>* >> pMap, std::string pMenuName, sf::Font *pFont, sf::Color pColor, sf::Vector2f pSize, int pCharacterSize, int pPadding, sf::Vector2f pPosition){
 	position = pPosition;
 	buttonSize = pSize;
 	sf::Vector2f buttonPosition = position;
@@ -65,8 +65,18 @@ void Menu::draw(sf::RenderWindow* pWindow)
 }
 
 
-std::vector<UIButton> Menu::getMenuButtons() {
-	return options;
+std::vector<Component*> Menu::getMenuButtons() {
+	return childElements;
+}
+
+Component* Menu::elementAt(int i) {
+	//std::cout << "Querying element at position " << i << ", nb options: " << childElements.size() << std::endl;
+	if (i < childElements.size() && i > -1) {
+		if ((childElements.at(i)) != nullptr) {
+			return childElements.at(i);
+		}
+	}
+	return nullptr;
 }
 //
 //void Menu::addButton(UIButton *pButton) {
@@ -84,4 +94,16 @@ bool Menu::isCursorHover(sf::Vector2f pCursorPosition) {
 		}
 	}
 	return isHover;
+}
+
+int Menu::positionOf(Component *pComp) {
+	if (pComp != nullptr) {
+		for (int i = 0; i < childElements.size(); i++) {
+			if (childElements.at(i) == pComp) {
+				//std::cout << "Element found in menu at position " << i << std::endl;
+				return i;
+			}
+		}
+	}
+	return -1;
 }

@@ -15,11 +15,11 @@ Mission::Mission()
 	blackPercentage = 100/3;
 }
 
-Mission::Mission(std::string pTitle, std::string pDescription, Company* pTarget, int pLevel, int pW, int pG, int pB) {
+Mission::Mission(std::string pTitle, std::string pDescription, std::shared_ptr<Company> pTarget, int pLevel, int pW, int pG, int pB) {
 	title = pTitle;
 	description = pDescription;
 	//Company* targetsArray;
-	targetArray.push_back(*pTarget);
+	targetArray.push_back(pTarget);
 	securityLevel = pLevel;
 	whitePercentage = pW;
 	greyPercentage = pG;
@@ -29,6 +29,9 @@ Mission::Mission(std::string pTitle, std::string pDescription, Company* pTarget,
 
 Mission::~Mission()
 {
+	for (Company *cmp : companiesDoing) {
+		cmp = nullptr;
+	}
 }
 
 void Mission::headLines() {
@@ -45,12 +48,12 @@ void Mission::details() {
 
 void Mission::displayAllTargetsStatistics() {
 	for (int i = 0; i < targetArray.size(); i++) {
-		targetArray.at(i).displayStatistics();
+		targetArray.at(i)->displayStatistics();
 	}
 }
 
-void Mission::addTarget(Company *newTarget) {
-	targetArray.push_back(*newTarget);
+void Mission::addTarget(std::shared_ptr<Company> newTarget) {
+	targetArray.push_back(newTarget);
 }
 
 void Mission::assignToCharacter(Character *pChar) {

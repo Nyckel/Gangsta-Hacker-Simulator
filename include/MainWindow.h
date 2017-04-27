@@ -22,13 +22,24 @@ private:
 	sf::RenderWindow* window;
 	std::vector<Component*> components;
 	std::vector<std::vector<Component*>> componentsAtLevel;
+
+	void removeFromHoveredList(Component*);
 public:
 	MainWindow();
 	~MainWindow();
 	void update();
+	void close();
 	void addComponent(Component *pComp, unsigned int zIndex = 0);
-	int showMainMenu();
+	void hoverElement(Component* elt);
+	void unHoverElement(Component* elt);
+	//int createMainMenu();
+	Menu* createMainMenu();
+	Label* createTitle();
 	void handleEvents();
-
+	std::vector<sf::Event> getEvents();
+	std::vector<Component*>* getHoveredComponents();
+	Component** getHoveredClickable();
+	Component* getDummyComponent();
+	std::vector<std::vector<Component*>>* getComponentsByLevel();
 };
 

@@ -4,6 +4,7 @@
 Attribute::Attribute()
 {
 }
+
 Attribute::Attribute(int pValue) {
 	type = integer;
 	intValue = pValue;
@@ -18,11 +19,11 @@ Attribute::Attribute(int pXp, std::string pFilename) {
 	Json::Value root;
 	Json::Reader reader;
 	std::ifstream file(pFilename, std::ifstream::binary);
+	
 	type = level;
 	file >> root;
-	if (pFilename == "levels.json") {
-		if (root["levels"] != NULL) {
-			//std::cout << "ici";
+	if (pFilename == "../ressources/jsons/levels.json") {
+		if (&root["levels"] != nullptr) {
 			int i = 0;
 			bool levelFound = false;
 			while (i < root["levels"].size() && !levelFound) {
@@ -35,6 +36,9 @@ Attribute::Attribute(int pXp, std::string pFilename) {
 
 				i++;
 			}
+		}
+		else {
+			std::cout << "Couldn't read json file" << std::endl;
 		}
 	}
 }
@@ -113,8 +117,7 @@ int Attribute::getLevelIndex() {
 int Attribute::getLevelXpForNext() {
 	if (!levelValue.isNull()) {
 		return levelValue.getLevelXpForNext();
-	}
-	else {
+	} else {
 		std::cout << "Asking lacking xp on a null Level object" << std::endl;
 		return NULL;
 	}
@@ -126,7 +129,7 @@ void Attribute::levelUpdate(int pExpEarned, std::string pFilename) {
 		std::ifstream file(pFilename, std::ifstream::binary);
 		file >> root;
 		if (pFilename == "levels.json") {
-			if (root["levels"] != NULL) {
+			if (root["levels"] != nullptr) {
 				int i = 0;
 				bool levelFound = false;
 				while (i < root["levels"].size() && !levelFound) {

@@ -15,7 +15,7 @@ private:
 	std::string name;
 	std::string description;
 
-	std::chrono::seconds duration;
+	std::chrono::microseconds duration;
 	std::chrono::microseconds elapsed;
 	//bool paused
 	bool finished;
@@ -46,6 +46,7 @@ public:
 	eOrientation getOrientation();
 
 	int getXp();// How is an activity grey ? Research, dev, hardwareInstall..
+	std::chrono::microseconds getTimeElapsed();
 
 	void setAllowed(bool pAllowed);
 	bool isAllowed();

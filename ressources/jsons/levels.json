@@ -1,0 +1,20 @@
+{
+	"levels":{
+		"1":{
+			"label":"nolwenn",
+			"next":10
+		},
+		"2":{
+			"label":"intern",
+			"next":30
+		},
+		"3":{
+			"label":"newbie",
+			"next":70
+		},
+		"4":{
+			"label":"script kiddy",
+			"next":150
+		}
+	}
+}

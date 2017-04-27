@@ -21,7 +21,7 @@ Character::Character(bool pPlayable){
 		xpBlack = *new Attribute(0);
 	}
 	
-	level_global = *new Attribute(xpGlobal.getIntValue(), std::string("levels.json"));
+	level_global = *new Attribute(xpGlobal.getIntValue(), std::string("../ressources/jsons/levels.json"));
 	std::cout << "In constructor level: " << std::endl << level_global.getLevelIndex();
 	system("pause");
 	/*
@@ -64,7 +64,7 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 		system("pause");
 	}*/
 
-	level_global = *new Attribute(xpGlobal.getIntValue(), std::string("levels.json"));
+	level_global = Attribute(xpGlobal.getIntValue(), std::string("../ressources/jsons/levels.json"));
 	/*level_recon = *new Attribute(0);
 	level_scan = *new Attribute(0);
 	level_exploit = *new Attribute(0);
@@ -73,11 +73,15 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 
 void Character::displayStatistics() {
 	std::cout << "\tName: " << name << std::endl;
-	std::cout << "\tGender: ";
-	if (gender == 0)
-		std::cout << "Male" << std::endl;
-	else
-		std::cout << "Female" << std::endl;
+	if (getCurrentActivity() != nullptr) {
+		std::cout << "\tCurrent activity: " << getCurrentActivity()->getName() << std::endl;
+		std::cout << "\tTime elapsed: " << getCurrentActivity()->getTimeElapsed().count() << std::endl;
+	}
+	//std::cout << "\tGender: ";
+	//if (gender == 0)
+	//	std::cout << "Male" << std::endl;
+	//else
+	//	std::cout << "Female" << std::endl;
 	std::cout << "\tBalance: " << balance << std::endl;
 	std::cout << "\t  -> acheivedWhite: " << acheivedWhite << std::endl;
 	std::cout << "\t  -> acheivedGrey: " << acheivedGrey << std::endl;
@@ -188,7 +192,14 @@ void Character::setCurrentActivity(int pIndex) {
 		std::cout << "Size of possibleActivities <= pIndex" << std::endl;
 	}
 }
-Activity* Character::getCurrentActivity() { return &(possibleActivities.at(currentActivityIndex)); }
+Activity* Character::getCurrentActivity() {
+	if (&currentActivityIndex != nullptr) {
+		if (possibleActivities.size() > currentActivityIndex) {
+			return &(possibleActivities.at(currentActivityIndex));
+		}
+	}
+	return nullptr;
+}
 int Character::getCurrentActivityIndex() { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
@@ -198,11 +209,11 @@ void Character::updateActivity(std::chrono::microseconds elapsed){
 		//Maybe send back discovered things from here (send pointer to vector of discovered things) or 
 		if (currentActivity->isFinished()) {
 			getActivityPoints(currentActivity);//Will also  update levels
-			//Check if that mission ended a mission (or a part ? -> Do a pentest report be the last activity, can go as far as wanted before ?)
+			// Check if that mission ended a mission (or a part ? -> Do a pentest report be the last activity, can go as far as wanted before ?)
 			// Detection current activity or finished activity was off contract -> (risk reaction ?)
 			// Advance missions status
 			
-			deletePossibleActivity(currentActivityIndex);
+			//deletePossibleActivity(currentActivityIndex);
 			currentActivityIndex = -1;
 		}
 	}
@@ -243,13 +254,13 @@ void Character::getActivityPoints(Activity *pAct) {
 }
 
 void Character::deletePossibleActivity(int pIndex) {
-	if (currentActivityIndex != pIndex) {
+	//if (currentActivityIndex != pIndex) {
 		delete(&(possibleActivities.at(pIndex)));
 		possibleActivities.erase(possibleActivities.begin() + pIndex);
-	}
-	else {
-		std::cout << "Trying to delete current activity (" << possibleActivities.at(currentActivityIndex).getName() << ")" << std::endl;
-	}
+	//}
+	//else {
+		//std::cout << "Trying to delete current activity (" << possibleActivities.at(currentActivityIndex).getName() << ")" << std::endl;
+	//}
 }
 
 bool Character::isDoingSomething() {
@@ -258,9 +269,8 @@ bool Character::isDoingSomething() {
 
 
 void Character::checkLevels() {
-	/*std::cout << "XPGlobal: " << xpGlobal.getIntValue() << "/" << level_global.getLevelXpForNext() << std::endl;*/
 	if (xpGlobal.getIntValue() > level_global.getLevelXpForNext()) {
-		level_global.levelUpdate(xpGlobal.getIntValue(), "levels.json");
+		level_global.levelUpdate(xpGlobal.getIntValue(), "../ressources/jsons/levels.json");
 		//for each level check if xp > pallier for next level
 	}
 }

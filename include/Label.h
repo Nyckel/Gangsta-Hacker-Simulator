@@ -11,7 +11,7 @@ class Label : public Component
 protected:
 	sf::Text text;
 	sf::Text overText;
-	sf::Font font;
+	sf::Font* font;
 	sf::Color color;
 	Background background;
 	Background overState;
@@ -21,9 +21,9 @@ protected:
 public:
 	Label();
 	Label(sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
-	Label(sf::Font pFont, sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
-	Label(sf::Font pFont, sf::Color pColor, sf::Vector2f pPosition, std::string pString, int characterSize);
-	Label(sf::Font pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow);
+	Label(sf::Font *pFont, sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
+	Label(sf::Font *pFont, sf::Color pColor, sf::Vector2f pPosition, std::string pString, int characterSize);
+	Label(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow);
 
 
 	~Label();

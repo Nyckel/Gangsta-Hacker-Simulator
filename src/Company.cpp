@@ -83,7 +83,7 @@ Character* Company::getCharacter(int index) {
 		return &(characters.at(index));
 	}
 	else
-		return NULL;
+		return nullptr;
 }
 
 
@@ -123,19 +123,19 @@ int Company::getNbCharacters() {
 
 void Company::updateActivities(std::chrono::microseconds elapsed) {
 
-	for (int i = 0; i < characters.size(); i++) {
-		if (characters.at(i).isDoingSomething()) {
-			characters.at(i).updateActivity(elapsed);//Add "characters.at(i)" param to get elements discovered by this character
+	for (Character character : characters) {
+		if (character.isDoingSomething()) {
+			character.updateActivity(elapsed);//Add "characters.at(i)" param to get elements discovered by this character
 			// -> Things are discovered in updateActivity() in a function using randomness and skills
 		}
 		else {
-			std::cout << characters.at(i).getName() << " is not doing anything" << std::endl;
+			std::cout << character.getName() << " is not doing anything" << std::endl;
 		}
 	}
 }
 
 void Company::createTechTree() {
-	technologyTree = *new TechTree("techTree.json");
+	technologyTree = *new TechTree("../ressources/jsons/techTree.json");
 }
 
 
