@@ -16,9 +16,9 @@ public:
 	Level(std::string pLabel, int pXp, int pId);
 	~Level();
 	friend std::ostream& operator<< (std::ostream& stream, const Level &pLevel);
-	std::string getLabel();
-	int getLevelXpForNext();
-	int getIndex();
+	std::string getLabel() const;
+	int getLevelXpForNext() const;
+	int getIndex() const;
 	bool isNull();
 
 	void show();

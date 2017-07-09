@@ -22,7 +22,7 @@ Attribute::Attribute(int pXp, std::string pFilename) {
 	
 	type = level;
 	file >> root;
-	if (pFilename == "../ressources/jsons/levels.json") {
+	if (pFilename == "ressources/jsons/levels.json") {
 		if (&root["levels"] != nullptr) {
 			int i = 0;
 			bool levelFound = false;

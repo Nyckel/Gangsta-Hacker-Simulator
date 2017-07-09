@@ -6,23 +6,23 @@ Character::Character(bool pPlayable){
 	playable = pPlayable;
 	currentActivityIndex = -1;
 
-	name = *new Attribute(std::string("Chappie"));
-	renown = *new Attribute(0);
-	balance = *new Attribute(0);
+	name = { "Chappie" };//*new Attribute(std::string("Chappie"));
+	renown = { 0 };
+	balance = { 0 };
 	
 	if (playable) {
-		acheivedWhite = *new Attribute(0);
-		acheivedGrey = *new Attribute(0);
-		acheivedBlack = *new Attribute(0);
+		acheivedWhite = { 0 };
+		acheivedGrey = { 0 };
+		acheivedBlack = { 0 };
 
-		xpGlobal = *new Attribute(0);
-		xpWhite = *new Attribute(0);
-		xpGrey = *new Attribute(0);
-		xpBlack = *new Attribute(0);
+		xpGlobal = { 0 };
+		xpWhite = { 0 };
+		xpGrey = { 0 };
+		xpBlack = { 0 };
 	}
 	
-	level_global = *new Attribute(xpGlobal.getIntValue(), std::string("../ressources/jsons/levels.json"));
-	std::cout << "In constructor level: " << std::endl << level_global.getLevelIndex();
+	level_global = LevelAttribute(xpGlobal.getValue(), std::string("ressources/jsons/levels.json"));
+	std::cout << "In constructor level: " << std::endl << level_global.getIndex();
 	system("pause");
 	/*
 	level_recon = *new Attribute(0);
@@ -33,24 +33,24 @@ Character::Character(bool pPlayable){
 }
 
 Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
-	name = *new Attribute(pName);
+	name = { pName };
 	currentActivityIndex = -1;
 
 	gender = pGender;
-	renown = *new Attribute(0);
-	balance = *new Attribute(0);
-	acheivedWhite = *new Attribute(0);
-	acheivedGrey = *new Attribute(0);
-	acheivedBlack = *new Attribute(0);
+	renown = { 0 };
+	balance = { 0 };
+	acheivedWhite = { 0 };
+	acheivedGrey = { 0 };
+	acheivedBlack = { 0 };
 
-	xpGlobal = *new Attribute(0);
-	xpBlack = *new Attribute(0);
-	xpGrey = *new Attribute(0);
-	xpWhite = *new Attribute(0);
-	xpRecon = *new Attribute(0);
-	xpScan = *new Attribute(0);
-	xpExploit = *new Attribute(0);
-	xpPostExploit = *new Attribute(0);
+	xpGlobal = { 0 };
+	xpBlack = { 0 };
+	xpGrey = { 0 };
+	xpWhite = { 0 };
+	xpRecon = { 0 };
+	xpScan = { 0 };
+	xpExploit = { 0 };
+	xpPostExploit = { 0 };
 	
 	//Create Attributes of type level from json
 	/*Json::Value root;
@@ -64,12 +64,13 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 		system("pause");
 	}*/
 
-	level_global = Attribute(xpGlobal.getIntValue(), std::string("../ressources/jsons/levels.json"));
+	level_global = LevelAttribute(xpGlobal.getValue(), std::string("ressources/jsons/levels.json"));
 	/*level_recon = *new Attribute(0);
 	level_scan = *new Attribute(0);
 	level_exploit = *new Attribute(0);
 	level_postExploit = *new Attribute(0);*/
 }
+
 
 void Character::displayStatistics() {
 	std::cout << "\tName: " << name << std::endl;
@@ -105,32 +106,32 @@ void Character::displayStatistics() {
 
 Character::~Character()
 {
-	deleteAttribute(&name);
+	/*deleteAttribute(&name);
 	deleteAttribute(&renown);
-	deleteAttribute(&balance);
+	deleteAttribute(&balance);*/
 	
-	deleteAttribute(&acheivedWhite);
-	deleteAttribute(&acheivedGrey);
-	deleteAttribute(&acheivedBlack);
+	//deleteAttribute(&acheivedWhite);
+	//deleteAttribute(&acheivedGrey);
+	//deleteAttribute(&acheivedBlack);
 
-	deleteAttribute(&xpGlobal);
-	deleteAttribute(&xpWhite);
-	deleteAttribute(&xpGrey);
-	deleteAttribute(&xpBlack);
-	deleteAttribute(&xpRecon);
-	deleteAttribute(&xpScan);
-	deleteAttribute(&xpExploit);
-	deleteAttribute(&xpPostExploit);
+	//deleteAttribute(&xpGlobal);
+	//deleteAttribute(&xpWhite);
+	//deleteAttribute(&xpGrey);
+	//deleteAttribute(&xpBlack);
+	//deleteAttribute(&xpRecon);
+	//deleteAttribute(&xpScan);
+	//deleteAttribute(&xpExploit);
+	//deleteAttribute(&xpPostExploit);
 
-	
-	deleteAttribute(&level_global);
+	//
+	//deleteAttribute(&level_global);
 	/*deleteAttribute(&level_recon);
 	deleteAttribute(&level_scan);
 	deleteAttribute(&level_exploit);
 	deleteAttribute(&level_postExploit)*/;
 
 	for (int i = 0; i < possibleActivities.size(); i++) {
-		deletePossibleActivity(i);
+		//deletePossibleActivity(i);
 	}
 }
 void Character::deleteAttribute(Attribute* pAttr) {
@@ -140,18 +141,15 @@ void Character::deleteAttribute(Attribute* pAttr) {
 }
 
 void Character::setName(std::string pName) {
-	if (name.getType() == NULL)
-		name = *new Attribute(pName);
-	else
-		name.setValue(pName);
+	name.setValue(pName);
 }
 void Character::setGender(enum eGender pGender) {
 	gender = pGender;
 }
 
 
-std::string Character::getName() {
-	return name.getStringValue();
+std::string Character::getName() const{
+	return name.getValue();
 }
 /*Mission* Character::getCurrentMission() {
 if (currentMissionIndex != NULL) {
@@ -178,7 +176,7 @@ void Character::displayMissions() {
 	}
 }*/
 
-void Character::addPossibleActivity(Activity* pAct) {
+void Character::addPossibleActivity(const Activity* pAct) {
 	possibleActivities.push_back(*pAct);
 }
 void Character::setCurrentActivity(int pIndex) {
@@ -200,7 +198,7 @@ Activity* Character::getCurrentActivity() {
 	}
 	return nullptr;
 }
-int Character::getCurrentActivityIndex() { return currentActivityIndex; }
+int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
 	if (currentActivityIndex != -1) {
@@ -228,23 +226,23 @@ void Character::getActivityPoints(Activity *pAct) {
 	//Add renown 
 
 	int earnedXp = pAct->getXp();
-	xpGlobal.setValue(xpGlobal.getIntValue() + earnedXp);
+	xpGlobal.setValue(xpGlobal.getValue() + earnedXp);
 	switch (pAct->getOrientation()) {
-	case White:	xpWhite.setValue(xpWhite.getIntValue() + earnedXp);
+	case White:	xpWhite.setValue(xpWhite.getValue() + earnedXp);
 		break;
-	case Grey: xpGrey.setValue(xpGrey.getIntValue() + earnedXp);
+	case Grey: xpGrey.setValue(xpGrey.getValue() + earnedXp);
 		break;
-	case Black:	xpBlack.setValue(xpBlack.getIntValue() + earnedXp);
+	case Black:	xpBlack.setValue(xpBlack.getValue() + earnedXp);
 		break;
 	}
 	switch (pAct->getType()) {
-	case Recon:	xpRecon.setValue(xpRecon.getIntValue() + earnedXp);
+	case Recon:	xpRecon.setValue(xpRecon.getValue() + earnedXp);
 		break;
-	case Scan: xpScan.setValue(xpScan.getIntValue() + earnedXp);
+	case Scan: xpScan.setValue(xpScan.getValue() + earnedXp);
 		break;
-	case Exploit: xpExploit.setValue(xpExploit.getIntValue() + earnedXp);
+	case Exploit: xpExploit.setValue(xpExploit.getValue() + earnedXp);
 		break;
-	case PostExploit: xpPostExploit.setValue(xpPostExploit.getIntValue() + earnedXp);
+	case PostExploit: xpPostExploit.setValue(xpPostExploit.getValue() + earnedXp);
 		break;
 	}
 
@@ -263,14 +261,15 @@ void Character::deletePossibleActivity(int pIndex) {
 	//}
 }
 
-bool Character::isDoingSomething() {
+bool Character::isDoingSomething() const
+{
 	return (currentActivityIndex != -1);
 }
 
 
 void Character::checkLevels() {
-	if (xpGlobal.getIntValue() > level_global.getLevelXpForNext()) {
-		level_global.levelUpdate(xpGlobal.getIntValue(), "../ressources/jsons/levels.json");
+	if (xpGlobal.getValue() > level_global.getLevelXpForNext()) {
+		level_global.update(xpGlobal.getValue(), "ressources/jsons/levels.json");
 		//for each level check if xp > pallier for next level
 	}
 }

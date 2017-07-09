@@ -4,7 +4,7 @@
 #include <string>
 #include <stdlib.h>
 #include <fstream>
-#include <json.h>
+#include <json/json.h>
 
 #include "Character.h"
 #include "Game.h"

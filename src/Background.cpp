@@ -66,8 +66,17 @@ void Background::setPosition(int x, int y) {
 
 
 void Background::setColors(sf::Color pBack, sf::Color pRect) {
-	shapes.at(0).setColor(pBack);
-	shapes.at(1).setColor(pRect);
+	if (shapes.size() > 0) {
+		shapes.at(0).setColor(pBack);
+		std::cout << pBack.toInteger() << std::endl;
+	}
+	else std::cout << "Shape 0 is null" << std::endl;
+	if (shapes.size() > 1) {
+		shapes.at(1).setColor(pRect);
+		std::cout << pRect.toInteger() << std::endl;
+	}
+	else std::cout << "Shape 1 is null" << std::endl;
+	system("pause");
 }
 
 void Background::setSize(sf::Vector2f pSize) {

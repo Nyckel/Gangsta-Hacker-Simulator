@@ -31,7 +31,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::update() {
 	//window->clear(sf::Color(52, 152, 219));
-	sf::Color windowBackgroundColor = sf::Color(10, 10, 10);
+	sf::Color windowBackgroundColor = sf::Color::Black;// sf::Color(44, 62, 80, 1.0);// sf::Color(10, 10, 10);
 	window->clear(windowBackgroundColor);
 
 	//for (int i = 0; i < components.size(); i++) {
@@ -105,12 +105,16 @@ void MainWindow::addComponent(Component *pComp, unsigned int zIndex) {
 
 Label* MainWindow::createTitle() {
 	sf::Font* titleFont = new sf::Font();
-	titleFont->loadFromFile("../ressources/fonts/nasalization-rg.ttf");
+	/*titleFont->loadFromFile("ressources/fonts/nasalization-rg.ttf");*/
+	titleFont->loadFromFile("ressources/fonts/SourceCodePro-Regular.ttf");
 
 	Label* title = new Label(titleFont, sf::Color::White, "Gangsta Hacker Simulator", 50, window);
 	title->setPadding(20, 20);
 	title->setPosition(title->getPosition().x, 10);
-	title->addBackgroundRect();
+	//title->addBackgroundRect();
+	title->addBackgroundRect(sf::Color(44, 62, 80), sf::Color(142, 68, 173));
+	//std::cout << "Setting colors" << std::endl;
+	//title->setBackgroundColors(sf::Color(44, 62, 80, 1.0), sf::Color(192, 57, 43, 1.0));
 	title->setName("Title");
 	return title;
 }
@@ -119,7 +123,8 @@ Label* MainWindow::createTitle() {
 Menu* MainWindow::createMainMenu() {
 
 	sf::Font* titleFont = new sf::Font();
-	titleFont->loadFromFile("../ressources/fonts/nasalization-rg.ttf");
+	//titleFont->loadFromFile("ressources/fonts/nasalization-rg.ttf");
+	titleFont->loadFromFile("ressources/fonts/SourceCodePro-Regular.ttf");
 	//titleFont->loadFromFile("../ressources/fonts/nasalization-rg.ttf");
 
 	//Label title(titleFont, sf::Color::White, "Gangsta Hacker Simulator", 50, window);

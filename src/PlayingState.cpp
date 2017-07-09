@@ -25,6 +25,7 @@ void ClrScrn(char attrib) {
 PlayingState::PlayingState()
 {
 	system("cls");
+	std::cout << "Switching to PlayingState" << std::endl;
 	std::cout << std::endl << "\tCreating new game..." << std::endl;
 	playerCompanies.push_back(createCompany());
 	std::cout << "\tCompany created" << std::endl;
@@ -103,7 +104,7 @@ void PlayingState::testMissions() {
 	Character badGuysDirector("Brandon", Male, false);
 	Character goodGuysDirector("Michelle", Female, false);
 	Company *goodGuys = new Company("ThegoodGuys", 1, 0);
-	goodGuys->addCharacter(&goodGuysDirector);
+	goodGuys->addCharacter(&goodGuysDirector);	
 
 	//Create Missions and set people giving these missions
 	Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", std::make_shared<Company>(*goodGuys), 0, 0, 0, 100);
@@ -194,8 +195,8 @@ void PlayingState::displayMissionsOfCharacter(Character *pChar) {
 }
 
 int PlayingState::getNbOfMissionsFor(Character *pChar) {
-	int nbMissions = 0;
-	for (Mission* mission : missions) {
+	auto nbMissions = 0;
+	for (auto* mission : missions) {
 		if (mission->isAssignedTo(pChar))
 			nbMissions++;
 	}

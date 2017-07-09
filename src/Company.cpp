@@ -6,6 +6,21 @@ class Character;
 
 Company::Company()
 {
+	renown = 0; // -> Better missions
+	balance = 0;
+	acheivedWhite = 0;
+	acheivedGrey = 0;
+	acheivedBlack = 0;
+
+	Character firstCharacter = createFirstCharacter();
+	characters.push_back(firstCharacter);
+
+	dollars = { 0 };
+	bitcoins = { 0 };
+	//displayStatistics();
+	//std::cout << "\t";
+	//system("pause");
+	compId = Company::generateUniqueId();
 }
 
 Company::Company(std::string pName) {//This is for the player
@@ -21,11 +36,12 @@ Company::Company(std::string pName) {//This is for the player
 	Character firstCharacter = createFirstCharacter();
 	characters.push_back(firstCharacter);
 
-	dollars = Attribute(money, 0);
-	bitcoins = Attribute(money, 0);
+	dollars = { 0 };
+	bitcoins = { 0 };
 	//displayStatistics();
 	//std::cout << "\t";
 	//system("pause");
+	compId = generateUniqueId();
 }
 
 Company::Company(std::string pName, int pRenown, int pBalance) { 
@@ -36,6 +52,7 @@ Company::Company(std::string pName, int pRenown, int pBalance) {
 	allowedExploit = false;
 	allowedPostExploit = false;
 
+	compId = generateUniqueId();
 }
 
 
@@ -61,7 +78,7 @@ Character Company::createFirstCharacter() {
 			goodGender = true;
 			gender = Male;
 		}
-		else if (std::string(genderChar) == "F" || std::string(genderChar) == "f") {
+		else {
 			goodGender = true;
 			gender = Female;
 		}
@@ -92,7 +109,7 @@ void Company::displayStatistics(){
 
 	std::cout <<std::endl<< "\tCompany name: " << name << std::endl;
 	std::cout << "__________________________________________________________________________________________" << std::endl;
-	if(!description.empty())
+	if(!description.isEmpty())
 		std::cout << "\tDescription: " << description << std::endl;
 	std::cout << "\tRenown: " << renown << std::endl;
 	std::cout << "\tBalance: " << balance << std::endl;
@@ -116,9 +133,6 @@ std::vector<Mission*> Company::getRunningMissions() {
 	}
 	return runningMissions;
 }*/
-int Company::getNbCharacters() {
-	return characters.size();
-}
 
 
 void Company::updateActivities(std::chrono::microseconds elapsed) {
@@ -135,10 +149,29 @@ void Company::updateActivities(std::chrono::microseconds elapsed) {
 }
 
 void Company::createTechTree() {
-	technologyTree = *new TechTree("../ressources/jsons/techTree.json");
+	technologyTree = TechTree("ressources/jsons/techTree.json");
 }
 
 
-bool Company::isAllowedScan() { return allowedScan; }
-bool Company::isAllowedExploit() { return allowedExploit; }
-bool Company::isAllowedPostExploit() { return allowedPostExploit; }
+bool Company::isAllowedScan() const { return allowedScan; }
+bool Company::isAllowedExploit() const { return allowedExploit; }
+bool Company::isAllowedPostExploit() const { return allowedPostExploit; }
+
+
+std::string Company::generateUniqueId()
+{
+	auto len = 10;
+	char s[10];
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+
+	for (int i = 0; i < len; ++i) {
+		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	}
+
+	//s[len] = 0;
+	std::cout << "Str: " << std::string(s) << std::endl;
+	return std::string(s);
+}

@@ -30,7 +30,8 @@ void Activity::update(std::chrono::microseconds pElapsed) {
 	//elapsed += pElapsed;
 	std::cout << "Updating activity  (+" << pElapsed.count() << ") to " << elapsed.count() << std::endl;
 	//system("pause");
-	//Random things that can happen in the activity, bug in dev, new thing discovered while recon...
+	//Random things that can happen in the activity,
+	// bug in dev, new thing discovered while recon...
 	
 
 	//Check if activity is not finished
@@ -40,6 +41,9 @@ void Activity::update(std::chrono::microseconds pElapsed) {
 		
 		//Popup or notif to player
 		//Update tech tree or mission or...
+	} else
+	{
+		std::cout << "Activity not finished" << std::endl;
 	}
 }
 

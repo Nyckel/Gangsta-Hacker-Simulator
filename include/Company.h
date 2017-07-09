@@ -4,7 +4,9 @@
 #include <chrono>
 
 #include "Character.h"
-#include "Attribute.h"
+#include "StringAttribute.h"
+#include "IntAttribute.h"
+#include "Mission.h"
 #include "Entity.h"
 
 #include "TechTree.h"
@@ -17,8 +19,9 @@ private:
 	//std::vector<Company> subCompanies;  Maybe later
 	// Power consumption...
 
-	Attribute name;
-	Attribute description;
+	StringAttribute name;
+	StringAttribute description;
+	std::string compId;
 
 	bool isTarget; // If true, other booleans discared
 	//Maybe put on individual elements (servers, characters, ...)
@@ -30,16 +33,17 @@ private:
 
 	
 	std::vector<Character> characters;
-	Attribute nbCharacters;
-	Attribute renown; // -> Better missions, publishing zeroDays, being politically engaged or claiming hack makes you famous (not always a good thing) 
-	Attribute balance;
-	Attribute acheivedWhite;
-	Attribute acheivedGrey;
-	Attribute acheivedBlack;
+	std::vector<Mission> missions;
+	IntAttribute nbCharacters;
+	IntAttribute renown; // -> Better missions, publishing zeroDays, being politically engaged or claiming hack makes you famous (not always a good thing) 
+	IntAttribute balance;
+	IntAttribute acheivedWhite;
+	IntAttribute acheivedGrey;
+	IntAttribute acheivedBlack;
 
 	//Moneymoney
-	Attribute dollars;
-	Attribute bitcoins;
+	IntAttribute dollars;
+	IntAttribute bitcoins;
 	TechTree technologyTree;
 
 public:
@@ -52,16 +56,18 @@ public:
 	Character* getCharacter(int index);
 	void addCharacter(Character *pChar);
 	void createTechTree();
-	int getNbCharacters();
+	int getNbCharacters() const { return characters.size(); }
 	void displayStatistics();
 	//void displayAllMissions();
 	//std::vector<Mission*> getRunningMissions();
 	//void updateActivities(const long long elapsed);
 	void updateActivities(std::chrono::microseconds elapsed);
 
-	bool isAllowedScan();
-	bool isAllowedExploit();
-	bool isAllowedPostExploit();
+	bool isAllowedScan() const;
+	bool isAllowedExploit() const;
+	bool isAllowedPostExploit() const;
+
+	static std::string generateUniqueId();
 
 };
 

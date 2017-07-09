@@ -8,7 +8,9 @@
 #include "Attribute.h"
 #include "Activity.h"
 #include "Entity.h"
-
+#include "StringAttribute.h"
+#include "IntAttribute.h"
+#include "LevelAttribute.h"
 
 
 //Ajouter un truc pour gérer le sommeil et la fatigue et un truc pour voir ses mails
@@ -25,26 +27,26 @@ private:
 	enum eGender gender;
 	bool playable;
 
-	Attribute name;
+	StringAttribute name;
 	std::vector<Activity> possibleActivities;
 	int currentActivityIndex;
 
-	Attribute renown;
-	Attribute balance;
-	Attribute acheivedWhite; //Nb missions finished in domain
-	Attribute acheivedGrey;
-	Attribute acheivedBlack;
+	IntAttribute renown;
+	IntAttribute balance;
+	IntAttribute acheivedWhite; //Nb missions finished in domain
+	IntAttribute acheivedGrey;
+	IntAttribute acheivedBlack;
 	
-	Attribute xpGlobal;
-	Attribute xpWhite;
-	Attribute xpGrey;
-	Attribute xpBlack;
-	Attribute xpRecon;
-	Attribute xpScan;
-	Attribute xpExploit;
-	Attribute xpPostExploit;
+	IntAttribute xpGlobal;
+	IntAttribute xpWhite;
+	IntAttribute xpGrey;
+	IntAttribute xpBlack;
+	IntAttribute xpRecon;
+	IntAttribute xpScan;
+	IntAttribute xpExploit;
+	IntAttribute xpPostExploit;
 
-	Attribute level_global;
+	LevelAttribute level_global;
 
 	/*Attribute level_recon;
 	Attribute level_scan;
@@ -67,19 +69,19 @@ public:
 	void setName(std::string pName);
 	void setGender(enum eGender pGender);
 
-	std::string getName();
+	std::string getName() const;
 	//void affectMission(Mission* pMission);
 	//void startMission(int pIndex);
 	//void displayMissions();
 	//Mission* getCurrentMission();
 
-	void addPossibleActivity(Activity* pAct);
-	void setCurrentActivity(int pIndex);
+	void addPossibleActivity(const Activity* pAct);
+	void setCurrentActivity(const int pIndex);
 	Activity* getCurrentActivity();
-	int getCurrentActivityIndex();
+	int getCurrentActivityIndex() const;
 	void updateActivity(std::chrono::microseconds elapsed);
 	void getActivityPoints(Activity *pAct);
-	bool isDoingSomething();
+	bool isDoingSomething() const;
 
 
 

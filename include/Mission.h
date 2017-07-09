@@ -21,6 +21,8 @@
 
 //class Company;
 
+class Company;
+
 class Mission
 {
 
@@ -30,6 +32,8 @@ private:
 
 	Character *assignedTo;
 	Character *applicant;
+
+	std::vector<Entity*> sponsor;
 	std::vector<std::shared_ptr<Company>> targetArray;
 	std::vector<Company*> companiesDoing; // Can be shared for COOP 
 

@@ -34,14 +34,16 @@ UIButton::UIButton(sf::Font* pFont, sf::Color pColor, sf::Vector2f pPosition, sf
 	clickable = true;
 	size = pSize;
 	position = pPosition;
-	addBackgroundRect(sf::Color::Black, sf::Color(228, 71, 98));
+	//addBackgroundRect(sf::Color::Black, sf::Color(228, 71, 98));
+	addBackgroundRect(sf::Color::Black, sf::Color::White);
 	textPosition = background.getTextPosition();
 	text.setPosition(textPosition);
 	text.setFont(*font);
 	/*std::cout << "COUCOU BBOBO:::::" << pString << std::endl;
 	std::cout << "Init font adress : " << &font << std::endl;
 	std::cout << "Font Family From UIButton : " << pFont.getInfo().family << " / " << text.getFont()->getInfo().family << std::endl;*/
-	addHoverState(sf::Color(113, 248, 192), sf::Color::Black, sf::Color(113, 248, 192));
+	//addHoverState(sf::Color(113, 248, 192), sf::Color::Black, sf::Color(113, 248, 192));
+	addHoverState(sf::Color::Black, sf::Color::White, sf::Color(113, 248, 192));
 }
 
 UIButton::~UIButton()

@@ -23,9 +23,9 @@ std::ostream& operator<< (std::ostream& stream, Level &pLevel) {
 	return stream;
 }
 
-int Level::getIndex() {	return levelNumber; }
-std::string Level::getLabel() { return label; }
-int Level::getLevelXpForNext() { return xpForNext; }
+int Level::getIndex() const { return levelNumber; }
+std::string Level::getLabel() const { return label; }
+int Level::getLevelXpForNext() const { return xpForNext; }
 bool Level::isNull() {
 	if (label.empty() || xpForNext == NULL || levelNumber == NULL) return true;
 	else return false;
