@@ -6,15 +6,13 @@ void ClrScrn(char attrib) {
 	const int COLS = 80;
 	COORD pos = { 0, 0 };
 	DWORD written;
-	unsigned size;
 	CHAR_INFO disp[ROWS][COLS];
-	HANDLE console;
-	console = GetStdHandle(STD_OUTPUT_HANDLE);
+	auto console = GetStdHandle(STD_OUTPUT_HANDLE);
 	//COORD size = { COLS, ROWS };
 	COORD src = { 0, 0 };
 	SMALL_RECT  dest = { 0, 0, COLS, ROWS };
 
-	size = ROWS * COLS;
+	unsigned size = ROWS * COLS;
 
 	FillConsoleOutputCharacter(console, ' ', size, pos, &written);
 	FillConsoleOutputAttribute(console, attrib, size, pos, &written);
@@ -48,13 +46,13 @@ PlayingState::PlayingState()
 
 PlayingState::~PlayingState()
 {
-	for (Company* cmp : playerCompanies) {
+	for (auto cmp : playerCompanies) {
 		delete(cmp);
 	}
-	for (Company* cmp : companies) {
+	for (auto cmp : companies) {
 		delete(cmp);
 	}
-	for (Mission* m : missions) {
+	for (auto m : missions) {
 		delete(m);
 	}
 }
@@ -83,6 +81,11 @@ GameState* PlayingState::update(std::chrono::microseconds elapsed) {
 	updateActivities(elapsed);
 	//displayMissionsOfCharacter(playerCompanies.at(0).getCharacter(0));
 	playerCompanies.at(0)->getCharacter(0)->displayStatistics();
+	if (!playerCompanies.at(0)->getCharacter(0)->isDoingSomething()) {
+		auto actMenu = window->createActivityMenu();
+		window->clearComponents();
+		window->addComponent(actMenu);
+	}
 	return nullptr;
 }
 void PlayingState::draw() {
@@ -156,7 +159,7 @@ void PlayingState::setCurrentMissionOf(Character *pChar, Mission *pMission) {
 	pMission->setCurrent(true);
 }
 
-Mission* PlayingState::getCurrentMissionOf(Character *pChar) {
+Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 	Mission* current = nullptr;
 	for (int i = 0; i < missions.size(); i++) {
 		if (missions.at(i)->getCharacterAssigned() == pChar && missions.at(i)->isCurrent()) {

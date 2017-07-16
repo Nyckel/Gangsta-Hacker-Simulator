@@ -6,10 +6,11 @@
 MainWindow::MainWindow()
 {
 	//window = new sf::RenderWindow(sf::VideoMode(800, 600), "Gangsta Hacker Simulator 1.0");
-	window = new sf::RenderWindow(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0");
-	window->setPosition(sf::Vector2i(0, 0));
-	window->setFramerateLimit(60);
-	window->setKeyRepeatEnabled(false);
+	sf::RenderWindow window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0");
+	tgui::Gui gui{ window };
+	window.setPosition(sf::Vector2i(0, 0));
+	window.setFramerateLimit(60);
+	window.setKeyRepeatEnabled(false);
 	dummyComponent = new Component();
 	hoveredClickableComponent = dummyComponent;
 	componentsAtLevel = std::vector<std::vector<Component*>>();
@@ -32,7 +33,7 @@ MainWindow::~MainWindow()
 void MainWindow::update() {
 	//window->clear(sf::Color(52, 152, 219));
 	sf::Color windowBackgroundColor = sf::Color::Black;// sf::Color(44, 62, 80, 1.0);// sf::Color(10, 10, 10);
-	window->clear(windowBackgroundColor);
+	window.clear(windowBackgroundColor);
 
 	//for (int i = 0; i < components.size(); i++) {
 	//	components.at(i)->draw(window);
@@ -42,7 +43,7 @@ void MainWindow::update() {
 			comp->draw(window);
 		}
 	}
-	window->display();
+	window.display();
 }
 
 
@@ -136,7 +137,7 @@ Menu* MainWindow::createMainMenu() {
 
 	dummyComponent = new Component();
 
-	sf::Vector2f buttonSize = sf::Vector2f(window->getSize().x - 100, window->getSize().y / 6);
+	sf::Vector2f buttonSize = sf::Vector2f(window.getSize().x - 100, window.getSize().y / 6);
 	//Start Menu
 	//std::vector<std::string> menuOptions;
 	std::vector<std::pair<std::string, std::function<void()>* >> menuParams;
@@ -152,7 +153,7 @@ Menu* MainWindow::createMainMenu() {
 	//menuOptions.push_back("Options");
 	//menuOptions.push_back("Exit");
 	//Menu* startMenu = new Menu(menuOptions, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window->getSize().y * 1 / 3));
-	Menu* startMenu = new Menu(menuParams, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window->getSize().y * 1 / 3));
+	Menu* startMenu = new Menu(menuParams, "Gangsta Hacker Simulator", titleFont, sf::Color(228, 71, 98), buttonSize, 30, 10, sf::Vector2f(50, window.getSize().y * 1 / 3));
 	startMenu->setName("Main Game Menu");
 	return startMenu;
 	//addComponent(startMenu);
@@ -162,10 +163,10 @@ Menu* MainWindow::createMainMenu() {
 
 void MainWindow::handleEvents() {
 	sf::Event event;
-	while (window->pollEvent(event)) {
+	while (window.pollEvent(event)) {
 		switch (event.type) {
 			case sf::Event::Closed: {
-				window->close();
+				window.close();
 				break;
 			}
 			case sf::Event::MouseMoved: {
@@ -234,7 +235,7 @@ void MainWindow::handleEvents() {
 std::vector<sf::Event> MainWindow::getEvents() {
 	std::vector<sf::Event> events;
 	sf::Event event;
-	while (window->pollEvent(event)) {
+	while (window.pollEvent(event)) {
 		events.push_back(event);
 	}
 
@@ -242,7 +243,7 @@ std::vector<sf::Event> MainWindow::getEvents() {
 }
 
 void MainWindow::close() {
-	window->close();
+	window.close();
 }
 
 std::vector<Component*>* MainWindow::getHoveredComponents() {
@@ -298,4 +299,41 @@ Component* MainWindow::getDummyComponent() {
 
 std::vector<std::vector<Component*>>* MainWindow::getComponentsByLevel() {
 	return &componentsAtLevel;
+}
+
+Menu* MainWindow::createActivityMenu() {
+
+	sf::Font* titleFont = new sf::Font();
+	titleFont->loadFromFile("ressources/fonts/SourceCodePro-Regular.ttf");
+
+	dummyComponent = new Component();
+
+	sf::Vector2f buttonSize = sf::Vector2f(window.getSize().x - 300, window.getSize().y / 10);
+	std::vector<std::pair<std::string, std::function<void()>* >> menuParams;
+
+	std::function<void()> func = [this]() { hoveredClickableComponent->printName(); };
+	std::function<void()> funcExit = [this]() { std::cout << "Exiting game" << std::endl; };
+	std::function<void()> funcPlay = [this]() { std::cout << "Playing game" << std::endl; };
+	menuParams.push_back({ "Play", &funcPlay }); //Except here we will point to unhautorized memory
+	menuParams.push_back({ "Options", &func });
+	menuParams.push_back({ "Exit", &funcExit });
+
+	Menu* startMenu = new Menu(menuParams, "Activities", titleFont, sf::Color(228, 71, 98), buttonSize, 20, 5, sf::Vector2f(50, window.getSize().y * 1 / 3));
+	startMenu->setName("Game Menu");
+	return startMenu;
+	//addComponent(startMenu);
+}
+
+void MainWindow::clearComponents()
+{
+	nbElementsInHoverState = 0;
+	hoveredClickableComponent = nullptr;
+	dummyComponent = nullptr;
+	for (auto elt : hoveredComponents)
+		delete elt;
+	for (auto elt : components)
+		delete elt;
+	for (auto level : componentsAtLevel)
+		for (auto elt : level)
+			delete elt;
 }

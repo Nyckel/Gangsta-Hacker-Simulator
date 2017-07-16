@@ -25,14 +25,14 @@ public:
 	virtual void hoverState();
 	virtual void normalState();
 
-	virtual bool isInHoverState();
+	virtual bool isInHoverState() const;
 	virtual bool isCursorHover(sf::Vector2f pCursorPosition);
-	bool hasHoverState();
-	bool isClickable();
+	bool hasHoverState() const;
+	bool isClickable() const;
 	void setClickable(bool pClickable);
 
-	virtual void draw(sf::RenderWindow *pWindow);
-	std::string getName();
+	virtual void draw(const sf::RenderWindow& pWindow);
+	std::string getName() const;
 	void printName();
 	void setName(std::string pName);
 	void setColor(sf::Color pColor);

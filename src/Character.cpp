@@ -191,7 +191,7 @@ void Character::setCurrentActivity(int pIndex) {
 	}
 }
 Activity* Character::getCurrentActivity() {
-	if (&currentActivityIndex != nullptr) {
+	if (currentActivityIndex != -1) {
 		if (possibleActivities.size() > currentActivityIndex) {
 			return &(possibleActivities.at(currentActivityIndex));
 		}
@@ -201,6 +201,7 @@ Activity* Character::getCurrentActivity() {
 int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
+	std::cout << "CurrentActivityIndex debbut : " << currentActivityIndex << std::endl;
 	if (currentActivityIndex != -1) {
 		Activity* currentActivity = &possibleActivities.at(currentActivityIndex);
 		currentActivity->update(elapsed);//Things are discovered in updateActivity() in a function using randomness and skills or only time (conf)	
@@ -212,6 +213,8 @@ void Character::updateActivity(std::chrono::microseconds elapsed){
 			// Advance missions status
 			
 			//deletePossibleActivity(currentActivityIndex);
+			std::cout << "Current activity finished, currentActivityIndex: "<< currentActivityIndex << std::endl;
+			system("pause");
 			currentActivityIndex = -1;
 		}
 	}
@@ -248,6 +251,7 @@ void Character::getActivityPoints(Activity *pAct) {
 
 	checkLevels();
 	//Update levels and orientation(w/g/b)
+	currentActivityIndex = -1;
 
 }
 

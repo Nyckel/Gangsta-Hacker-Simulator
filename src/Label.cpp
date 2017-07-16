@@ -57,7 +57,7 @@ Label::Label(sf::Font *pFont, sf::Color pColor, sf::Vector2f pPosition, std::str
 	std::cout << pString << std::endl;
 	std::cout << "113 Font adress from draw : " << &font << std::endl;
 }
-Label::Label(sf::Font* pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow) {
+Label::Label(sf::Font* pFont, sf::Color pColor, std::string pString, int characterSize, const sf::RenderWindow& pWindow) {
 	/*background = NULL;
 	overState = NULL;*/
 	isinhoverstate = false;
@@ -72,8 +72,8 @@ Label::Label(sf::Font* pFont, sf::Color pColor, std::string pString, int charact
 	text.setFillColor(pColor);
 	text.setCharacterSize(characterSize);
 
-	int positionX = (int) pWindow->getSize().x / 2 - text.getGlobalBounds().width / 2;
-	int positionY = (int) pWindow->getSize().y / 2 - text.getGlobalBounds().height / 2;
+	int positionX = (int) pWindow.getSize().x / 2 - text.getGlobalBounds().width / 2;
+	int positionY = (int) pWindow.getSize().y / 2 - text.getGlobalBounds().height / 2;
 
 	text.setPosition(positionX, positionY);
 	std::cout << "112 Font adress from draw : " << &font << std::endl;

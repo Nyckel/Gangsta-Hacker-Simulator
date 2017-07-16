@@ -41,8 +41,8 @@ public:
 	void start();
 	void update(std::chrono::microseconds pElapsed);
 	
-	std::string getName();
-	eActType getType();
+	std::string getName() const;
+	eActType getType() const;
 	eOrientation getOrientation();
 
 	int getXp();// How is an activity grey ? Research, dev, hardwareInstall..

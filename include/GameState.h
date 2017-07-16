@@ -1,6 +1,7 @@
 #pragma once
 #include "SFML\Graphics.hpp"
 #include "MainWindow.h"
+#include "World.h"
 #include <chrono>
 
 /*
@@ -17,6 +18,7 @@ class GameState
 protected:
 	GameState() {};
 	MainWindow* window;
+	World world;
 
 public:
 

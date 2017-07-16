@@ -5,6 +5,7 @@ project(GHS)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/extlibs/find/")
 
 add_subdirectory(extlibs/build/json)
+add_subdirectory(extlibs/build/TGUI)
 
 file(GLOB PG_GHS include/*.h)
 file(GLOB HD_GHS src/*.cpp)
@@ -18,7 +19,7 @@ include_directories(${SFML_INCLUDE_DIR})
 add_executable(GHS ${PG_GHS} ${HD_GHS})
 
 
-target_link_libraries(GHS jsoncpp)
+target_link_libraries(GHS jsoncpp tgui)
 if(SFML_FOUND)
     target_link_libraries(GHS ${EXECUTABLE_NAME} ${SFML_LIBRARIES})
 endif()

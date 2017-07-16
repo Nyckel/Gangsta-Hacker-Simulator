@@ -12,7 +12,7 @@ Activity::Activity()
 	allowed = false;
 	duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(5));
 	std::cout << "Activity will last " << duration.count() << std::endl;
-	//system("pause");
+	system("pause");
 }
 
 
@@ -29,6 +29,7 @@ void Activity::update(std::chrono::microseconds pElapsed) {
 	elapsed += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startTime);
 	//elapsed += pElapsed;
 	std::cout << "Updating activity  (+" << pElapsed.count() << ") to " << elapsed.count() << std::endl;
+	std::cout << "Time left: " << duration.count() - elapsed.count() << std::endl;
 	//system("pause");
 	//Random things that can happen in the activity,
 	// bug in dev, new thing discovered while recon...
@@ -47,8 +48,8 @@ void Activity::update(std::chrono::microseconds pElapsed) {
 	}
 }
 
-std::string Activity::getName() { return name; }
-eActType Activity::getType(){ return typeAct;}
+std::string Activity::getName() const { return name; }
+eActType Activity::getType() const { return typeAct;}
 eOrientation Activity::getOrientation() { return orientation; }
 
 int Activity::getXp() { return xp; }

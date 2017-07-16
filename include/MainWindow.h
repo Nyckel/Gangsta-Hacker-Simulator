@@ -9,6 +9,7 @@
 #include "SFML\Graphics.hpp"
 #include "Label.h"
 #include "Menu.h"
+#include <TGUI/TGUI.hpp>
 
 
 class MainWindow
@@ -19,7 +20,7 @@ private:
 	Component* hoveredClickableComponent;
 	Component* dummyComponent;
 	std::vector<Component*> hoveredComponents;
-	sf::RenderWindow* window;
+	sf::RenderWindow window;
 	std::vector<Component*> components;
 	std::vector<std::vector<Component*>> componentsAtLevel;
 
@@ -41,5 +42,9 @@ public:
 	Component** getHoveredClickable();
 	Component* getDummyComponent();
 	std::vector<std::vector<Component*>>* getComponentsByLevel();
+	void clearComponents();
+
+	Menu* createActivityMenu();
+
 };
 

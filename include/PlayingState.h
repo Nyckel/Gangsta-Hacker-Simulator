@@ -16,7 +16,7 @@ private:
 	
 	Company* createCompany();
 	void setCurrentMissionOf(Character *pChar, Mission *pMission);
-	Mission* getCurrentMissionOf(Character *pChar);
+	Mission* getCurrentMissionOf(const Character* pChar);
 	void updateActivities(std::chrono::microseconds elapsed);
 
 	//Tests
@@ -37,16 +37,16 @@ public:
 	PlayingState();
 	~PlayingState();
 
-	void init();
-	void cleanUp();
+	void init() override;
+	void cleanUp() override;
 
-	void pause();
-	void resume();
+	void pause() override;
+	void resume() override;
 
-	void handleEvents();
-	GameState* update(std::chrono::microseconds elapsed);
+	void handleEvents() override;
+	GameState* update(std::chrono::microseconds elapsed) override;
 	void displayMissionsOfCharacter(Character *pChar);
 	int getNbOfMissionsFor(Character *pChar);
-	void draw();
+	void draw() override;
 };
 

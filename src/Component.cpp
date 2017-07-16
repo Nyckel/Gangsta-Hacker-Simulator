@@ -12,7 +12,7 @@ Component::~Component()
 {
 }
 
-bool Component::hasHoverState()
+bool Component::hasHoverState() const
 {
 	return hashoverstate;
 }
@@ -23,7 +23,7 @@ void Component::hoverState(){
 void Component::normalState() {
 	isinhoverstate = false;
 }
-bool Component::isInHoverState() {
+bool Component::isInHoverState() const {
 	return isinhoverstate;
 }
 
@@ -33,15 +33,15 @@ bool Component::isCursorHover(sf::Vector2f pCursorPosition)
 	//std::cout << "In function isCursorHover of Component" << std::endl;
 	return false;
 }
-bool Component::isClickable() { return clickable; }
+bool Component::isClickable() const { return clickable; }
 void Component::setClickable(bool pClickable) { clickable = pClickable; }
-void Component::draw(sf::RenderWindow * pWindow)
+void Component::draw(const sf::RenderWindow & pWindow)
 {
 	//For debug purpose
 	//std::cout << "In function draw of Component" << std::endl;
 }
 
-std::string Component::getName() {
+std::string Component::getName() const{
 	return name;
 }
 void Component::setName(std::string pName) {

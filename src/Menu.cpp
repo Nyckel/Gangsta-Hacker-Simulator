@@ -55,7 +55,7 @@ void Menu::build() {
 
 }
 
-void Menu::draw(sf::RenderWindow* pWindow)
+void Menu::draw(const sf::RenderWindow& pWindow)
 {
 	if (&childElements != nullptr) {
 		for (Component* bob : childElements) {

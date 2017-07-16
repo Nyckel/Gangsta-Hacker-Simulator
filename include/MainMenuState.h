@@ -15,13 +15,13 @@ public:
 	MainMenuState(MainWindow* pWindow);
 	~MainMenuState();
 
-	void init();
-	void cleanUp();
+	void init() override;
+	void cleanUp() override;
 
-	void pause();
-	void resume();
+	void pause() override;
+	void resume() override;
 
-	void handleEvents();
-	GameState* update(std::chrono::microseconds elapsed);
-	void draw();
+	void handleEvents() override;
+	GameState* update(std::chrono::microseconds elapsed) override;
+	void draw() override;
 };

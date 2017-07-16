@@ -23,7 +23,7 @@ public:
 	Label(sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
 	Label(sf::Font *pFont, sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
 	Label(sf::Font *pFont, sf::Color pColor, sf::Vector2f pPosition, std::string pString, int characterSize);
-	Label(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow);
+	Label(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, const sf::RenderWindow& pWindow);
 
 
 	~Label();
