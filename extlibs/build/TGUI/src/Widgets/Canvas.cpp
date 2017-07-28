@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -34,33 +34,26 @@ namespace tgui
     Canvas::Canvas(const Layout2d& size)
     {
         m_callback.widgetType = "Canvas";
+        m_type = "Canvas";
 
         setSize(size);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Canvas::Canvas(const Layout& width, const Layout& height) :
-        Canvas{Layout2d{width, height}}
+    Canvas::Canvas(const Canvas& other) :
+        ClickableWidget{other}
     {
+        setSize(other.getSize());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Canvas::Canvas(const Canvas& canvasToCopy) :
-        ClickableWidget{canvasToCopy}
-    {
-        setSize(canvasToCopy.getSize());
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Canvas& Canvas::operator= (const Canvas& right)
+    Canvas& Canvas::operator=(const Canvas& right)
     {
         if (this != &right)
         {
             ClickableWidget::operator=(right);
-
             setSize(right.getSize());
         }
 
@@ -76,21 +69,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Canvas::Ptr Canvas::copy(Canvas::ConstPtr canvas)
+    Canvas::Ptr Canvas::copy(ConstPtr canvas)
     {
         if (canvas)
             return std::static_pointer_cast<Canvas>(canvas->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Canvas::setPosition(const Layout2d& position)
-    {
-        Widget::setPosition(position);
-
-        m_sprite.setPosition(getPosition());
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +91,7 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Canvas::clear(const Color& color)
+    void Canvas::clear(Color color)
     {
         m_renderTexture.clear(color);
     }
@@ -122,7 +105,7 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Canvas::draw(const sf::Vertex* vertices, unsigned int vertexCount, sf::PrimitiveType type, const sf::RenderStates& states)
+    void Canvas::draw(const sf::Vertex* vertices, size_t vertexCount, sf::PrimitiveType type, const sf::RenderStates& states)
     {
         m_renderTexture.draw(vertices, vertexCount, type, states);
     }
@@ -136,17 +119,19 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Canvas::setOpacity(float opacity)
+    void Canvas::rendererChanged(const std::string& property)
     {
-        Widget::setOpacity(opacity);
+        Widget::rendererChanged(property);
 
-        m_sprite.setColor({m_sprite.getColor().r, m_sprite.getColor().g, m_sprite.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
+        if (property == "opacity")
+            m_sprite.setColor(Color::calcColorOpacity(sf::Color::White, getRenderer()->getOpacity()));
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Canvas::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
+        states.transform.translate(getPosition());
         target.draw(m_sprite, states);
     }
 

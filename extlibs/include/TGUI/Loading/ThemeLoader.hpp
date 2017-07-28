@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,17 +27,17 @@
 #define TGUI_THEME_LOADER_HPP
 
 
-#include <TGUI/Widget.hpp>
-
+#include <TGUI/Config.hpp>
+#include <SFML/System/String.hpp>
 #include <memory>
 #include <string>
 #include <vector>
 #include <map>
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 namespace tgui
 {
-    class Widget;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Base class for theme loader implementations
     ///
@@ -46,9 +46,6 @@ namespace tgui
     {
     public:
 
-        using PropertyValuePairs = std::map<std::string, std::string>;
-
-
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Virtual destructor
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,18 +53,29 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Load the property-value pairs from the theme
+        /// @brief Optionally already do some work when only the primary parameter is known yet
+        ///
+        /// @param primary    Primary parameter of the loader (filename of the theme file in DefaultThemeLoader)
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        virtual void preload(const std::string& primary);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Loads the property-value pairs from the theme
         ///
         /// @param primary    Primary parameter of the loader
         /// @param secondary  Secondary parameter of the loader
-        /// @param properties Empty map op property-value pairs that will be filled by this function
         ///
-        /// For the default loader, the primary parameter is the filename while the secondary parameter is the class name.
+        /// For the default loader, the primary parameter is the filename while the secondary parameter is the section name.
         ///
-        /// @return Type of the widget
+        /// @return Map op property-value pairs
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::string load(const std::string& primary, const std::string& secondary, PropertyValuePairs& properties) = 0;
+        virtual const std::map<sf::String, sf::String>& load(const std::string& primary, const std::string& secondary) = 0;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     };
 
 
@@ -85,23 +93,33 @@ namespace tgui
     public:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Load the property-value pairs from the theme file
+        /// @brief Loads the theme file in cache
+        ///
+        /// @param filename  Filename of the theme file to load
+        ///
+        /// @exception Exception when finding syntax errors in the file
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void preload(const std::string& filename) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Loads the property-value pairs from the theme file
         ///
         /// @param filename   Filename of the theme file
-        /// @param className  Name of the class inside the theme file (equals widget type when no class is given)
-        /// @param properties Empty map op property-value pairs that will be filled by this function
+        /// @param section    Name of the section inside the theme file
         ///
-        /// @return Type of the widget
+        /// @return Map of property-value pairs
         ///
         /// @exception Exception when finding syntax errors in the file
         /// @exception Exception when file did not contain requested class name
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::string load(const std::string& filename, const std::string& className, PropertyValuePairs& properties);
+        const std::map<sf::String, sf::String>& load(const std::string& filename, const std::string& section) override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Empty the caches and force files to be reloaded.
+        /// @brief Empties the caches and force files to be reloaded.
         ///
         /// @param filename  File to remove from cache.
         ///                  If no filename is given, the entire cache is cleared.
@@ -125,10 +143,9 @@ namespace tgui
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private:
-        static std::map<std::string, std::map<std::string, PropertyValuePairs>> m_propertiesCache;
-        static std::map<std::string, std::map<std::string, std::string>> m_widgetTypeCache;
+        static std::map<std::string, std::map<std::string, std::map<sf::String, sf::String>>> m_propertiesCache;
 
-        friend struct DefaultThemeLoaderTest;
+        friend struct DefaultThemeLoaderTest; // Used for testing m_propertiesCache
     };
 
 

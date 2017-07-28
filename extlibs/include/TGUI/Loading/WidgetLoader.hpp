@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,7 +27,6 @@
 #define TGUI_WIDGET_LOADER_HPP
 
 
-#include <TGUI/Loading/WidgetConverter.hpp>
 #include <TGUI/Loading/DataIO.hpp>
 #include <TGUI/Container.hpp>
 
@@ -42,11 +41,11 @@ namespace tgui
     class TGUI_API WidgetLoader
     {
     public:
-        using LoadFunction = std::function<Widget::Ptr(std::shared_ptr<DataIO::Node>)>;
+        using LoadFunction = std::function<Widget::Ptr(std::shared_ptr<DataIO::Node>, Widget::Ptr)>;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Load a container and its child widgets from a stream containing a widget file
+        /// @brief Loads a container and its child widgets from a stream containing a widget file
         ///
         /// @param parent  The parent container for the child widget
         /// @param stream  Stream containing the widget file
@@ -59,7 +58,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the load function for a certain widget type
+        /// @brief Changes the load function for a certain widget type
         ///
         /// @param type         Type of the widget
         /// @param loadFunction New load function
@@ -69,7 +68,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Retrieve the load function of a certain widget type
+        /// @brief Retrieves the load function of a certain widget type
         ///
         /// @param type  Type of the widget
         ///

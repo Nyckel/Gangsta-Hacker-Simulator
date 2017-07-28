@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -29,14 +29,13 @@
 
 #include <TGUI/Container.hpp>
 #include <TGUI/Widgets/Button.hpp>
-#include <TGUI/Widgets/Label.hpp>
+#include <TGUI/Renderers/ChildWindowRenderer.hpp>
+#include <limits>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
-    class ChildWindowRenderer;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Child window widget
     ///
@@ -68,19 +67,19 @@ namespace tgui
         /// Title alignments, possible options for the setTitleAlignment function
         enum class TitleAlignment
         {
-            Left,   ///< Places the title on the left side of the title bar
+            Left, ///< Places the title on the left side of the title bar
             Center, ///< Places the title in the middle of the title bar
-            Right   ///< Places the title on the right side of the title bar
+            Right ///< Places the title on the right side of the title bar
         };
 
 
-        /// Title buttons (bitwise OR to combine)
-        enum TitleButtons
+        /// Title buttons (use bitwise OR to combine)
+        enum TitleButton
         {
-            None     = 0,      ///< No buttons
-            Close    = 1 << 0, ///< Include a close button
-            Minimize = 1 << 1, ///< Include a minimize button
-            Maximize = 1 << 2  ///< Include a maximize button
+            None = 0, ///< No buttons
+            Close = 1 << 0, ///< Include a close button
+            Maximize = 1 << 1, ///< Include a maximize button
+            Minimize = 1 << 2 ///< Include a minimize button
         };
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +94,7 @@ namespace tgui
         /// @return The new child window
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static ChildWindow::Ptr create();
+        static Ptr create();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,23 +105,23 @@ namespace tgui
         /// @return The new child window
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static ChildWindow::Ptr copy(ChildWindow::ConstPtr childWindow);
+        static Ptr copy(ConstPtr childWindow);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Returns the renderer, which gives access to functions that determine how the widget is displayed
         ///
-        /// @return Reference to the renderer
+        /// @return Temporary pointer to the renderer
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ChildWindowRenderer> getRenderer() const
+        ChildWindowRenderer* getRenderer() const
         {
-            return std::static_pointer_cast<ChildWindowRenderer>(m_renderer);
+            return aurora::downcast<ChildWindowRenderer*>(m_renderer.get());
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the position of the widget
+        /// @brief Sets the position of the widget
         ///
         /// This function completely overwrites the previous position.
         /// See the move function to apply an offset based on the previous position instead.
@@ -138,7 +137,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the child window.
+        /// @brief Changes the size of the child window
         ///
         /// @param size   Sets the new size of the child window
         ///
@@ -150,14 +149,14 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the size of the full child window.
+        /// @brief Returns the size of the full child window
         ///
         /// @return Size of the child window
         ///
         /// The size returned by this function is the size of the child window, including the title bar and the borders.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getFullSize() const override;
+        sf::Vector2f getFullSize() const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,27 +206,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the font of the text in the widget and its children.
-        ///
-        /// @param font  The new font.
-        ///
-        /// When you don't call this function then the font from the parent widget will be used.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setFont(const Font& font) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the opacity of the widget.
-        ///
-        /// @param opacity  The opacity of the widget. 0 means completely transparent, while 1 (default) means fully opaque.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setOpacity(float opacity) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the title that is displayed in the title bar of the child window.
+        /// @brief Changes the title that is displayed in the title bar of the child window
         ///
         /// @param title  New title for the child window
         ///
@@ -236,19 +215,16 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the title that is displayed in the title bar of the child window.
+        /// @brief Returns the title that is displayed in the title bar of the child window
         ///
         /// @return Title of the child window
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const sf::String& getTitle() const
-        {
-            return m_titleText.getText();
-        }
+        const sf::String& getTitle() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the title alignment.
+        /// @brief Changes the title alignment
         ///
         /// @param alignment  How should the title be aligned in the title bar?
         ///
@@ -257,15 +233,12 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the title alignment.
+        /// @brief Returns the title alignment
         ///
         /// @return How the title is aligned in the title bar
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        TitleAlignment getTitleAlignment() const
-        {
-            return m_titleAlignment;
-        }
+        TitleAlignment getTitleAlignment() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,8 +251,9 @@ namespace tgui
         /// @code
         /// childWindow->setTitleButtons(ChildWindow::TitleButtons::Minimize | ChildWindow::TitleButtons::Close);
         /// @endcode
+        ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleButtons(TitleButtons buttons);
+        void setTitleButtons(unsigned int buttons);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,46 +262,11 @@ namespace tgui
         /// @return Which buttons are available in the title bar
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        TitleButtons getTitleButtons() const
-        {
-            return m_titleButtons;
-        }
+        unsigned int getTitleButtons() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the text within the title bar buttons
-        ///
-        /// @param closeText     New text for the close button (default is "x")
-        /// @param minimizeText  New text for the minimize button (default is "-")
-        /// @param maximizeText  New text for the maximize button (default is "+")
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleButtonsText(const sf::String& closeText = "x", const sf::String& minimizeText = "-", const sf::String& maximizeText = "+");
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the icon in the top left corner of the child window.
-        ///
-        /// @param icon  the icon image
-        ///
-        /// There is no icon by default.
-        /// Set an empty texture to remove the icon.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setIcon(const Texture& icon);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the icon in the top left corner of the child window.
-        ///
-        /// @return the icon image
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const Texture& getIcon();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Destroys the window.
+        /// @brief Destroys the window
         ///
         /// When no callback is requested when closing the window, this function will be called automatically.
         ///
@@ -339,7 +278,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes whether the child window can be resized by dragging its borders or not.
+        /// @brief Changes whether the child window can be resized by dragging its borders or not
         ///
         /// @param resizable  Can the user change the size of the window by dragging one of the borders?
         ///
@@ -348,7 +287,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Check whether the child window can be resized by dragging its borders or not.
+        /// @brief Checks whether the child window can be resized by dragging its borders or not
         ///
         /// @return Can the user change the size of the window by dragging one of the borders?
         ///
@@ -357,105 +296,27 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the child window to be kept inside its parent.
+        /// @brief Sets the child window to be kept inside its parent
         ///
         /// @param enabled  When it's set to true, the child window will always be kept automatically inside its parent.
         ///                 It will be fully kept on left, right and top.
         ///                 At the bottom of the parent only the title bar will be kept inside.
-        ///                 It's set to false by default.
+        ///                 It's set to false by default
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         void keepInParent(bool enabled = true);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Tells whether the child window is kept inside its parent.
+        /// @brief Tells whether the child window is kept inside its parent
         ///
         /// @return  When it's set to true, the child window will always be kept automatically inside its parent.
         ///          It will be fully kept on left, right and top.
         ///          At the bottom of the parent only the title bar will be kept inside.
-        ///          It's set to false by default.
+        ///          It's set to false by default
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         bool isKeptInParent() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the close button
-        ///
-        /// @return closeButton  The new close button
-        ///
-        /// The close button should have no parent and you should no longer change it after calling this function.
-        /// The function is meant to be used like this:
-        /// @code
-        /// childWindow->setCloseButton(theme->load("CloseButton"));
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setCloseButton(Button::Ptr closeButton);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the close button
-        ///
-        /// @return close button of the child window
-        ///
-        /// You should not change this close button yourself.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Button::Ptr getCloseButton() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the minimize button
-        ///
-        /// @return minimizeButton  The new minimize button
-        ///
-        /// The minimize button should have no parent and you should no longer change it after calling this function.
-        /// The function is meant to be used like this:
-        /// @code
-        /// childWindow->setMinimizeButton(theme->load("MinimizeButton"));
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setMinimizeButton(Button::Ptr minimizeButton);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the minimize button
-        ///
-        /// @return minimize button of the child window
-        ///
-        /// You should not change this minimize button yourself.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Button::Ptr getMinimizeButton() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the maximize button
-        ///
-        /// @return maximizeButton  The new maximize button
-        ///
-        /// The maximize button should have no parent and you should no longer change it after calling this function.
-        /// The function is meant to be used like this:
-        /// @code
-        /// childWindow->setMaximizeButton(theme->load("MaximizeButton"));
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setMaximizeButton(Button::Ptr maximizeButton);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the maximize button
-        ///
-        /// @return maximize button of the child window
-        ///
-        /// You should not change this maximize button yourself.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Button::Ptr getMaximizeButton() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -465,109 +326,116 @@ namespace tgui
         /// @return Offset of the widgets in the container
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getChildWidgetsOffset() const override;
+        sf::Vector2f getChildWidgetsOffset() const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual bool mouseOnWidget(float x, float y) const override;
+        bool mouseOnWidget(sf::Vector2f pos) const override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void leftMousePressed(float x, float y) override;
+        void leftMousePressed(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void leftMouseReleased(float x, float y) override;
+        void leftMouseReleased(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseMoved(float x, float y) override;
+        void mouseMoved(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseWheelMoved(int delta, int x, int y) override;
+        void mouseWheelScrolled(float delta, int x, int y) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseNoLongerOnWidget() override;
+        void mouseNoLongerOnWidget() override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseNoLongerDown() override;
+        void mouseNoLongerDown() override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Draw the widget to a render target
+        ///
+        /// @param target Render target to draw to
+        /// @param states Current render states
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Reload the widget
+        // Updates the title bar texture, text and buttons after the title bar height has changed.
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void updateTitleBarHeight();
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Function called when one of the properties of the renderer is changed
         ///
-        /// @param primary    Primary parameter for the loader
-        /// @param secondary  Secondary parameter for the loader
-        /// @param force      Try to only change the looks of the widget and not alter the widget itself when false
-        ///
-        /// @throw Exception when the connected theme could not create the widget
-        ///
-        /// When primary is an empty string the built-in white theme will be used.
+        /// @param property  Lowercase name of the property that was changed
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void reload(const std::string& primary = "", const std::string& secondary = "", bool force = false) override;
+        void rendererChanged(const std::string& property) override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Makes a copy of the widget
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual Widget::Ptr clone() const override
+        Widget::Ptr clone() const override
         {
             return std::make_shared<ChildWindow>(*this);
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @internal
-        // Draws the widget on the render target.
+    private:
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+        // Signal handler from the title buttons. This function propagates the signal to the user if needed.
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void titleButtonPressed(const sf::String& signal);
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         enum ResizeDirection
         {
-            ResizeNone   = 0,
-            ResizeLeft   = 1,
-            ResizeTop    = 2,
-            ResizeRight  = 4,
+            ResizeNone = 0,
+            ResizeLeft = 1,
+            ResizeTop = 2,
+            ResizeRight = 4,
             ResizeBottom = 8
         };
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
-        Texture        m_iconTexture;
-
-        Label          m_titleText;
-        sf::Vector2f   m_draggingPosition;
-        sf::Vector2f   m_maximumSize;
-        sf::Vector2f   m_minimumSize;
+        Text m_titleText;
+        sf::Vector2f m_draggingPosition;
+        sf::Vector2f m_maximumSize = {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
+        sf::Vector2f m_minimumSize = {0, 0};
         TitleAlignment m_titleAlignment = TitleAlignment::Center;
-        TitleButtons   m_titleButtons = TitleButtons::Close;
-        sf::String     m_closeButtonText = "x";
-        sf::String     m_minimizeButtonText = "-";
-        sf::String     m_maximizeButtonText = "+";
+        unsigned int m_titleButtons = Close;
 
-        std::shared_ptr<Button> m_closeButton = std::make_shared<Button>();
-        std::shared_ptr<Button> m_minimizeButton = std::make_shared<Button>();
-        std::shared_ptr<Button> m_maximizeButton = std::make_shared<Button>();
+        std::shared_ptr<Button> m_closeButton;
+        std::shared_ptr<Button> m_minimizeButton;
+        std::shared_ptr<Button> m_maximizeButton;
 
         bool m_mouseDownOnTitleBar = false;
         bool m_keepInParent = false;
@@ -575,221 +443,17 @@ namespace tgui
         bool m_resizable = false;
         int m_resizeDirection = ResizeNone;
 
-        friend class ChildWindowRenderer;
+        Sprite m_spriteTitleBar;
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    };
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class TGUI_API ChildWindowRenderer : public WidgetRenderer, public WidgetBorders
-    {
-    public:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor
-        ///
-        /// @param childWindow  The child window that is connected to the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ChildWindowRenderer(ChildWindow* childWindow) : m_childWindow{childWindow} {}
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new serialized value that you like to assign to the property
-        ///
-        /// @throw Exception when deserialization fails or when the widget does not have this property.
-        /// @throw Exception when loading scrollbar fails with the theme connected to the list box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, const std::string& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new value that you like to assign to the property.
-        ///                  The ObjectConverter is implicitly constructed from the possible value types.
-        ///
-        /// @throw Exception for unknown properties or when value was of a wrong type.
-        /// @throw Exception when loading scrollbar fails with the theme connected to the list box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, ObjectConverter&& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Retrieve the value of a certain property
-        ///
-        /// @param property  The property that you would like to retrieve
-        ///
-        /// @return The value inside a ObjectConverter object which you can extract with the correct get function or
-        ///         an ObjectConverter object with type ObjectConverter::Type::None when the property did not exist.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual ObjectConverter getProperty(std::string property) const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get a map with all properties and their values
-        ///
-        /// @return Property-value pairs of the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::map<std::string, ObjectConverter> getPropertyValuePairs() const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the title bar
-        ///
-        /// @param color  New title bar color
-        ///
-        /// Note that this color is ignored when you set an image as title bar.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleBarColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the height of the title bar.
-        ///
-        /// @param height  New height of the title bar
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleBarHeight(float height);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the title that is displayed in the title bar of the child window.
-        ///
-        /// @param color  New title color for the child window
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the border color.
-        ///
-        /// @param borderColor  The color of the borders
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBorderColor(const Color& borderColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the borders.
-        ///
-        /// @param borders  The size of the borders
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setBorders(const Borders& borders) override;
-        using WidgetBorders::setBorders;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the distance between the title and the side of the title bar.
-        ///
-        /// @param distanceToSide  distance between the title and the side of the title bar
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setDistanceToSide(float distanceToSide);
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the distance between the title buttons if multiple exist.
-        ///
-        /// @param paddingBetweenButtons  distance between the title and the side of the title bar
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setPaddingBetweenButtons(float paddingBetweenButtons);
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the background color of the child window.
-        ///
-        /// @param backgroundColor  New background color
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundColor(const Color& backgroundColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image of the title bar
-        ///
-        /// @param texture  New title bar texture
-        ///
-        /// When this image is set, the title bar color property will be ignored.
-        /// Pass an empty string to unset the image, in this case the title bar color property will be used again.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTitleBarTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the renderer of the close button
-        ///
-        /// @return The close button renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ButtonRenderer> getCloseButton() const;
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the renderer of the minimize button
-        ///
-        /// @return The minimize button renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ButtonRenderer> getMinimizeButton() const;
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the renderer of the maximize button
-        ///
-        /// @return The maximize button renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ButtonRenderer> getMaximizeButton() const;
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Makes a copy of the renderer
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::shared_ptr<WidgetRenderer> clone(Widget* widget) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected:
-
-        ChildWindow* m_childWindow;
-
-        float        m_titleBarHeight = 0;
-        float        m_distanceToSide = 0;
-        float        m_paddingBetweenButtons = 3; // Pixels between buttons
-
-        Texture      m_textureTitleBar;
-
-        sf::Color    m_titleColor;
-        sf::Color    m_titleBarColor;
-
-        sf::Color    m_backgroundColor;
-        sf::Color    m_borderColor;
-
-        sf::String   m_closeButtonClassName = "";
-        sf::String   m_minimizeButtonClassName = "";
-        sf::String   m_maximizeButtonClassName = "";
-
-        friend class ChildWindow;
+        // Cached renderer properties
+        Borders m_bordersCached;
+        Color m_borderColorCached;
+        Color m_titleColorCached;
+        Color m_titleBarColorCached;
+        Color m_backgroundColorCached;
+        float m_titleBarHeightCached = 20;
+        float m_distanceToSideCached = 0;
+        float m_paddingBetweenButtonsCached = 0;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     };

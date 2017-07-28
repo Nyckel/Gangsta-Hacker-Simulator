@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -26,11 +26,10 @@
 #ifndef TGUI_CALLBACK_HPP
 #define TGUI_CALLBACK_HPP
 
-#include <map>
-#include <list>
-#include <functional>
-
-#include <TGUI/Global.hpp>
+#include <TGUI/Config.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/System/String.hpp>
+#include <string>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,11 +38,11 @@ namespace tgui
     class Widget;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Struct that tells more about the callback that happened.
+    // @brief Struct that tells more about the callback that happened
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     struct TGUI_API Callback
     {
-        // The callback id that was passed to the widget. It is used to identify from what widget the callback came from.
+        // The callback id that was passed to the widget. It is used to identify from what widget the callback came from
         unsigned int id = 0;
 
         // How did the callback occur?
@@ -65,8 +64,8 @@ namespace tgui
         sf::String itemId;
 
         // Only one of these things can be filled at a given time
-        bool         checked = false;
-        int          value = 0;
+        bool checked = false;
+        int value = 0;
         unsigned int index = 0;
         sf::Vector2f value2d;
         sf::Vector2f position;
@@ -79,4 +78,3 @@ namespace tgui
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // TGUI_CALLBACK_HPP
-

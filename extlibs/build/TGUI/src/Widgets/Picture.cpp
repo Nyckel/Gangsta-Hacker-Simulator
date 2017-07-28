@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -33,17 +33,10 @@ namespace tgui
 
     Picture::Picture()
     {
+        m_type = "Picture";
         m_callback.widgetType = "Picture";
 
         addSignal("DoubleClicked");
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Picture::Picture(const sf::String& filename, bool fullyClickable) :
-        Picture{}
-    {
-        setTexture(filename, fullyClickable);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,13 +49,6 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Picture::Ptr Picture::create(const char* filename, bool fullyClickable)
-    {
-        return create(Texture{sf::String{filename}}, fullyClickable);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     Picture::Ptr Picture::create(const Texture& texture, bool fullyClickable)
     {
         return std::make_shared<Picture>(texture, fullyClickable);
@@ -70,45 +56,31 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Picture::setTexture(const sf::String& filename, bool fullyClickable)
+    Picture::Ptr Picture::copy(ConstPtr picture)
     {
-        m_loadedFilename = getResourcePath() + filename;
-
-        setTexture(Texture{filename}, fullyClickable);
+        if (picture)
+            return std::static_pointer_cast<Picture>(picture->clone());
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Picture::setTexture(const Texture& texture, bool fullyClickable)
     {
-        sf::Vector2f size;
-        if (!m_texture.isLoaded())
-            setSize(texture.getSize());
+        if (!m_sprite.isSet())
+            setSize(texture.getImageSize());
 
         m_fullyClickable = fullyClickable;
-        m_texture = texture;
-        m_texture.setSize(getSize());
-        m_texture.setPosition(getPosition());
-        m_texture.setColor({m_texture.getColor().r, m_texture.getColor().g, m_texture.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
+        m_sprite.setTexture(texture);
+        m_sprite.setPosition(getPosition());
+        m_sprite.setOpacity(m_opacityCached);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Picture::Ptr Picture::copy(Picture::ConstPtr picture)
+    const sf::String& Picture::getLoadedFilename() const
     {
-        if (picture)
-            return std::static_pointer_cast<Picture>(picture->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Picture::setPosition(const Layout2d& position)
-    {
-        Widget::setPosition(position);
-
-        m_texture.setPosition(getPosition());
+        return m_sprite.getTexture().getId();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,37 +89,34 @@ namespace tgui
     {
         Widget::setSize(size);
 
-        m_texture.setSize(getSize());
+        m_sprite.setSize(getSize());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Picture::setSmooth(bool smooth)
     {
-        m_texture.setSmooth(smooth);
+        m_sprite.getTexture().setSmooth(smooth);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Picture::setOpacity(float opacity)
+    bool Picture::isSmooth() const
     {
-        Widget::setOpacity(opacity);
-
-        m_texture.setColor({m_texture.getColor().r, m_texture.getColor().g, m_texture.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
+        return m_sprite.getTexture().isSmooth();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool Picture::mouseOnWidget(float x, float y) const
+    bool Picture::mouseOnWidget(sf::Vector2f pos) const
     {
         // Check if the mouse is on top of the picture
-        if (sf::FloatRect{getPosition().x, getPosition().y, getSize().x, getSize().y}.contains(x, y))
+        if (sf::FloatRect{0, 0, getSize().x, getSize().y}.contains(pos))
         {
             // We sometimes want clicks to go through transparent parts of the picture
-            if (!m_fullyClickable && m_texture.isTransparentPixel(x, y))
+            if (!m_fullyClickable && m_sprite.isTransparentPixel(pos))
                 return false;
-            else
-                return true;
+            return true;
         }
 
         return false;
@@ -155,11 +124,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Picture::leftMouseReleased(float x, float y)
+    void Picture::leftMouseReleased(sf::Vector2f pos)
     {
         bool mouseDown = m_mouseDown;
 
-        ClickableWidget::leftMouseReleased(x, y);
+        ClickableWidget::leftMouseReleased(pos);
 
         if (mouseDown)
         {
@@ -168,9 +137,9 @@ namespace tgui
             {
                 m_possibleDoubleClick = false;
 
-                m_callback.mouse.x = static_cast<int>(x - getPosition().x);
-                m_callback.mouse.y = static_cast<int>(y - getPosition().y);
-                sendSignal("DoubleClicked", sf::Vector2f{x - getPosition().x, y - getPosition().y});
+                m_callback.mouse.x = static_cast<int>(pos.x);
+                m_callback.mouse.y = static_cast<int>(pos.y);
+                sendSignal("DoubleClicked", pos);
             }
             else // This is the first click
             {
@@ -178,6 +147,16 @@ namespace tgui
                 m_possibleDoubleClick = true;
             }
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Picture::rendererChanged(const std::string& property)
+    {
+        Widget::rendererChanged(property);
+
+        if (property == "opacity")
+            m_sprite.setOpacity(m_opacityCached);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +177,8 @@ namespace tgui
 
     void Picture::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        target.draw(m_texture, states);
+        states.transform.translate(getPosition());
+        m_sprite.draw(target, states);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -22,11 +22,12 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <TGUI/Clipboard.hpp>
-#include <TGUI/Widgets/ToolTip.hpp>
 #include <TGUI/Gui.hpp>
 #include <TGUI/DefaultFont.hpp>
+#include <TGUI/Clipboard.hpp>
+#include <TGUI/ToolTip.hpp>
 
+#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/OpenGL.hpp>
 
 #include <cassert>
@@ -38,20 +39,20 @@ namespace tgui
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Gui::Gui() :
-        m_window        (nullptr),
+        m_window(nullptr),
         m_accessToWindow(false)
     {
         m_container->m_focused = true;
 
-        sf::Font defaultFont;
-        if (defaultFont.loadFromMemory(defaultFontBytes, sizeof(defaultFontBytes)))
+        auto defaultFont = std::make_shared<sf::Font>();
+        if (defaultFont->loadFromMemory(defaultFontBytes, sizeof(defaultFontBytes)))
             setFont(defaultFont);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Gui::Gui(sf::RenderWindow& window) :
-        m_window        (&window),
+        m_window(&window),
         m_accessToWindow(true)
     {
         m_container->m_window = &window;
@@ -69,7 +70,7 @@ namespace tgui
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Gui::Gui(sf::RenderTarget& window) :
-        m_window        (&window),
+        m_window(&window),
         m_accessToWindow(false)
     {
         m_container->m_window = &window;
@@ -110,6 +111,13 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    sf::RenderTarget* Gui::getWindow() const
+    {
+        return m_window;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void Gui::setView(const sf::View& view)
     {
         if ((m_view.getCenter() != view.getCenter()) || (m_view.getSize() != view.getSize()))
@@ -126,21 +134,28 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    const sf::View& Gui::getView() const
+    {
+        return m_view;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     bool Gui::handleEvent(sf::Event event)
     {
         assert(m_window != nullptr);
 
         // Check if the event has something to do with the mouse
         if ((event.type == sf::Event::MouseMoved) || (event.type == sf::Event::TouchMoved)
-         || (event.type == sf::Event::MouseButtonPressed) || (event.type == sf::Event::TouchBegan)
-         || (event.type == sf::Event::MouseButtonReleased) || (event.type == sf::Event::TouchEnded)
-         || (event.type == sf::Event::MouseWheelMoved))
+            || (event.type == sf::Event::MouseButtonPressed) || (event.type == sf::Event::TouchBegan)
+            || (event.type == sf::Event::MouseButtonReleased) || (event.type == sf::Event::TouchEnded)
+            || (event.type == sf::Event::MouseWheelScrolled))
         {
             sf::Vector2f mouseCoords;
 
             switch (event.type)
             {
-                case sf::Event::MouseMoved:
+            case sf::Event::MouseMoved:
                 {
                     mouseCoords = m_window->mapPixelToCoords({event.mouseMove.x, event.mouseMove.y}, m_view);
                     event.mouseMove.x = static_cast<int>(mouseCoords.x + 0.5f);
@@ -148,8 +163,8 @@ namespace tgui
                     break;
                 }
 
-                case sf::Event::MouseButtonPressed:
-                case sf::Event::MouseButtonReleased:
+            case sf::Event::MouseButtonPressed:
+            case sf::Event::MouseButtonReleased:
                 {
                     mouseCoords = m_window->mapPixelToCoords({event.mouseButton.x, event.mouseButton.y}, m_view);
                     event.mouseButton.x = static_cast<int>(mouseCoords.x + 0.5f);
@@ -157,17 +172,17 @@ namespace tgui
                     break;
                 }
 
-                case sf::Event::MouseWheelMoved:
+            case sf::Event::MouseWheelScrolled:
                 {
-                    mouseCoords = m_window->mapPixelToCoords({event.mouseWheel.x, event.mouseWheel.y}, m_view);
-                    event.mouseWheel.x = static_cast<int>(mouseCoords.x + 0.5f);
-                    event.mouseWheel.y = static_cast<int>(mouseCoords.y + 0.5f);
+                    mouseCoords = m_window->mapPixelToCoords({event.mouseWheelScroll.x, event.mouseWheelScroll.y}, m_view);
+                    event.mouseWheelScroll.x = static_cast<int>(mouseCoords.x + 0.5f);
+                    event.mouseWheelScroll.y = static_cast<int>(mouseCoords.y + 0.5f);
                     break;
                 }
 
-                case sf::Event::TouchMoved:
-                case sf::Event::TouchBegan:
-                case sf::Event::TouchEnded:
+            case sf::Event::TouchMoved:
+            case sf::Event::TouchBegan:
+            case sf::Event::TouchEnded:
                 {
                     mouseCoords = m_window->mapPixelToCoords({event.touch.x, event.touch.y}, m_view);
                     event.touch.x = static_cast<int>(mouseCoords.x + 0.5f);
@@ -175,8 +190,8 @@ namespace tgui
                     break;
                 }
 
-                default:
-                    break;
+            default:
+                break;
             }
 
             // If a tooltip is visible then hide it now
@@ -265,11 +280,37 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    sf::Vector2f Gui::getSize() const
+    GuiContainer::Ptr Gui::getContainer() const
     {
-        assert(m_window != nullptr);
+        return m_container;
+    }
 
-        return sf::Vector2f{m_window->getSize()};
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Gui::setFont(const Font& font)
+    {
+        m_container->getRenderer()->setFont(font);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::shared_ptr<sf::Font> Gui::getFont() const
+    {
+        return m_container->getRenderer()->getFont();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const std::vector<Widget::Ptr>& Gui::getWidgets() const
+    {
+        return m_container->getWidgets();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const std::vector<sf::String>& Gui::getWidgetNames() const
+    {
+        return m_container->getWidgetNames();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -318,7 +359,7 @@ namespace tgui
 
     void Gui::focusWidget(const Widget::Ptr& widget)
     {
-        m_container->focusWidget(widget.get());
+        m_container->focusWidget(widget);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,14 +394,14 @@ namespace tgui
 
     void Gui::setOpacity(float opacity)
     {
-        m_container->setOpacity(opacity);
+        m_container->getRenderer()->setOpacity(opacity);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     float Gui::getOpacity() const
     {
-        return m_container->getOpacity();
+        return m_container->getRenderer()->getOpacity();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

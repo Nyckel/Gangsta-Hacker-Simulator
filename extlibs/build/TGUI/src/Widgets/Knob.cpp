@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,27 +23,42 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include <TGUI/Container.hpp>
 #include <TGUI/Widgets/Knob.hpp>
-#include <TGUI/Loading/Theme.hpp>
-
+#include <SFML/Graphics/CircleShape.hpp>
 #include <cmath>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+    const float pi = 3.14159265358979f;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
+    static std::map<std::string, ObjectConverter> defaultRendererValues =
+    {
+        {"borders", Borders{5}},
+        {"imagerotation", 0.f},
+        {"bordercolor", sf::Color::Black},
+        {"thumbcolor", sf::Color::Black},
+        {"backgroundcolor", sf::Color::White}
+    };
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Knob::Knob()
     {
+        m_type = "Knob";
         m_callback.widgetType = "Knob";
         m_draggableWidget = true;
 
         addSignal<int>("ValueChanged");
 
-        m_renderer = std::make_shared<KnobRenderer>(this);
-        reload();
+        m_renderer = aurora::makeCopied<KnobRenderer>();
+        setRenderer(RendererData::create(defaultRendererValues));
 
         setSize(140, 140);
     }
@@ -57,23 +72,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Knob::Ptr Knob::copy(Knob::ConstPtr knob)
+    Knob::Ptr Knob::copy(ConstPtr knob)
     {
         if (knob)
             return std::static_pointer_cast<Knob>(knob->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Knob::setPosition(const Layout2d& position)
-    {
-        Widget::setPosition(position);
-
-        getRenderer()->m_backgroundTexture.setPosition(getPosition());
-        getRenderer()->m_foregroundTexture.setPosition(getPosition().x + ((getSize().x - getRenderer()->m_foregroundTexture.getSize().x) / 2.0f),
-                                                       getPosition().y + ((getSize().y - getRenderer()->m_foregroundTexture.getSize().y) / 2.0f));
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,23 +85,12 @@ namespace tgui
     {
         Widget::setSize(size);
 
-        if (getRenderer()->m_backgroundTexture.isLoaded() && getRenderer()->m_foregroundTexture.isLoaded())
+        if (m_spriteBackground.isSet() && m_spriteForeground.isSet())
         {
-            getRenderer()->m_backgroundTexture.setSize(getSize());
-            getRenderer()->m_foregroundTexture.setSize({getRenderer()->m_foregroundTexture.getImageSize().x / getRenderer()->m_backgroundTexture.getImageSize().x * getSize().x,
-                                                        getRenderer()->m_foregroundTexture.getImageSize().y / getRenderer()->m_backgroundTexture.getImageSize().y * getSize().y});
+            m_spriteBackground.setSize(getInnerSize());
+            m_spriteForeground.setSize({m_spriteForeground.getTexture().getImageSize().x / m_spriteBackground.getTexture().getImageSize().x * getInnerSize().x,
+                m_spriteForeground.getTexture().getImageSize().y / m_spriteBackground.getTexture().getImageSize().y * getInnerSize().y});
         }
-
-        // Recalculate the position of the images
-        updatePosition();
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    sf::Vector2f Knob::getFullSize() const
-    {
-        return {getSize().x + getRenderer()->getBorders().left + getRenderer()->getBorders().right,
-                getSize().y + getRenderer()->getBorders().top + getRenderer()->getBorders().bottom};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +110,13 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    float Knob::getStartRotation() const
+    {
+        return m_startRotation;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void Knob::setEndRotation(float endRotation)
     {
         while (endRotation >= 360)
@@ -129,6 +128,13 @@ namespace tgui
 
         // The knob might have to point in a different direction even though it has the same value
         recalculateRotation();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    float Knob::getEndRotation() const
+    {
+        return m_endRotation;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +157,13 @@ namespace tgui
             // The knob might have to point in a different direction even though it has the same value
             recalculateRotation();
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    int Knob::getMinimum() const
+    {
+        return m_minimum;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +193,13 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    int Knob::getMaximum() const
+    {
+        return m_maximum;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void Knob::setValue(int value)
     {
         if (m_value != value)
@@ -203,6 +223,13 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    int Knob::getValue() const
+    {
+        return m_value;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void Knob::setClockwiseTurning(bool clockwise)
     {
         m_clockwiseTurning = clockwise;
@@ -213,39 +240,28 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Knob::setOpacity(float opacity)
+    bool Knob::getClockwiseTurning() const
     {
-        Widget::setOpacity(opacity);
-
-        getRenderer()->m_backgroundTexture.setColor({getRenderer()->m_backgroundTexture.getColor().r, getRenderer()->m_backgroundTexture.getColor().g, getRenderer()->m_backgroundTexture.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
-        getRenderer()->m_foregroundTexture.setColor({getRenderer()->m_foregroundTexture.getColor().r, getRenderer()->m_foregroundTexture.getColor().g, getRenderer()->m_foregroundTexture.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
+        return m_clockwiseTurning;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    sf::Vector2f Knob::getWidgetOffset() const
-    {
-        return {getRenderer()->getBorders().left, getRenderer()->getBorders().top};
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    bool Knob::mouseOnWidget(float x, float y) const
+    bool Knob::mouseOnWidget(sf::Vector2f pos) const
     {
         // Check if the mouse is on top of the widget
-        if (sf::FloatRect{getPosition().x, getPosition().y, getSize().x, getSize().y}.contains(x, y))
+        if (sf::FloatRect{0, 0, getSize().x, getSize().y}.contains(pos))
         {
-            if (getRenderer()->m_backgroundTexture.isLoaded() && getRenderer()->m_foregroundTexture.isLoaded())
+            if (m_spriteBackground.isSet() && m_spriteForeground.isSet())
             {
                 // Only return true when the pixel under the mouse isn't transparent
-                if (!getRenderer()->m_backgroundTexture.isTransparentPixel(x, y))
+                if (!m_spriteBackground.isTransparentPixel(pos))
                     return true;
             }
             else // There is no texture, the widget has a circle shape
             {
-                sf::Vector2f centerPoint = getPosition() + (getSize() / 2.0f);
-                sf::Vector2f mousePoint = {x, y};
-                float distance = std::sqrt(std::pow(centerPoint.x - mousePoint.x, 2) + std::pow(centerPoint.y - mousePoint.y, 2));
+                sf::Vector2f centerPoint = getSize() / 2.f;
+                float distance = sqrt(pow(centerPoint.x - pos.x, 2) + pow(centerPoint.y - pos.y, 2));
                 return (distance <= std::min(getSize().x, getSize().y));
             }
         }
@@ -255,45 +271,45 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Knob::leftMousePressed(float x, float y)
+    void Knob::leftMousePressed(sf::Vector2f pos)
     {
         // Set the mouse down flag
         m_mouseDown = true;
 
         // Change the value of the knob depending on where you clicked
-        mouseMoved(x, y);
+        mouseMoved(pos);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Knob::leftMouseReleased(float, float)
+    void Knob::leftMouseReleased(sf::Vector2f)
     {
         m_mouseDown = false;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Knob::mouseMoved(float x, float y)
+    void Knob::mouseMoved(sf::Vector2f pos)
     {
         if (!m_mouseHover)
             mouseEnteredWidget();
 
-        sf::Vector2f centerPosition = getPosition() + (getSize() / 2.0f);
+        sf::Vector2f centerPosition = getSize() / 2.0f;
 
         // Check if the mouse button is down
         if (m_mouseDown)
         {
             // Find out the direction that the knob should now point
-            if (compareFloats(x, centerPosition.x))
+            if (compareFloats(pos.x, centerPosition.x))
             {
-                if (y > centerPosition.y)
+                if (pos.y > centerPosition.y)
                     m_angle = 270;
-                else if (y < centerPosition.y)
+                else if (pos.y < centerPosition.y)
                     m_angle = 90;
             }
             else
             {
-                m_angle = std::atan2(centerPosition.y - y, x - centerPosition.x) * 180.0f / pi;
+                m_angle = atan2(centerPosition.y - pos.y, pos.x - centerPosition.x) * 180.0f / pi;
                 if (m_angle < 0)
                     m_angle += 360;
             }
@@ -311,7 +327,7 @@ namespace tgui
                 else if (m_angle > m_endRotation)
                 {
                     if (((m_startRotation > m_endRotation) && (m_clockwiseTurning))
-                     || ((m_startRotation < m_endRotation) && (!m_clockwiseTurning)))
+                        || ((m_startRotation < m_endRotation) && (!m_clockwiseTurning)))
                     {
                         if (std::min(m_angle - m_startRotation, 360 - m_angle + m_startRotation) <= std::min(m_angle - m_endRotation, 360 - m_angle + m_endRotation))
                             m_angle = m_startRotation;
@@ -325,9 +341,9 @@ namespace tgui
                 if (m_angle < m_endRotation)
                 {
                     if (((m_startRotation > m_endRotation) && (m_clockwiseTurning))
-                     || ((m_startRotation < m_endRotation) && (!m_clockwiseTurning)))
+                        || ((m_startRotation < m_endRotation) && (!m_clockwiseTurning)))
                     {
-                        if (std::min(m_startRotation - m_angle, 360 - m_startRotation + m_angle) <= std::min(m_endRotation - m_angle, 360 -m_endRotation + m_angle))
+                        if (std::min(m_startRotation - m_angle, 360 - m_startRotation + m_angle) <= std::min(m_endRotation - m_angle, 360 - m_endRotation + m_angle))
                             m_angle = m_startRotation;
                         else
                             m_angle = m_endRotation;
@@ -349,12 +365,12 @@ namespace tgui
             else
             {
                 if (((m_endRotation > m_startRotation) && (m_clockwiseTurning))
-                 || ((m_endRotation < m_startRotation) && (!m_clockwiseTurning)))
+                    || ((m_endRotation < m_startRotation) && (!m_clockwiseTurning)))
                 {
                     allowedAngle = 360 - std::abs(m_endRotation - m_startRotation);
                 }
                 else if (((m_endRotation > m_startRotation) && (!m_clockwiseTurning))
-                      || ((m_endRotation < m_startRotation) && (m_clockwiseTurning)))
+                    || ((m_endRotation < m_startRotation) && (m_clockwiseTurning)))
                 {
                     allowedAngle = std::abs(m_endRotation - m_startRotation);
                 }
@@ -404,12 +420,12 @@ namespace tgui
         else
         {
             if (((m_endRotation > m_startRotation) && (m_clockwiseTurning))
-             || ((m_endRotation < m_startRotation) && (!m_clockwiseTurning)))
+                || ((m_endRotation < m_startRotation) && (!m_clockwiseTurning)))
             {
                 allowedAngle = 360 - std::abs(m_endRotation - m_startRotation);
             }
             else if (((m_endRotation > m_startRotation) && (!m_clockwiseTurning))
-                  || ((m_endRotation < m_startRotation) && (m_clockwiseTurning)))
+                || ((m_endRotation < m_startRotation) && (m_clockwiseTurning)))
             {
                 allowedAngle = std::abs(m_endRotation - m_startRotation);
             }
@@ -427,261 +443,113 @@ namespace tgui
         {
             m_angle = (((m_value - m_minimum) / static_cast<float>(m_maximum - m_minimum)) * allowedAngle) + m_startRotation;
         }
-
-        // Give the image the correct rotation
-        if (getRenderer()->m_imageRotation > m_angle)
-            getRenderer()->m_foregroundTexture.setRotation(getRenderer()->m_imageRotation - m_angle);
-        else
-            getRenderer()->m_foregroundTexture.setRotation(360 - m_angle + getRenderer()->m_imageRotation);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Knob::reload(const std::string& primary, const std::string& secondary, bool force)
+    void Knob::rendererChanged(const std::string& property)
     {
-        getRenderer()->setBorders(5, 5, 5, 5);
-        getRenderer()->setBackgroundColor({255, 255, 255});
-        getRenderer()->setThumbColor({0, 0, 0});
-        getRenderer()->setBorderColor({0, 0, 0});
-        getRenderer()->setImageRotation(0);
-        getRenderer()->setBackgroundTexture({});
-        getRenderer()->setForegroundTexture({});
-
-        if (m_theme && primary != "")
+        if (property == "borders")
         {
-            getRenderer()->setBorders({0, 0, 0, 0});
-            Widget::reload(primary, secondary, force);
-
-            if (force)
-            {
-                if (getRenderer()->m_backgroundTexture.isLoaded() || getRenderer()->m_foregroundTexture.isLoaded())
-                {
-                    getRenderer()->m_foregroundTexture.setRotation(m_startRotation - getRenderer()->m_imageRotation);
-                    setSize(getRenderer()->m_backgroundTexture.getImageSize());
-                }
-            }
-
-            recalculateRotation();
+            m_bordersCached = getRenderer()->getBorders();
+            updateSize();
         }
+        else if (property == "texturebackground")
+        {
+            m_spriteBackground.setTexture(getRenderer()->getTextureBackground());
+            updateSize();
+        }
+        else if (property == "textureforeground")
+        {
+            m_spriteForeground.setTexture(getRenderer()->getTextureForeground());
+            updateSize();
+        }
+        else if (property == "bordercolor")
+        {
+            m_borderColorCached = getRenderer()->getBorderColor();
+        }
+        else if (property == "backgroundcolor")
+        {
+            m_backgroundColorCached = getRenderer()->getBackgroundColor();
+        }
+        else if (property == "thumbcolor")
+        {
+            m_thumbColorCached = getRenderer()->getThumbColor();
+        }
+        else if (property == "imagerotation")
+        {
+            m_imageRotationCached = getRenderer()->getImageRotation();
+        }
+        else if (property == "opacity")
+        {
+            Widget::rendererChanged(property);
+
+            m_spriteBackground.setOpacity(m_opacityCached);
+            m_spriteForeground.setOpacity(m_opacityCached);
+        }
+        else
+            Widget::rendererChanged(property);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Vector2f Knob::getInnerSize() const
+    {
+        return {getSize().x - m_bordersCached.left - m_bordersCached.right, getSize().y - m_bordersCached.top - m_bordersCached.bottom};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Knob::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        getRenderer()->draw(target, states);
-    }
+        states.transform.translate(getPosition());
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        float size = std::min(getInnerSize().x, getInnerSize().y);
 
-    void KnobRenderer::setProperty(std::string property, const std::string& value)
-    {
-        property = toLower(property);
-
-        if (property == "borders")
-            setBorders(Deserializer::deserialize(ObjectConverter::Type::Borders, value).getBorders());
-        else if (property == "backgroundcolor")
-            setBackgroundColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "thumbcolor")
-            setThumbColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "bordercolor")
-            setBorderColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundimage")
-            setBackgroundTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else if (property == "foregroundimage")
-            setForegroundTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else if (property == "imagerotation")
-            setImageRotation(tgui::stof(value));
-        else
-            WidgetRenderer::setProperty(property, value);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setProperty(std::string property, ObjectConverter&& value)
-    {
-        property = toLower(property);
-
-        if (value.getType() == ObjectConverter::Type::Borders)
+        // Draw the borders
+        float borderThickness = std::min({m_bordersCached.left, m_bordersCached.top, m_bordersCached.right, m_bordersCached.bottom});
+        if (borderThickness > 0)
         {
-            if (property == "borders")
-                setBorders(value.getBorders());
-            else
-                return WidgetRenderer::setProperty(property, std::move(value));
+            states.transform.translate({borderThickness, borderThickness});
+
+            sf::CircleShape bordersShape{size / 2};
+            bordersShape.setFillColor(sf::Color::Transparent);
+            bordersShape.setOutlineColor(Color::calcColorOpacity(m_borderColorCached, m_opacityCached));
+            bordersShape.setOutlineThickness(borderThickness);
+            target.draw(bordersShape, states);
         }
-        else if (value.getType() == ObjectConverter::Type::Color)
-        {
-            if (property == "backgroundcolor")
-                setBackgroundColor(value.getColor());
-            else if (property == "thumbcolor")
-                setThumbColor(value.getColor());
-            else if (property == "bordercolor")
-                setBorderColor(value.getColor());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::Texture)
-        {
-            if (property == "backgroundimage")
-                setBackgroundTexture(value.getTexture());
-            else if (property == "foregroundimage")
-                setForegroundTexture(value.getTexture());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::Number)
-        {
-            if (property == "imagerotation")
-                setImageRotation(value.getNumber());
-        }
-        else
-            WidgetRenderer::setProperty(property, std::move(value));
-    }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjectConverter KnobRenderer::getProperty(std::string property) const
-    {
-        property = toLower(property);
-
-        if (property == "borders")
-            return m_borders;
-        else if (property == "backgroundcolor")
-            return m_backgroundColor;
-        else if (property == "thumbcolor")
-            return m_thumbColor;
-        else if (property == "bordercolor")
-            return m_borderColor;
-        else if (property == "backgroundimage")
-            return m_backgroundTexture;
-        else if (property == "foregroundimage")
-            return m_foregroundTexture;
-        if (property == "imagerotation")
-            return m_imageRotation;
-        else
-            return WidgetRenderer::getProperty(property);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, ObjectConverter> KnobRenderer::getPropertyValuePairs() const
-    {
-        auto pairs = WidgetRenderer::getPropertyValuePairs();
-
-        if (m_backgroundTexture.isLoaded() && m_foregroundTexture.isLoaded())
-        {
-            pairs["BackgroundImage"] = m_backgroundTexture;
-            pairs["ForegroundImage"] = m_foregroundTexture;
-            pairs["ImageRotation"] = m_imageRotation;
-        }
+        // Draw the background
+        if (m_spriteBackground.isSet())
+            m_spriteBackground.draw(target, states);
         else
         {
-            pairs["BackgroundColor"] = m_backgroundColor;
-            pairs["ThumbColor"] = m_thumbColor;
-        }
-
-        pairs["BorderColor"] = m_borderColor;
-        pairs["Borders"] = m_borders;
-        return pairs;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setImageRotation(float rotation)
-    {
-        m_imageRotation = rotation;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setBackgroundColor(const Color& color)
-    {
-        m_backgroundColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setThumbColor(const Color& color)
-    {
-        m_thumbColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setBorderColor(const Color& color)
-    {
-        m_borderColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setBackgroundTexture(const Texture& texture)
-    {
-        m_backgroundTexture = texture;
-        if (m_backgroundTexture.isLoaded())
-        {
-            m_backgroundTexture.setColor({m_backgroundTexture.getColor().r, m_backgroundTexture.getColor().g, m_backgroundTexture.getColor().b, static_cast<sf::Uint8>(m_knob->getOpacity() * 255)});
-
-            if (m_foregroundTexture.isLoaded())
-                m_knob->updateSize();
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::setForegroundTexture(const Texture& texture)
-    {
-        m_foregroundTexture = texture;
-        if (m_foregroundTexture.isLoaded())
-        {
-            m_foregroundTexture.setColor({m_foregroundTexture.getColor().r, m_foregroundTexture.getColor().g, m_foregroundTexture.getColor().b, static_cast<sf::Uint8>(m_knob->getOpacity() * 255)});
-
-            if (m_backgroundTexture.isLoaded())
-                m_knob->updateSize();
-
-            if (m_imageRotation > m_knob->m_angle)
-                m_foregroundTexture.setRotation(m_imageRotation - m_knob->m_angle);
-            else
-                m_foregroundTexture.setRotation(360 - m_knob->m_angle + m_imageRotation);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void KnobRenderer::draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
-        if (m_backgroundTexture.isLoaded() && m_foregroundTexture.isLoaded())
-        {
-            target.draw(m_backgroundTexture, states);
-            target.draw(m_foregroundTexture, states);
-        }
-        else
-        {
-            float size = std::min(m_knob->getSize().x, m_knob->getSize().y);
-
-            sf::CircleShape background{size / 2.0f};
-            background.setPosition(m_knob->getPosition());
-            background.setFillColor(calcColorOpacity(m_backgroundColor, m_knob->getOpacity()));
-            background.setOutlineColor(calcColorOpacity(m_borderColor, m_knob->getOpacity()));
-            background.setOutlineThickness(std::min({m_borders.left, m_borders.top, m_borders.right, m_borders.bottom}));
+            sf::CircleShape background{size / 2};
+            background.setFillColor(Color::calcColorOpacity(m_backgroundColorCached, m_opacityCached));
             target.draw(background, states);
+        }
 
+        // Draw the foreground
+        if (m_spriteForeground.isSet())
+        {
+            states.transform.translate((getInnerSize() - m_spriteForeground.getSize()) / 2.f);
+
+            // Give the image the correct rotation
+            if (m_imageRotationCached > m_angle)
+                states.transform.rotate(m_imageRotationCached - m_angle, (m_spriteForeground.getSize() / 2.f));
+            else
+                states.transform.rotate(360 - m_angle + m_imageRotationCached, (m_spriteForeground.getSize() / 2.f));
+
+            m_spriteForeground.draw(target, states);
+        }
+        else
+        {
             sf::CircleShape thumb{size / 10.0f};
-            thumb.setFillColor(calcColorOpacity(m_thumbColor, m_knob->getOpacity()));
-            thumb.setPosition({m_knob->getPosition().x + (size / 2.0f) - thumb.getRadius() + (std::cos(m_knob->m_angle / 180 * pi) * background.getRadius() * 3/5),
-                               m_knob->getPosition().y + (size / 2.0f) - thumb.getRadius() + (-std::sin(m_knob->m_angle / 180 * pi) * background.getRadius() * 3/5)});
+            thumb.setFillColor(Color::calcColorOpacity(m_thumbColorCached, m_opacityCached));
+            thumb.setPosition({(size / 2.0f) - thumb.getRadius() + (cos(m_angle / 180 * pi) * (size / 2) * 3 / 5),
+                (size / 2.0f) - thumb.getRadius() + (-sin(m_angle / 180 * pi) * (size / 2) * 3 / 5)});
             target.draw(thumb, states);
         }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<WidgetRenderer> KnobRenderer::clone(Widget* widget)
-    {
-        auto renderer = std::make_shared<KnobRenderer>(*this);
-        renderer->m_knob = static_cast<Knob*>(widget);
-        return renderer;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

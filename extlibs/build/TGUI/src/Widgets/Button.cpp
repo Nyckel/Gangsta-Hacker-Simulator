@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,24 +23,38 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include <TGUI/Container.hpp>
 #include <TGUI/Widgets/Button.hpp>
-#include <TGUI/Loading/Theme.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
+    static std::map<std::string, ObjectConverter> defaultRendererValues =
+    {
+        {"borders", Borders{2}},
+        {"bordercolor", Color{60, 60, 60}},
+        {"bordercolorhover", sf::Color::Black},
+        {"bordercolordown", sf::Color::Black},
+        {"textcolor", Color{60, 60, 60}},
+        {"textcolorhover", sf::Color::Black},
+        {"textcolordown", sf::Color::Black},
+        {"backgroundcolor", Color{245, 245, 245}},
+        {"backgroundcolorhover", sf::Color::White},
+        {"backgroundcolordown", sf::Color::White}
+        ///TODO: Define default disabled colors
+    };
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Button::Button()
     {
         m_callback.widgetType = "Button";
+        m_type = "Button";
 
         addSignal<sf::String>("Pressed");
 
-        m_renderer = std::make_shared<ButtonRenderer>(this);
-        reload();
+        m_renderer = aurora::makeCopied<ButtonRenderer>();
+        setRenderer(RendererData::create(defaultRendererValues));
 
         setSize(120, 30);
     }
@@ -59,28 +73,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Button::Ptr Button::copy(Button::ConstPtr button)
+    Button::Ptr Button::copy(ConstPtr button)
     {
         if (button)
             return std::static_pointer_cast<Button>(button->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Button::setPosition(const Layout2d& position)
-    {
-        Widget::setPosition(position);
-
-        getRenderer()->m_textureDown.setPosition(getPosition());
-        getRenderer()->m_textureHover.setPosition(getPosition());
-        getRenderer()->m_textureNormal.setPosition(getPosition());
-        getRenderer()->m_textureFocused.setPosition(getPosition());
-
-        // Set the position of the text
-        m_text.setPosition(getPosition().x + (getSize().x - m_text.getSize().x) * 0.5f,
-                           getPosition().y + (getSize().y - m_text.getSize().y) * 0.5f);
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,34 +86,32 @@ namespace tgui
     {
         Widget::setSize(size);
 
-        getRenderer()->m_textureDown.setSize(getSize());
-        getRenderer()->m_textureHover.setSize(getSize());
-        getRenderer()->m_textureNormal.setSize(getSize());
-        getRenderer()->m_textureFocused.setSize(getSize());
+        // Reset the texture sizes
+        m_sprite.setSize(getInnerSize());
+        m_spriteHover.setSize(getInnerSize());
+        m_spriteDown.setSize(getInnerSize());
+        m_spriteDisabled.setSize(getInnerSize());
+        m_spriteFocused.setSize(getInnerSize());
 
         // Recalculate the text size when auto sizing
         if (m_textSize == 0)
-            setText(m_string);
-
-        // Recalculate the position of the images
-        updatePosition();
+            setText(getText());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    sf::Vector2f Button::getFullSize() const
+    void Button::enable()
     {
-        return {getSize().x + getRenderer()->getBorders().left + getRenderer()->getBorders().right,
-                getSize().y + getRenderer()->getBorders().top + getRenderer()->getBorders().bottom};
+        Widget::enable();
+        updateTextColorAndStyle();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Button::setFont(const Font& font)
+    void Button::disable()
     {
-        Widget::setFont(font);
-        m_text.setFont(font);
-        setText(m_string);
+        Widget::disable();
+        updateTextColorAndStyle();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,109 +123,94 @@ namespace tgui
 
         // Set the text size when the text has a fixed size
         if (m_textSize != 0)
-            m_text.setTextSize(m_textSize);
+            m_text.setCharacterSize(m_textSize);
 
-        // If the height is much bigger than the width then the text should be vertical
-        if (getSize().y > getSize().x * 2)
+        // Draw the text normally unless the height is more than double of the width
+        if (getInnerSize().y <= getInnerSize().x * 2)
+        {
+            m_text.setString(text);
+
+            // Auto size the text when necessary
+            if (m_textSize == 0)
+            {
+                unsigned int textSize = Text::findBestTextSize(m_fontCached, getInnerSize().y * 0.8f);
+                m_text.setCharacterSize(textSize);
+
+                // Make the text smaller when it's too width
+                if (m_text.getSize().x > (getInnerSize().x * 0.85f))
+                    m_text.setCharacterSize(static_cast<unsigned int>(textSize * ((getInnerSize().x * 0.85f) / m_text.getSize().x)));
+            }
+        }
+        else // Place the text vertically
         {
             // The text is vertical
             if (!m_string.isEmpty())
             {
-                m_text.setText(m_string[0]);
+                m_text.setString(m_string[0]);
 
                 for (unsigned int i = 1; i < m_string.getSize(); ++i)
-                    m_text.setText(m_text.getText() + "\n" + m_string[i]);
+                    m_text.setString(m_text.getString() + "\n" + m_string[i]);
             }
 
             // Auto size the text when necessary
             if (m_textSize == 0)
             {
-                unsigned int textSize = findBestTextSize(getFont(), getSize().x * 0.85f);
-                m_text.setTextSize(textSize);
+                unsigned int textSize = Text::findBestTextSize(m_fontCached, getInnerSize().x * 0.8f);
+                m_text.setCharacterSize(textSize);
 
                 // Make the text smaller when it's too high
-                if (m_text.getSize().y > (getSize().y * 0.85f))
-                    m_text.setTextSize(static_cast<unsigned int>(textSize * getSize().y * 0.85f / m_text.getSize().y));
+                if (m_text.getSize().y > (getInnerSize().y * 0.85f))
+                    m_text.setCharacterSize(static_cast<unsigned int>(textSize * getInnerSize().y * 0.85f / m_text.getSize().y));
             }
         }
-        else // The width of the button is big enough
-        {
-            m_text.setText(text);
+    }
 
-            // Auto size the text when necessary
-            if (m_textSize == 0)
-            {
-                unsigned int textSize = findBestTextSize(getFont(), getSize().y * 0.85f);
-                m_text.setTextSize(textSize);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                // Make the text smaller when it's too width
-                if (m_text.getSize().x > (getSize().x * 0.85f))
-                    m_text.setTextSize(static_cast<unsigned int>(textSize * ((getSize().x * 0.85f) / m_text.getSize().x)));
-            }
-        }
-
-        // Set the position of the text
-        m_text.setPosition(getPosition().x + (getSize().x - m_text.getSize().x) * 0.5f,
-                           getPosition().y + (getSize().y - m_text.getSize().y) * 0.5f);
+    const sf::String& Button::getText() const
+    {
+        return m_string;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Button::setTextSize(unsigned int size)
     {
-        // Change the text size
-        m_textSize = size;
+        if (size != m_textSize)
+        {
+            m_textSize = size;
 
-        // Call setText to reposition the text
-        setText(m_string);
+            // Call setText to reposition the text
+            setText(getText());
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Button::setOpacity(float opacity)
+    unsigned int Button::getTextSize() const
     {
-        Widget::setOpacity(opacity);
-
-        getRenderer()->m_textureNormal.setColor({getRenderer()->m_textureNormal.getColor().r, getRenderer()->m_textureNormal.getColor().g, getRenderer()->m_textureNormal.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
-        getRenderer()->m_textureHover.setColor({getRenderer()->m_textureHover.getColor().r, getRenderer()->m_textureHover.getColor().g, getRenderer()->m_textureHover.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
-        getRenderer()->m_textureDown.setColor({getRenderer()->m_textureDown.getColor().r, getRenderer()->m_textureDown.getColor().g, getRenderer()->m_textureDown.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
-        getRenderer()->m_textureFocused.setColor({getRenderer()->m_textureFocused.getColor().r, getRenderer()->m_textureFocused.getColor().g, getRenderer()->m_textureFocused.getColor().b, static_cast<sf::Uint8>(m_opacity * 255)});
-
-        if (!m_mouseHover)
-            m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorNormal, getOpacity()));
-        else if (m_mouseHover && !m_mouseDown)
-            m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorHover, getOpacity()));
-        else if (m_mouseHover && m_mouseDown)
-            m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorDown, getOpacity()));
+        return m_text.getCharacterSize();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    sf::Vector2f Button::getWidgetOffset() const
+    void Button::leftMousePressed(sf::Vector2f pos)
     {
-        return {getRenderer()->getBorders().left, getRenderer()->getBorders().top};
+        ClickableWidget::leftMousePressed(pos);
+
+        updateTextColorAndStyle();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Button::leftMousePressed(float x, float y)
-    {
-        ClickableWidget::leftMousePressed(x, y);
-
-        m_text.setTextColor(getRenderer()->m_textColorDown);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Button::leftMouseReleased(float x, float y)
+    void Button::leftMouseReleased(sf::Vector2f pos)
     {
         if (m_mouseDown)
-            sendSignal("Pressed", m_text.getText());
+            sendSignal("Pressed", m_text.getString());
 
-        ClickableWidget::leftMouseReleased(x, y);
+        ClickableWidget::leftMouseReleased(pos);
 
-        if (m_mouseHover)
-            m_text.setTextColor(getRenderer()->m_textColorHover);
+        updateTextColorAndStyle();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +218,7 @@ namespace tgui
     void Button::keyPressed(const sf::Event::KeyEvent& event)
     {
         if ((event.code == sf::Keyboard::Space) || (event.code == sf::Keyboard::Return))
-            sendSignal("Pressed", m_text.getText());
+            sendSignal("Pressed", m_text.getString());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +226,7 @@ namespace tgui
     void Button::widgetFocused()
     {
         // We can't be focused when we don't have a focus image
-        if (getRenderer()->m_textureFocused.isLoaded())
+        if (m_spriteFocused.getTexture().getData())
             Widget::widgetFocused();
         else
             unfocus();
@@ -254,48 +234,10 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Button::reload(const std::string& primary, const std::string& secondary, bool force)
-    {
-        getRenderer()->setBorders({2, 2, 2, 2});
-        getRenderer()->setTextColorNormal({60, 60, 60});
-        getRenderer()->setTextColorHover({0, 0, 0});
-        getRenderer()->setTextColorDown({0, 0, 0});
-        getRenderer()->setBackgroundColorNormal({245, 245, 245});
-        getRenderer()->setBackgroundColorHover({255, 255, 255});
-        getRenderer()->setBackgroundColorDown({255, 255, 255});
-        getRenderer()->setBorderColor({0, 0, 0});
-        getRenderer()->setNormalTexture({});
-        getRenderer()->setHoverTexture({});
-        getRenderer()->setDownTexture({});
-        getRenderer()->setFocusTexture({});
-
-        if (m_theme && primary != "")
-        {
-            getRenderer()->setBorders({0, 0, 0, 0});
-            Widget::reload(primary, secondary, force);
-
-            // The widget can only be focused when there is an image available for this phase
-            if (getRenderer()->m_textureFocused.isLoaded())
-                m_allowFocus = true;
-
-            if (force)
-            {
-                if (getRenderer()->m_textureNormal.isLoaded())
-                    setSize(getRenderer()->m_textureNormal.getImageSize());
-            }
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     void Button::mouseEnteredWidget()
     {
         Widget::mouseEnteredWidget();
-
-        if (m_mouseDown)
-            m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorDown, getOpacity()));
-        else
-            m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorHover, getOpacity()));
+        updateTextColorAndStyle();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,387 +245,200 @@ namespace tgui
     void Button::mouseLeftWidget()
     {
         Widget::mouseLeftWidget();
+        updateTextColorAndStyle();
+    }
 
-        m_text.setTextColor(calcColorOpacity(getRenderer()->m_textColorNormal, getOpacity()));
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Button::rendererChanged(const std::string& property)
+    {
+        if (property == "borders")
+        {
+            m_bordersCached = getRenderer()->getBorders();
+            updateSize();
+        }
+        else if ((property == "textcolor") || (property == "textcolorhover") || (property == "textcolordown") || (property == "textcolordisabled")
+            || (property == "textstyle") || (property == "textstylehover") || (property == "textstyledown") || (property == "textstyledisabled"))
+        {
+            updateTextColorAndStyle();
+        }
+        else if (property == "texture")
+        {
+            m_sprite.setTexture(getRenderer()->getTexture());
+        }
+        else if (property == "texturehover")
+        {
+            m_spriteHover.setTexture(getRenderer()->getTextureHover());
+        }
+        else if (property == "texturedown")
+        {
+            m_spriteDown.setTexture(getRenderer()->getTextureDown());
+        }
+        else if (property == "texturedisabled")
+        {
+            m_spriteDisabled.setTexture(getRenderer()->getTextureDisabled());
+        }
+        else if (property == "texturefocused")
+        {
+            m_spriteFocused.setTexture(getRenderer()->getTextureFocused());
+            m_allowFocus = m_spriteFocused.isSet();
+        }
+        else if (property == "bordercolor")
+        {
+            m_borderColorCached = getRenderer()->getBorderColor();
+        }
+        else if (property == "bordercolorhover")
+        {
+            m_borderColorHoverCached = getRenderer()->getBorderColorHover();
+        }
+        else if (property == "bordercolordown")
+        {
+            m_borderColorDownCached = getRenderer()->getBorderColorDown();
+        }
+        else if (property == "bordercolordisabled")
+        {
+            m_borderColorDisabledCached = getRenderer()->getBorderColorDisabled();
+        }
+        else if (property == "backgroundcolor")
+        {
+            m_backgroundColorCached = getRenderer()->getBackgroundColor();
+        }
+        else if (property == "backgroundcolorhover")
+        {
+            m_backgroundColorHoverCached = getRenderer()->getBackgroundColorHover();
+        }
+        else if (property == "backgroundcolordown")
+        {
+            m_backgroundColorDownCached = getRenderer()->getBackgroundColorDown();
+        }
+        else if (property == "backgroundcolordisabled")
+        {
+            m_backgroundColorDisabledCached = getRenderer()->getBackgroundColorDisabled();
+        }
+        else if (property == "opacity")
+        {
+            Widget::rendererChanged(property);
+
+            m_sprite.setOpacity(m_opacityCached);
+            m_spriteHover.setOpacity(m_opacityCached);
+            m_spriteDown.setOpacity(m_opacityCached);
+            m_spriteDisabled.setOpacity(m_opacityCached);
+            m_spriteFocused.setOpacity(m_opacityCached);
+
+            m_text.setOpacity(m_opacityCached);
+        }
+        else if (property == "font")
+        {
+            Widget::rendererChanged(property);
+
+            m_text.setFont(m_fontCached);
+            setText(getText());
+        }
+        else
+            Widget::rendererChanged(property);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Vector2f Button::getInnerSize() const
+    {
+        return {getSize().x - m_bordersCached.left - m_bordersCached.right, getSize().y - m_bordersCached.top - m_bordersCached.bottom};
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Color Button::getCurrentBackgroundColor() const
+    {
+        if (!m_enabled && m_backgroundColorDisabledCached.isSet())
+            return m_backgroundColorDisabledCached;
+        if (m_mouseHover && m_mouseDown && m_backgroundColorDownCached.isSet())
+            return m_backgroundColorDownCached;
+        if (m_mouseHover && m_backgroundColorHoverCached.isSet())
+            return m_backgroundColorHoverCached;
+        return m_backgroundColorCached;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Color Button::getCurrentBorderColor() const
+    {
+        if (!m_enabled && m_borderColorDisabledCached.isSet())
+            return m_borderColorDisabledCached;
+        if (m_mouseHover && m_mouseDown && m_borderColorDownCached.isSet())
+            return m_borderColorDownCached;
+        if (m_mouseHover && m_borderColorHoverCached.isSet())
+            return m_borderColorHoverCached;
+        return m_borderColorCached;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Button::updateTextColorAndStyle()
+    {
+        if (!m_enabled && getRenderer()->getTextStyleDisabled().isSet())
+            m_text.setStyle(getRenderer()->getTextStyleDisabled());
+        else if (m_mouseHover && m_mouseDown && getRenderer()->getTextStyleDown().isSet())
+            m_text.setStyle(getRenderer()->getTextStyleDown());
+        else if (m_mouseHover && getRenderer()->getTextStyleHover().isSet())
+            m_text.setStyle(getRenderer()->getTextStyleHover());
+        else
+            m_text.setStyle(getRenderer()->getTextStyle());
+
+        sf::Color color;
+        if (!m_enabled && getRenderer()->getTextColorDisabled().isSet())
+            color = getRenderer()->getTextColorDisabled();
+        else if (m_mouseHover && m_mouseDown && getRenderer()->getTextColorDown().isSet())
+            color = getRenderer()->getTextColorDown();
+        else if (m_mouseHover && getRenderer()->getTextColorHover().isSet())
+            color = getRenderer()->getTextColorHover();
+        else
+            color = getRenderer()->getTextColor();
+
+        m_text.setColor(color);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        // Draw the background of the button
-        getRenderer()->draw(target, states);
+        states.transform.translate(getPosition());
 
-        // If the button has a text then also draw the text
-        target.draw(m_text, states);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setProperty(std::string property, const std::string& value)
-    {
-        property = toLower(property);
-        if (property == "borders")
-            setBorders(Deserializer::deserialize(ObjectConverter::Type::Borders, value).getBorders());
-        else if (property == "textcolor")
-            setTextColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "textcolornormal")
-            setTextColorNormal(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "textcolorhover")
-            setTextColorHover(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "textcolordown")
-            setTextColorDown(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolor")
-            setBackgroundColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolornormal")
-            setBackgroundColorNormal(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolorhover")
-            setBackgroundColorHover(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolordown")
-            setBackgroundColorDown(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "bordercolor")
-            setBorderColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "normalimage")
-            setNormalTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else if (property == "hoverimage")
-            setHoverTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else if (property == "downimage")
-            setDownTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else if (property == "focusedimage")
-            setFocusTexture(Deserializer::deserialize(ObjectConverter::Type::Texture, value).getTexture());
-        else
-            WidgetRenderer::setProperty(property, value);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setProperty(std::string property, ObjectConverter&& value)
-    {
-        property = toLower(property);
-
-        if (value.getType() == ObjectConverter::Type::Borders)
+        // Draw the borders
+        if (m_bordersCached != Borders{0})
         {
-            if (property == "borders")
-                setBorders(value.getBorders());
-            else
-                return WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::Color)
-        {
-            if (property == "textcolor")
-                setTextColor(value.getColor());
-            else if (property == "textcolornormal")
-                setTextColorNormal(value.getColor());
-            else if (property == "textcolorhover")
-                setTextColorHover(value.getColor());
-            else if (property == "textcolordown")
-                setTextColorDown(value.getColor());
-            else if (property == "backgroundcolor")
-                setBackgroundColor(value.getColor());
-            else if (property == "backgroundcolornormal")
-                setBackgroundColorNormal(value.getColor());
-            else if (property == "backgroundcolorhover")
-                setBackgroundColorHover(value.getColor());
-            else if (property == "backgroundcolordown")
-                setBackgroundColorDown(value.getColor());
-            else if (property == "bordercolor")
-                setBorderColor(value.getColor());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::Texture)
-        {
-            if (property == "normalimage")
-                setNormalTexture(value.getTexture());
-            else if (property == "hoverimage")
-                setHoverTexture(value.getTexture());
-            else if (property == "downimage")
-                setDownTexture(value.getTexture());
-            else if (property == "focusedimage")
-                setFocusTexture(value.getTexture());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else
-            WidgetRenderer::setProperty(property, std::move(value));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjectConverter ButtonRenderer::getProperty(std::string property) const
-    {
-        property = toLower(property);
-
-        if (property == "borders")
-            return m_borders;
-        else if (property == "textcolor")
-            return m_textColorNormal;
-        else if (property == "textcolornormal")
-            return m_textColorNormal;
-        else if (property == "textcolorhover")
-            return m_textColorHover;
-        else if (property == "textcolordown")
-            return m_textColorDown;
-        else if (property == "backgroundcolor")
-            return m_backgroundColorNormal;
-        else if (property == "backgroundcolornormal")
-            return m_backgroundColorNormal;
-        else if (property == "backgroundcolorhover")
-            return m_backgroundColorHover;
-        else if (property == "backgroundcolordown")
-            return m_backgroundColorDown;
-        else if (property == "bordercolor")
-            return m_borderColor;
-        else if (property == "normalimage")
-            return m_textureNormal;
-        else if (property == "hoverimage")
-            return m_textureHover;
-        else if (property == "downimage")
-            return m_textureDown;
-        else if (property == "focusedimage")
-            return m_textureFocused;
-        else
-            return WidgetRenderer::getProperty(property);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, ObjectConverter> ButtonRenderer::getPropertyValuePairs() const
-    {
-        auto pairs = WidgetRenderer::getPropertyValuePairs();
-
-        if (m_textureNormal.isLoaded())
-        {
-            pairs["NormalImage"] = m_textureNormal;
-            if (m_textureHover.isLoaded())
-                pairs["HoverImage"] = m_textureHover;
-            if (m_textureDown.isLoaded())
-                pairs["DownImage"] = m_textureDown;
-            if (m_textureFocused.isLoaded())
-                pairs["FocusedImage"] = m_textureFocused;
-        }
-        else
-        {
-            pairs["BackgroundColorNormal"] = m_backgroundColorNormal;
-            pairs["BackgroundColorHover"] = m_backgroundColorHover;
-            pairs["BackgroundColorDown"] = m_backgroundColorDown;
+            drawBorders(target, states, m_bordersCached, getSize(), getCurrentBorderColor());
+            states.transform.translate({m_bordersCached.left, m_bordersCached.top});
         }
 
-        pairs["TextColorNormal"] = m_textColorNormal;
-        pairs["TextColorHover"] = m_textColorHover;
-        pairs["TextColorDown"] = m_textColorDown;
-        pairs["BorderColor"] = m_borderColor;
-        pairs["Borders"] = m_borders;
-
-        return pairs;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setTextColor(const Color& color)
-    {
-        setTextColorNormal(color);
-        setTextColorHover(color);
-        setTextColorDown(color);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setTextColorNormal(const Color& color)
-    {
-        m_textColorNormal = color;
-
-        if (!m_button->m_mouseHover)
-            m_button->m_text.setTextColor(calcColorOpacity(m_textColorNormal, m_button->getOpacity()));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setTextColorHover(const Color& color)
-    {
-        m_textColorHover = color;
-
-        if (m_button->m_mouseHover && !m_button->m_mouseDown)
-            m_button->m_text.setTextColor(calcColorOpacity(m_textColorHover, m_button->getOpacity()));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setTextColorDown(const Color& color)
-    {
-        m_textColorDown = color;
-
-        if (m_button->m_mouseHover && m_button->m_mouseDown)
-            m_button->m_text.setTextColor(calcColorOpacity(m_textColorDown, m_button->getOpacity()));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setBackgroundColor(const Color& color)
-    {
-        setBackgroundColorNormal(color);
-        setBackgroundColorHover(color);
-        setBackgroundColorDown(color);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setBackgroundColorNormal(const Color& color)
-    {
-        m_backgroundColorNormal = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setBackgroundColorHover(const Color& color)
-    {
-        m_backgroundColorHover = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setBackgroundColorDown(const Color& color)
-    {
-        m_backgroundColorDown = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setBorderColor(const Color& color)
-    {
-        m_borderColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setNormalTexture(const Texture& texture)
-    {
-        m_textureNormal = texture;
-        if (m_textureNormal.isLoaded())
-        {
-            m_textureNormal.setPosition(m_button->getPosition());
-            m_textureNormal.setSize(m_button->getSize());
-            m_textureNormal.setColor({m_textureNormal.getColor().r, m_textureNormal.getColor().g, m_textureNormal.getColor().b, static_cast<sf::Uint8>(m_button->getOpacity() * 255)});
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setHoverTexture(const Texture& texture)
-    {
-        m_textureHover = texture;
-        if (m_textureHover.isLoaded())
-        {
-            m_textureHover.setPosition(m_button->getPosition());
-            m_textureHover.setSize(m_button->getSize());
-            m_textureHover.setColor({m_textureHover.getColor().r, m_textureHover.getColor().g, m_textureHover.getColor().b, static_cast<sf::Uint8>(m_button->getOpacity() * 255)});
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setDownTexture(const Texture& texture)
-    {
-        m_textureDown = texture;
-        if (m_textureDown.isLoaded())
-        {
-            m_textureDown.setPosition(m_button->getPosition());
-            m_textureDown.setSize(m_button->getSize());
-            m_textureDown.setColor({m_textureDown.getColor().r, m_textureDown.getColor().g, m_textureDown.getColor().b, static_cast<sf::Uint8>(m_button->getOpacity() * 255)});
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::setFocusTexture(const Texture& texture)
-    {
-        m_textureFocused = texture;
-        if (m_textureFocused.isLoaded())
-        {
-            m_textureFocused.setPosition(m_button->getPosition());
-            m_textureFocused.setSize(m_button->getSize());
-            m_textureFocused.setColor({m_textureFocused.getColor().r, m_textureFocused.getColor().g, m_textureFocused.getColor().b, static_cast<sf::Uint8>(m_button->getOpacity() * 255)});
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void ButtonRenderer::draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
         // Check if there is a background texture
-        if (m_textureNormal.isLoaded())
+        if (m_sprite.isSet())
         {
-            if (m_button->m_mouseHover)
+            if (!m_enabled && m_spriteDisabled.isSet())
+                m_spriteDisabled.draw(target, states);
+            else if (m_mouseHover)
             {
-                if (m_button->m_mouseDown && m_textureDown.isLoaded())
-                    target.draw(m_textureDown, states);
-                else if (m_textureHover.isLoaded())
-                    target.draw(m_textureHover, states);
+                if (m_mouseDown && m_spriteDown.isSet())
+                    m_spriteDown.draw(target, states);
+                else if (m_spriteHover.isSet())
+                    m_spriteHover.draw(target, states);
                 else
-                    target.draw(m_textureNormal, states);
+                    m_sprite.draw(target, states);
             }
             else
-                target.draw(m_textureNormal, states);
+                m_sprite.draw(target, states);
 
             // When the edit box is focused then draw an extra image
-            if (m_button->m_focused && m_textureFocused.isLoaded())
-                target.draw(m_textureFocused, states);
+            if (m_focused && m_spriteFocused.isSet())
+                m_spriteFocused.draw(target, states);
         }
         else // There is no background texture
         {
-            sf::RectangleShape button(m_button->getSize());
-            button.setPosition(m_button->getPosition());
-
-            if (m_button->m_mouseHover)
-            {
-                if (m_button->m_mouseDown)
-                    button.setFillColor(calcColorOpacity(m_backgroundColorDown, m_button->getOpacity()));
-                else
-                    button.setFillColor(calcColorOpacity(m_backgroundColorHover, m_button->getOpacity()));
-            }
-            else
-                button.setFillColor(calcColorOpacity(m_backgroundColorNormal, m_button->getOpacity()));
-
-            target.draw(button, states);
+            drawRectangleShape(target, states, getInnerSize(), getCurrentBackgroundColor());
         }
 
-        // Draw the borders around the button
-        if (m_borders != Borders{0, 0, 0, 0})
-        {
-            sf::Vector2f position = m_button->getPosition();
-            sf::Vector2f size = m_button->getSize();
-
-            // Draw left border
-            sf::RectangleShape border({m_borders.left, size.y + m_borders.top});
-            border.setPosition(position.x - m_borders.left, position.y - m_borders.top);
-            border.setFillColor(calcColorOpacity(m_borderColor, m_button->getOpacity()));
-            target.draw(border, states);
-
-            // Draw top border
-            border.setSize({size.x + m_borders.right, m_borders.top});
-            border.setPosition(position.x, position.y - m_borders.top);
-            target.draw(border, states);
-
-            // Draw right border
-            border.setSize({m_borders.right, size.y + m_borders.bottom});
-            border.setPosition(position.x + size.x, position.y);
-            target.draw(border, states);
-
-            // Draw bottom border
-            border.setSize({size.x + m_borders.left, m_borders.bottom});
-            border.setPosition(position.x - m_borders.left, position.y + size.y);
-            target.draw(border, states);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<WidgetRenderer> ButtonRenderer::clone(Widget* widget)
-    {
-        auto renderer = std::make_shared<ButtonRenderer>(*this);
-        renderer->m_button = static_cast<Button*>(widget);
-        return renderer;
+        // If the button has a text then also draw the text
+        states.transform.translate({(getInnerSize().x - m_text.getSize().x) / 2.f, (getInnerSize().y - m_text.getSize().y) / 2.f});
+        m_text.draw(target, states);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

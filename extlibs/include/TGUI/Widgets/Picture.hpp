@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -38,9 +38,6 @@ namespace tgui
     ///
     /// Signals:
     ///     - DoubleClicked (double left clicked on top of the picture)
-    ///         * Optional parameter sf::Vector2f: Position where you clicked
-    ///         * Uses Callback member 'mouse'
-    ///
     ///     - Inherited signals from ClickableWidget
     ///
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,31 +56,20 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor to creates the picture
-        ///
-        /// @param filename       The absolute or relative filename of the image that should be loaded
-        /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
-        ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
-        ///
-        /// @throw Exception when the image could not be loaded (probably not found)
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Picture(const sf::String& filename, bool fullyClickable = true);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor to create the picture from an image
+        /// @brief Constructor to create the picture from a texture
         ///
         /// @param texture  The texture to load the picture from
         /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
         ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
         ///
         /// @code
-        /// auto picture1 = tgui::Picture::create({"image.png", {10, 10, 80, 80}});
+        /// Picture picture1("image.png");
+        ///
+        /// Picture picture2({"image.png", {20, 15, 60, 40}}); // Only load the part of the image from (20,15) to (80,55)
         ///
         /// sf::Texture texture;
-        /// texture.loadFromFile("image.png", {10, 10, 80, 80});
-        /// auto picture2 = tgui::Picture::create(texture);
+        /// texture.loadFromFile("image.png", {20, 15, 60, 40});
+        /// Picture picture3(texture);
         /// @endcode
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,61 +77,6 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image
-        ///
-        /// @param filename       The absolute or relative filename of the image that should be loaded
-        /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
-        ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
-        ///
-        /// @throw Exception when the image could not be loaded (probably not found)
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTexture(const sf::String& filename, bool fullyClickable = true);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image
-        ///
-        /// @param texture  The texture to load the picture from
-        /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
-        ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
-        ///
-        /// @code
-        /// picture1->setTexture({"image.png", {10, 10, 80, 80}});
-        ///
-        /// sf::Texture texture;
-        /// texture.loadFromFile("image.png", {10, 10, 80, 80});
-        /// picture2->setTexture(texture);
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTexture(const Texture& texture, bool fullyClickable = true);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Creates a new picture widget
-        ///
-        /// @param filename  The filename of the texture to load the picture from
-        /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
-        ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
-        ///
-        /// @return The new picture
-        ///
-        /// @code
-        /// auto picture1 = Picture::create("image.png");
-        ///
-        /// auto picture2 = Picture::create({"image.png", {20, 15, 60, 40}}); // Load part of the image from (20,15) to (80,55)
-        ///
-        /// sf::Texture texture;
-        /// texture.loadFromFile("image.png", {20, 15, 60, 40});
-        /// auto picture3 = Picture::create(texture);
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static Picture::Ptr create(const char* filename, bool fullyClickable = true);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Creates a new picture widget
         ///
         /// @param texture  The texture to load the picture from
@@ -165,7 +96,7 @@ namespace tgui
         /// @endcode
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static Picture::Ptr create(const Texture& texture = {}, bool fullyClickable = true);
+        static Ptr create(const Texture& texture = {}, bool fullyClickable = true);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -176,52 +107,54 @@ namespace tgui
         /// @return The new picture
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static Picture::Ptr copy(Picture::ConstPtr picture);
+        static Ptr copy(ConstPtr picture);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the filename of the image that was used to load the widget.
+        /// @brief Changes the image
+        ///
+        /// @param texture  The texture to load the picture from
+        /// @param fullyClickable This affects what happens when clicking on a transparent pixel in the image.
+        ///                       Is the click caught by the picture, or does the event pass to the widgets behind it?
+        ///
+        /// @code
+        /// picture1->setTexture("image.png");
+        ///
+        /// picture2->setTexture({"image.png", {20, 15, 60, 40}}); // Only load the part of the image from (20,15) to (80,55)
+        ///
+        /// sf::Texture texture;
+        /// texture.loadFromFile("image.png", {20, 15, 60, 40});
+        /// picture3->setTexture(texture);
+        /// @endcode
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void setTexture(const Texture& texture, bool fullyClickable = true);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Returns the filename of the image that was used to load the widget
         ///
         /// @return Filename of loaded image.
-        ///         Empty string when no image was loaded yet or when it was loaded directly from a texture.
+        ///         Empty string when no image was loaded yet or when it was loaded directly from an sf::Texture.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const sf::String& getLoadedFilename() const
-        {
-            return m_loadedFilename;
-        }
+        const sf::String& getLoadedFilename() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the position of the widget
-        ///
-        /// This function completely overwrites the previous position.
-        /// See the move function to apply an offset based on the previous position instead.
-        /// The default position of a transformable widget is (0, 0).
-        ///
-        /// @param position  New position
-        ///
-        /// @see move, getPosition
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setPosition(const Layout2d& position) override;
-        using Transformable::setPosition;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the picture.
+        /// @brief Changes the size of the picture
         ///
         /// @param size  The new size of the picture
         ///
         /// The image will be scaled to fit this size.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setSize(const Layout2d& size) override;
+        void setSize(const Layout2d& size) override;
         using Transformable::setSize;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Enable or disable the smooth filter.
+        /// @brief Enables or disable the smooth filter
         ///
         /// When the filter is activated, the texture appears smoother so that pixels are less noticeable.
         /// However if you want the texture to look exactly the same as its source file, you should leave it disabled.
@@ -236,70 +169,69 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Tell whether the smooth filter is enabled or not.
+        /// @brief Tells whether the smooth filter is enabled or not
         ///
         /// @return True if smoothing is enabled, false if it is disabled
         ///
         /// @see setSmooth
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool isSmooth() const
-        {
-            return m_texture.isSmooth();
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the opacity of the widget.
-        ///
-        /// @param opacity  The opacity of the widget. 0 means completely transparent, while 1 (default) means fully opaque.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setOpacity(float opacity) override;
+        bool isSmooth() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual bool mouseOnWidget(float x, float y) const override;
+        bool mouseOnWidget(sf::Vector2f pos) const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void leftMouseReleased(float x, float y) override;
+        void leftMouseReleased(sf::Vector2f pos) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Draw the widget to a render target
+        ///
+        /// @param target Render target to draw to
+        /// @param states Current render states
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Function called when one of the properties of the renderer is changed
+        ///
+        /// @param property  Lowercase name of the property that was changed
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void rendererChanged(const std::string& property) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // This function is called every frame with the time passed since the last frame.
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void update(sf::Time elapsedTime) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Makes a copy of the widget
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual Widget::Ptr clone() const override
+        Widget::Ptr clone() const override
         {
             return std::make_shared<Picture>(*this);
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // This function is called every frame with the time passed since the last frame.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void update(sf::Time elapsedTime) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
-        sf::String m_loadedFilename;
-
-        Texture m_texture;
+        Sprite m_sprite;
 
         // Set to false when clicks on transparent parts of the picture should go to the widgets behind the picture
         bool m_fullyClickable = true;

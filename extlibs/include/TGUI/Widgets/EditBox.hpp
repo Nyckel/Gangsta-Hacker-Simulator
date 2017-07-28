@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,17 +27,20 @@
 
 
 #include <TGUI/Widgets/ClickableWidget.hpp>
-
+#include <TGUI/Renderers/EditBoxRenderer.hpp>
+#include <TGUI/FloatRect.hpp>
+#include <TGUI/Text.hpp>
 #include <regex>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
-    class EditBoxRenderer;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Edit box widget
+    ///
+    /// An edit box is a single line input field. It has options like setting a password character or displaying a default text.
+    /// If you are looking for something with multiple lines, word-wrap and a scrollbar then check out the TextBox class.
     ///
     /// Signals:
     ///     - TextChanged
@@ -80,8 +83,9 @@ namespace tgui
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         struct Validator
         {
-            static TGUI_API std::string Int;   ///< Accept negative and positive integers
-            static TGUI_API std::string UInt;  ///< Accept only positive integers
+            static TGUI_API std::string All; ///< Accept any input
+            static TGUI_API std::string Int; ///< Accept negative and positive integers
+            static TGUI_API std::string UInt; ///< Accept only positive integers
             static TGUI_API std::string Float; ///< Accept decimal numbers
         };
 
@@ -98,7 +102,7 @@ namespace tgui
         /// @return The new edit box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static EditBox::Ptr create();
+        static Ptr create();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,39 +113,23 @@ namespace tgui
         /// @return The new edit box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static EditBox::Ptr copy(EditBox::ConstPtr editBox);
+        static Ptr copy(ConstPtr editBox);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Returns the renderer, which gives access to functions that determine how the widget is displayed
         ///
-        /// @return Reference to the renderer
+        /// @return Temporary pointer to the renderer
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<EditBoxRenderer> getRenderer() const
+        EditBoxRenderer* getRenderer() const
         {
-            return std::static_pointer_cast<EditBoxRenderer>(m_renderer);
+            return aurora::downcast<EditBoxRenderer*>(m_renderer.get());
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the position of the widget
-        ///
-        /// This function completely overwrites the previous position.
-        /// See the move function to apply an offset based on the previous position instead.
-        /// The default position of a transformable widget is (0, 0).
-        ///
-        /// @param position  New position
-        ///
-        /// @see move, getPosition
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setPosition(const Layout2d& position) override;
-        using Transformable::setPosition;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the edit box.
+        /// @brief Changes the size of the edit box
         ///
         /// @param size  The new size of the edit box
         ///
@@ -151,31 +139,29 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the full size of the edit box
+        /// @brief Enables the widget
         ///
-        /// The size returned by this function includes the borders.
-        ///
-        /// @return Full size of the edit box
+        /// The widget will receive events and send callbacks again.
+        /// All widgets are enabled by default.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getFullSize() const override;
+        void enable() override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the font of the text in the widget.
+        /// @brief Disables the widget
         ///
-        /// @param font  The new font.
-        ///
-        /// When you don't call this function then the font from the parent widget will be used.
+        /// The widget will no longer receive events and it will thus no longer send callbacks.
+        /// All widgets are enabled by default.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setFont(const Font& font) override;
+        void disable() override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the text of the editbox.
+        /// @brief Changes the text of the editbox
         ///
-        /// @param text  The new text.
+        /// @param text  The new text
         ///
         /// The last characters of the text might be removed in the following situations:
         /// - You have set a character limit and this text contains too much characters.
@@ -189,55 +175,61 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the text inside the edit box. This text is not affected by the password character.
+        /// @brief Returns the text inside the edit box. This text is not affected by the password character
         ///
-        /// @return The text of the edit box.
+        /// @return The text of the edit box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::String getText() const
-        {
-            return m_text;
-        }
+        const sf::String& getText() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the default text of the editbox. This is the text drawn when the edit box is empty.
+        /// @brief Changes the default text of the editbox. This is the text drawn when the edit box is empty
         ///
         /// This text is not affected by the password character.
         ///
-        /// @param text  The new default text.
+        /// @param text  The new default text
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         void setDefaultText(const sf::String& text);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the default text of the edit box. This is the text drawn when the edit box is empty.
+        /// @brief Returns the default text of the edit box. This is the text drawn when the edit box is empty
         ///
         /// This text is not affected by the password character.
         ///
-        /// @return The default text of the edit box.
+        /// @return The default text of the edit box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::String getDefaultText() const
-        {
-            return m_defaultText.getString();
-        }
+        const sf::String& getDefaultText() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the text that you currently have selected. This text is not affected by the password character.
+        /// @brief Selects text in the edit box
         ///
-        /// @return The selected text of the edit box.
+        /// @param start  The index of the first character to select
+        /// @param length Amount of character to select
+        ///
+        /// When no parameters are provided, the entire text is selected.
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void selectText(size_t start = 0, size_t length = sf::String::InvalidPos);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Returns the text that you currently have selected. This text is not affected by the password character
+        ///
+        /// @return The selected text of the edit box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         sf::String getSelectedText() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the character size of the text.
+        /// @brief Changes the character size of the text
         ///
-        /// @param textSize  The new size of the text.
+        /// @param textSize  The new size of the text
         ///                  If the size is 0 (default) then the text will be scaled to fit in the edit box.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,22 +237,19 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the character size of the text.
+        /// @brief Returns the character size of the text
         ///
-        /// @return The text size.
+        /// @return The text size
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        unsigned int getTextSize() const
-        {
-            return m_textFull.getCharacterSize();
-        }
+        unsigned int getTextSize() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Sets a password character.
+        /// @brief Sets a password character
         ///
         /// @param passwordChar  The new password character.
-        ///                      If set to 0 then there is no password character.
+        ///                      If set to 0 then there is no password character
         ///
         /// When the text width is limited then this function might remove the last characters in the text if they no
         /// longer fit in the EditBox. You can avoid this by setting LimitTextWidth to false (which is the default).
@@ -272,22 +261,19 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the password character.
+        /// @brief Returns the password character
         ///
         /// @return  The password character that is currently being used.
-        ///          When no password character is used then this function returns 0.
+        ///          When no password character is used then this function returns 0
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        char getPasswordCharacter() const
-        {
-            return m_passwordChar;
-        }
+        char getPasswordCharacter() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the character limit.
+        /// @brief Changes the character limit
         ///
-        /// @param maxChars  The new character limit. Set it to 0 to disable the limit.
+        /// @param maxChars  The new character limit. Set it to 0 to disable the limit
         ///
         /// This character limit is disabled by default.
         ///
@@ -296,22 +282,19 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the character limit.
+        /// @brief Returns the character limit
         ///
         /// @return The character limit.
-        ///         The function will return 0 when there is no limit.
+        ///         The function will return 0 when there is no limit
         ///
         /// There is no character limit by default.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        unsigned int getMaximumCharacters() const
-        {
-            return m_maxChars;
-        }
+        unsigned int getMaximumCharacters() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the text alignment
+        /// @brief Changes the text alignment
         ///
         /// @param alignment  The new text alignment
         ///
@@ -320,21 +303,18 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get the current text alignment
+        /// @brief Gets the current text alignment
         ///
         /// @return Text alignment
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Alignment getAlignment()
-        {
-            return m_textAlignment;
-        }
+        Alignment getAlignment() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Should the text width be limited or should you be able to type even if the edit box is full?
         ///
-        /// @param limitWidth  Should there be a text width limit or not.
+        /// @param limitWidth  Should there be a text width limit or not
         ///
         /// When set to true, you will no longer be able to add text when the edit box is full.
         /// The default value is false.
@@ -344,26 +324,21 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Check if the text width is limited to the size of the edit box
+        /// @brief Checks if the text width is limited to the size of the edit box
         ///
-        /// @return Is the text width limit or not.
+        /// @return Is the text width limit or not
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool isTextWidthLimited()
-        {
-            return m_limitTextWidth;
-        }
+        bool isTextWidthLimited() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Sets the blinking caret to after a specific character.
+        /// @brief Sets the blinking caret to after a specific character
         ///
-        /// @param charactersBeforeCaret  The new position.
-        ///
-        /// Normally you will not need this function.
+        /// @param charactersBeforeCaret  The new position
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setCaretPosition(std::size_t charactersBeforeCaret);
+        void setCaretPosition(size_t charactersBeforeCaret);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,32 +347,11 @@ namespace tgui
         /// @return Characters before the caret
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::size_t getCaretPosition() const;
+        size_t getCaretPosition() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief This will change the width of the caret.
-        ///
-        /// @param width  New width of the caret
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setCaretWidth(float width);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the width of the caret.
-        ///
-        /// @return  Caret width
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        float getCaretWidth()
-        {
-            return m_caret.getSize().x;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Define how the text input should look like
+        /// @brief Defines how the text input should look like
         ///
         /// @param regex  Valid regular expression for std::regex to match on text changes
         ///
@@ -419,95 +373,78 @@ namespace tgui
         /// @return Regex to match the text with on every text change
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const std::string& getInputValidator();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Selects the entire text in the edit box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void selectText();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the opacity of the widget.
-        ///
-        /// @param opacity  The opacity of the widget. 0 means completely transparent, while 1 (default) means fully opaque.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setOpacity(float opacity) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the distance between the position where the widget is drawn and where the widget is placed
-        ///
-        /// This is basically the width and height of the optional borders drawn around widgets.
-        ///
-        /// @return Offset of the widget
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getWidgetOffset() const override;
+        const std::string& getInputValidator() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void leftMousePressed(float x, float y) override;
+        void leftMousePressed(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseMoved(float x, float y) override;
+        void mouseMoved(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void keyPressed(const sf::Event::KeyEvent& event) override;
+        void keyPressed(const sf::Event::KeyEvent& event) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void textEntered(sf::Uint32 Key) override;
+        void textEntered(sf::Uint32 Key) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void widgetFocused() override;
+        void widgetFocused() override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void widgetUnfocused() override;
+        void widgetUnfocused() override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Draw the widget to a render target
+        ///
+        /// @param target Render target to draw to
+        /// @param states Current render states
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Reload the widget
+        /// @brief Function called when one of the properties of the renderer is changed
         ///
-        /// @param primary    Primary parameter for the loader
-        /// @param secondary  Secondary parameter for the loader
-        /// @param force      Try to only change the looks of the widget and not alter the widget itself when false
-        ///
-        /// @throw Exception when the connected theme could not create the widget
-        ///
-        /// When primary is an empty string the built-in white theme will be used.
+        /// @param property  Lowercase name of the property that was changed
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void reload(const std::string& primary = "", const std::string& secondary = "", bool force = false) override;
+        void rendererChanged(const std::string& property) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Returns the size without the borders
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        sf::Vector2f getInnerSize() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Returns the width of the edit box minus the padding.
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        float getVisibleEditBoxWidth();
+        float getVisibleEditBoxWidth() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // This function will search after which character the caret should be placed. It will not change the caret position.
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::size_t findCaretPosition(float posX);
+        size_t findCaretPosition(float posX);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,363 +461,100 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // This function is called every frame with the time passed since the last frame.
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void update(sf::Time elapsedTime) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Makes a copy of the widget
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual Widget::Ptr clone() const override
+        Widget::Ptr clone() const override
         {
             return std::make_shared<EditBox>(*this);
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // This function is called every frame with the time passed since the last frame.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void update(sf::Time elapsedTime) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         // Is the caret visible or not?
-        bool          m_caretVisible = true;
+        bool m_caretVisible = true;
 
         // When this boolean is true then you can no longer add text when the EditBox is full.
         // Changing it to false will allow you to scroll the text (default).
         // You can change the boolean with the limitTextWidth(bool) function.
-        bool          m_limitTextWidth = false;
+        bool m_limitTextWidth = false;
 
         // The text inside the edit box
-        sf::String    m_displayedText;
-        sf::String    m_text;
+        sf::String m_text;
 
-        std::string   m_regexString = ".*";
-        std::regex    m_regex = std::regex{m_regexString};
+        std::string m_regexString = ".*";
+        std::regex m_regex = std::regex{m_regexString};
 
         // This will store the size of the text ( 0 to auto size )
-        unsigned int  m_textSize = 0;
+        unsigned int m_textSize = 0;
 
         // The text alignment
         Alignment m_textAlignment = Alignment::Left;
 
         // The selection
-        std::size_t   m_selChars = 0;
-        std::size_t   m_selStart = 0;
-        std::size_t   m_selEnd = 0;
+        size_t m_selChars = 0;
+        size_t m_selStart = 0;
+        size_t m_selEnd = 0;
 
         // The password character
-        char          m_passwordChar = '\0';
+        char m_passwordChar = '\0';
 
         // The maximum allowed characters.
         // Zero by default, meaning no limit.
-        unsigned int  m_maxChars = 0;
+        unsigned int m_maxChars = 0;
 
         // When the text width is not limited, you can scroll the edit box and only a part will be visible.
-        unsigned int  m_textCropPosition = 0;
+        unsigned int m_textCropPosition = 0;
 
         // The rectangle behind the selected text
-        sf::RectangleShape  m_selectedTextBackground;
+        FloatRect m_selectedTextBackground;
 
         // The blinking caret
-        sf::RectangleShape  m_caret;
-
-        // We need three SFML texts to draw our text, and one more for calculations.
-        sf::Text m_textBeforeSelection;
-        sf::Text m_textSelection;
-        sf::Text m_textAfterSelection;
-        sf::Text m_textFull;
-        sf::Text m_defaultText;
+        FloatRect m_caret;
 
         // Is there a possibility that the user is going to double click?
         bool m_possibleDoubleClick = false;
 
+        // We need three texts for drawing + one for the default text + one more for calculations.
+        Text m_textBeforeSelection;
+        Text m_textSelection;
+        Text m_textAfterSelection;
+        Text m_defaultText;
+        Text m_textFull;
 
-        friend class EditBoxRenderer;
+        Sprite m_sprite;
+        Sprite m_spriteHover;
+        Sprite m_spriteDisabled;
+        Sprite m_spriteFocused;
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Cached renderer properties
+        Borders m_bordersCached;
+        Padding m_paddingCached;
+        Color m_borderColorCached;
+        Color m_borderColorHoverCached;
+        Color m_borderColorDisabledCached;
+        Color m_backgroundColorCached;
+        Color m_backgroundColorHoverCached;
+        Color m_backgroundColorDisabledCached;
+        Color m_caretColorCached;
+        Color m_caretColorHoverCached;
+        Color m_caretColorDisabledCached;
+        Color m_selectedTextBackgroundColorCached;
 
-    };
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class TGUI_API EditBoxRenderer : public WidgetRenderer, public WidgetBorders, public WidgetPadding
-    {
-    public:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor
-        ///
-        /// @param editBox  The edit box that is connected to the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        EditBoxRenderer(EditBox* editBox) : m_editBox{editBox} {}
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new serialized value that you like to assign to the property
-        ///
-        /// @throw Exception when deserialization fails or when the widget does not have this property.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, const std::string& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new value that you like to assign to the property.
-        ///                  The ObjectConverter is implicitly constructed from the possible value types.
-        ///
-        /// @throw Exception for unknown properties or when value was of a wrong type.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, ObjectConverter&& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Retrieve the value of a certain property
-        ///
-        /// @param property  The property that you would like to retrieve
-        ///
-        /// @return The value inside a ObjectConverter object which you can extract with the correct get function or
-        ///         an ObjectConverter object with type ObjectConverter::Type::None when the property did not exist.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual ObjectConverter getProperty(std::string property) const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get a map with all properties and their values
-        ///
-        /// @return Property-value pairs of the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::map<std::string, ObjectConverter> getPropertyValuePairs() const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the padding of the edit box.
-        ///
-        /// When the text is auto-scaled then it will be drawn within the area defined by the size minus the padding.
-        /// The padding is also used to define the clipping area for when the text it too long.
-        ///
-        /// This padding will be scaled together with the background image.
-        /// If there is no background image, or when 9-slice scaling is used, the padding will be exactly what you pass here.
-        ///
-        /// @param padding  The padding width and height
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setPadding(const Padding& padding) override;
-        using WidgetPadding::setPadding;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief This will change the width of the caret.
-        ///
-        /// @param width  New width of the caret
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setCaretWidth(float width);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the text color that will be used inside the edit box.
-        ///
-        /// @param textColor  The new text color.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTextColor(const Color& textColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the text color of the selected text that will be used inside the edit box.
-        ///
-        /// @param selectedTextColor  The new text color.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setSelectedTextColor(const Color& selectedTextColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the background color of the selected text that will be used inside the edit box.
-        ///
-        /// @param selectedTextBackgroundColor  The new background color.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setSelectedTextBackgroundColor(const Color& selectedTextBackgroundColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the color of the default text that can optionally be displayed when the edit box is empty.
-        ///
-        /// @param defaultTextColor  The new default text color.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setDefaultTextColor(const Color& defaultTextColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the background.
-        ///
-        /// @param color  New background color
-        ///
-        /// This color will overwrite the color for both the normal and hover state.
-        ///
-        /// Note that this color is ignored when you set an image as background.
-        ///
-        /// @see setTextColorNormal
-        /// @see setTextColorHover
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the background in the normal state (mouse not on edit box).
-        ///
-        /// @param color  New background color
-        ///
-        /// Note that this color is ignored when you set an image as background.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundColorNormal(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the background in the hover state (mouse on edit box, but not pressed).
-        ///
-        /// @param color  New background color
-        ///
-        /// Note that this color is ignored when you set an image as background.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundColorHover(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the color that will be used inside the edit box for the blinking caret.
-        ///
-        /// @param caretColor  The color of the blinking caret
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setCaretColor(const Color& caretColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the color of the borders.
-        ///
-        /// @param color  New border color
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBorderColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image that is displayed when the mouse is not on the edit box
-        ///
-        /// @param texture  The new normal texture
-        ///
-        /// When this image is set, the background color property will be ignored.
-        /// Pass an empty texture to unset the image, in this case the background color property will be used again.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setNormalTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image that is displayed when the mouse is located on top of the edit box
-        ///
-        /// @param texture  The new hover texture
-        ///
-        /// Pass an empty texture to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setHoverTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the image that is drawn on top of the edit box image when the edit box is focused
-        ///
-        /// @param texture  The new focus texture
-        ///
-        /// Pass an empty texture to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setFocusTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the text style of the default text (the text drawn when the edit box is empty)
-        ///
-        /// @param style  The new default text style
-        ///
-        /// By default text style is italic.
-        ///
-        /// @code
-        /// editBox->getRenderer()->setDefaultTextStyle(sf::Text::Italic | sf::Text::Bold);
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setDefaultTextStyle(sf::Uint32 style);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Returns the padding, which is possibly scaled with the background image.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Padding getScaledPadding() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Makes a copy of the renderer
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::shared_ptr<WidgetRenderer> clone(Widget* widget) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected:
-
-        EditBox*  m_editBox;
-
-        sf::Color m_textColor;
-        sf::Color m_selectedTextColor;
-        sf::Color m_selectedTextBackgroundColor;
-        sf::Color m_defaultTextColor;
-        sf::Color m_backgroundColorNormal;
-        sf::Color m_backgroundColorHover;
-        sf::Color m_caretColor;
-        sf::Color m_borderColor;
-
-        Texture   m_textureNormal;
-        Texture   m_textureHover;
-        Texture   m_textureFocused;
-
-        friend class EditBox;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // TGUI_EDIT_BOX_HPP

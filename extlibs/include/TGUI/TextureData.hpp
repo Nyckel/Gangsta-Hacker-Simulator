@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -47,8 +47,8 @@ namespace tgui
     struct TGUI_API TextureData
     {
         std::shared_ptr<sf::Image> image;
-        sf::Texture   texture;
-        sf::IntRect   rect;
+        sf::Texture texture;
+        sf::IntRect rect;
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +57,8 @@ namespace tgui
     struct TGUI_API TextureDataHolder
     {
         std::shared_ptr<TextureData> data;
-        std::string   filename;
-        unsigned int  users;
+        std::string filename;
+        unsigned int users;
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

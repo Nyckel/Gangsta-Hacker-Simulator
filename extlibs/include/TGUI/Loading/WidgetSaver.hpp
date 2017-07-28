@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,7 +27,6 @@
 #define TGUI_WIDGET_SAVER_HPP
 
 
-#include <TGUI/Loading/WidgetConverter.hpp>
 #include <TGUI/Loading/DataIO.hpp>
 #include <TGUI/Container.hpp>
 
@@ -42,11 +41,11 @@ namespace tgui
     class TGUI_API WidgetSaver
     {
     public:
-        using SaveFunction = std::function<std::shared_ptr<DataIO::Node>(WidgetConverter)>;
+        using SaveFunction = std::function<std::shared_ptr<DataIO::Node>(Widget::Ptr)>;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Save a container and its child widgets to a stream
+        /// @brief Saves a container and its child widgets to a stream
         ///
         /// @param widget  The container to save
         /// @param stream  Stream to which the widget file will be written to
@@ -59,7 +58,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the save function for a certain widget type
+        /// @brief Changes the save function for a certain widget type
         ///
         /// @param type         Type of the widget
         /// @param saveFunction New save function
@@ -69,7 +68,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Retrieve the save function of a certain widget type
+        /// @brief Retrieves the save function of a certain widget type
         ///
         /// @param type  Type of the widget
         ///

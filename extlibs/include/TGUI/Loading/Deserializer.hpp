@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,14 +27,14 @@
 #define TGUI_DESERIALIZER_HPP
 
 
-#include <TGUI/Loading/ObjectConverter.hpp>
+#include <TGUI/ObjectConverter.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// @brief Deserialize an settable property
+    /// @brief Deserializes a settable property
     ///
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     class TGUI_API Deserializer
@@ -46,6 +46,9 @@ namespace tgui
 
         static void setFunction(ObjectConverter::Type type, const DeserializeFunc& deserializer);
         static const DeserializeFunc& getFunction(ObjectConverter::Type type);
+
+    public:
+        static std::vector<std::string> split(const std::string& str, char delim);
 
     private:
         static std::map<ObjectConverter::Type, DeserializeFunc> m_deserializers;

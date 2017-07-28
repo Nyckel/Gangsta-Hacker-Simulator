@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,7 +27,9 @@
 #define TGUI_CLIPBOARD_HPP
 
 
-#include <TGUI/Global.hpp>
+#include <TGUI/Config.hpp>
+#include <SFML/System/String.hpp>
+#include <SFML/Window/WindowHandle.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +39,7 @@ namespace tgui
 
     class TGUI_API Clipboard
     {
-      public:
+    public:
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Returns the contents of the clipboard
         ///
@@ -66,7 +68,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      protected:
+    protected:
 
         static sf::String m_contents;
         static sf::WindowHandle m_windowHandle;

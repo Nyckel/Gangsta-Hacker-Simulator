@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -31,22 +31,14 @@ namespace tgui
 {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ClickableWidget::ClickableWidget(const Layout2d& size)
+    ClickableWidget::ClickableWidget()
     {
+        m_type = "ClickableWidget";
         m_callback.widgetType = "ClickableWidget";
 
         addSignal<sf::Vector2f>("MousePressed");
         addSignal<sf::Vector2f>("MouseReleased");
         addSignal<sf::Vector2f>("Clicked");
-
-        setSize(size);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ClickableWidget::ClickableWidget(const Layout& width, const Layout& height) :
-        ClickableWidget{Layout2d{width, height}}
-    {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,42 +52,43 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ClickableWidget::Ptr ClickableWidget::copy(ClickableWidget::ConstPtr widget)
+    ClickableWidget::Ptr ClickableWidget::copy(ConstPtr widget)
     {
         if (widget)
             return std::static_pointer_cast<ClickableWidget>(widget->clone());
-        else
-            return nullptr;
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool ClickableWidget::mouseOnWidget(float x, float y) const
+    bool ClickableWidget::mouseOnWidget(sf::Vector2f pos) const
     {
-        return sf::FloatRect{getPosition().x, getPosition().y, getSize().x, getSize().y}.contains(x, y);
+        return sf::FloatRect{0, 0, getSize().x, getSize().y}.contains(pos);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void ClickableWidget::leftMousePressed(float x, float y)
+    void ClickableWidget::leftMousePressed(sf::Vector2f pos)
     {
-        m_mouseDown = true;
+        m_mouseDown = true; /// TODO: Is there any widget for which this can't be in Widget base class?
 
-        m_callback.mouse.x = static_cast<int>(x - getPosition().x);
-        m_callback.mouse.y = static_cast<int>(y - getPosition().y);
-        sendSignal("MousePressed", sf::Vector2f{x - getPosition().x, y - getPosition().y});
+        m_callback.mouse.x = static_cast<int>(pos.x);
+        m_callback.mouse.y = static_cast<int>(pos.y);
+        sendSignal("MousePressed", pos);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void ClickableWidget::leftMouseReleased(float x, float y)
+    void ClickableWidget::leftMouseReleased(sf::Vector2f pos)
     {
-        m_callback.mouse.x = static_cast<int>(x - getPosition().x);
-        m_callback.mouse.y = static_cast<int>(y - getPosition().y);
-        sendSignal("MouseReleased", sf::Vector2f{x - getPosition().x, y - getPosition().y});
+        m_callback.mouse.x = static_cast<int>(pos.x);
+        m_callback.mouse.y = static_cast<int>(pos.y);
+        sendSignal("MouseReleased", pos);
 
         if (m_mouseDown)
-            sendSignal("Clicked", sf::Vector2f{x - getPosition().x, y - getPosition().y});
+            sendSignal("Clicked", pos);
+
+        m_mouseDown = false; /// TODO: Is there any widget for which this can't be in Widget base class?
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

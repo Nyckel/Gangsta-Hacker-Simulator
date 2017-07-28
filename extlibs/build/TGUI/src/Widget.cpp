@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,12 +23,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include <TGUI/Loading/Theme.hpp>
-#include <TGUI/Widgets/ToolTip.hpp>
+#include <TGUI/ToolTip.hpp>
 #include <TGUI/Container.hpp>
 #include <TGUI/Animation.hpp>
-
-#include <cassert>
+#include <SFML/System/Err.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,13 +70,20 @@ namespace tgui
         addSignal("Unfocused");
         addSignal("MouseEntered");
         addSignal("MouseLeft");
+
+        m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
+
+        // The opacity is 1 by default and thus has to be explicitly initialized
+        m_opacityCached = getRenderer()->getOpacity();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Widget::~Widget()
     {
-        detachTheme();
+        // The renderer will be null when the widget was moved
+        if (m_renderer)
+            m_renderer->unsubscribe(this);
 
         if (m_position.x.getImpl()->parentWidget == this)
             m_position.x.getImpl()->parentWidget = nullptr;
@@ -91,32 +97,24 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Widget::Widget(const Widget& copy) :
-        sf::Drawable     {copy},
-        Transformable    {copy},
-        SignalWidgetBase {copy},
-        enable_shared_from_this<Widget>{copy},
-        m_disabledBlockingMouseEvents  {copy.m_disabledBlockingMouseEvents},
-        m_enabled        {copy.m_enabled},
-        m_visible        {copy.m_visible},
-        m_parent         {nullptr},
-        m_opacity        {copy.m_opacity},
-        m_mouseHover     {false},
-        m_mouseDown      {false},
-        m_focused        {false},
-        m_allowFocus     {copy.m_allowFocus},
-        m_draggableWidget{copy.m_draggableWidget},
-        m_containerWidget{copy.m_containerWidget},
-        m_font           {copy.m_font}
+    Widget::Widget(const Widget& other) :
+        Transformable {other},
+        SignalWidgetBase {other},
+        enable_shared_from_this<Widget>{other},
+        m_type(other.m_type), // Did not compile in VS2013 when using braces
+        m_enabled {other.m_enabled},
+        m_visible {other.m_visible},
+        m_parent {nullptr},
+        m_allowFocus {other.m_allowFocus},
+        m_draggableWidget {other.m_draggableWidget},
+        m_containerWidget {other.m_containerWidget},
+        m_toolTip {other.m_toolTip ? other.m_toolTip->clone() : nullptr},
+        m_renderer {other.m_renderer},
+        m_showAnimations(other.m_showAnimations), // Did not compile in VS2013 when using braces
+        m_fontCached {other.m_fontCached},
+        m_opacityCached {other.m_opacityCached}
     {
         m_callback.widget = this;
-        m_callback.widgetType = copy.m_callback.widgetType;
-
-        if (copy.m_toolTip != nullptr)
-            m_toolTip = copy.m_toolTip->clone();
-
-        if (copy.m_renderer != nullptr)
-            m_renderer = copy.m_renderer->clone(this);
 
         m_position.x.getImpl()->parentWidget = this;
         m_position.x.getImpl()->recalculate();
@@ -129,46 +127,82 @@ namespace tgui
 
         m_size.y.getImpl()->parentWidget = this;
         m_size.y.getImpl()->recalculate();
+
+        m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Widget& Widget::operator= (const Widget& right)
+    Widget::Widget(Widget&& other) :
+        Transformable {std::move(other)},
+        SignalWidgetBase {std::move(other)},
+        enable_shared_from_this<Widget>{std::move(other)},
+        m_type(std::move(other.m_type)), // Did not compile in VS2013 when using braces
+        m_enabled {std::move(other.m_enabled)},
+        m_visible {std::move(other.m_visible)},
+        m_parent {nullptr},
+        m_mouseHover {std::move(other.m_mouseHover)},
+        m_mouseDown {std::move(other.m_mouseDown)},
+        m_focused {std::move(other.m_focused)},
+        m_allowFocus {std::move(other.m_allowFocus)},
+        m_animationTimeElapsed {std::move(other.m_animationTimeElapsed)},
+        m_draggableWidget {std::move(other.m_draggableWidget)},
+        m_containerWidget {std::move(other.m_containerWidget)},
+        m_toolTip {std::move(other.m_toolTip)},
+        m_renderer {other.m_renderer},
+        m_showAnimations(std::move(other.m_showAnimations)), // Did not compile in VS2013 when using braces
+        m_fontCached {std::move(other.m_fontCached)},
+        m_opacityCached {std::move(other.m_opacityCached)}
     {
-        if (this != &right)
+        m_callback.widget = this;
+
+        m_position.x.getImpl()->parentWidget = this;
+        m_position.x.getImpl()->recalculate();
+
+        m_position.y.getImpl()->parentWidget = this;
+        m_position.y.getImpl()->recalculate();
+
+        m_size.x.getImpl()->parentWidget = this;
+        m_size.x.getImpl()->recalculate();
+
+        m_size.y.getImpl()->parentWidget = this;
+        m_size.y.getImpl()->recalculate();
+
+        other.m_renderer->unsubscribe(&other);
+        m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
+
+        other.m_renderer = nullptr;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Widget& Widget::operator=(const Widget& other)
+    {
+        if (this != &other)
         {
-            sf::Drawable::operator=(right);
-            Transformable::operator=(right);
-            SignalWidgetBase::operator=(right);
-            enable_shared_from_this::operator=(right);
+            m_renderer->unsubscribe(this);
 
-            m_disabledBlockingMouseEvents = right.m_disabledBlockingMouseEvents;
-            m_enabled             = right.m_enabled;
-            m_visible             = right.m_visible;
-            m_parent              = nullptr;
-            m_opacity             = right.m_opacity;
-            m_mouseHover          = false;
-            m_mouseDown           = false;
-            m_focused             = false;
-            m_allowFocus          = right.m_allowFocus;
-            m_draggableWidget     = right.m_draggableWidget;
-            m_containerWidget     = right.m_containerWidget;
-            m_font                = right.m_font;
-            m_callback.widget     = this;
-            m_callback.widgetType = right.m_callback.widgetType;
+            Transformable::operator=(other);
+            SignalWidgetBase::operator=(other);
+            enable_shared_from_this::operator=(other);
 
-            if (right.m_toolTip != nullptr)
-                m_toolTip = right.m_toolTip->clone();
-            else
-                m_toolTip = nullptr;
-
-            if (right.m_renderer != nullptr)
-                m_renderer = right.m_renderer->clone(this);
-            else
-                m_renderer = nullptr;
-
-            // Animations can't be copied
+            m_callback.widget = this;
+            m_type = other.m_type;
+            m_enabled = other.m_enabled;
+            m_visible = other.m_visible;
+            m_parent = nullptr;
+            m_mouseHover = false;
+            m_mouseDown = false;
+            m_focused = false;
+            m_allowFocus = other.m_allowFocus;
+            m_animationTimeElapsed = {};
+            m_draggableWidget = other.m_draggableWidget;
+            m_containerWidget = other.m_containerWidget;
+            m_toolTip = other.m_toolTip ? other.m_toolTip->clone() : nullptr;
+            m_renderer = other.m_renderer;
             m_showAnimations = {};
+            m_fontCached = other.m_fontCached;
+            m_opacityCached = other.m_opacityCached;
 
             m_position.x.getImpl()->parentWidget = this;
             m_position.x.getImpl()->recalculate();
@@ -181,9 +215,121 @@ namespace tgui
 
             m_size.y.getImpl()->parentWidget = this;
             m_size.y.getImpl()->recalculate();
+
+            m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
         }
 
         return *this;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Widget& Widget::operator=(Widget&& other)
+    {
+        if (this != &other)
+        {
+            m_renderer->unsubscribe(this);
+            other.m_renderer->unsubscribe(&other);
+
+            Transformable::operator=(std::move(other));
+            SignalWidgetBase::operator=(std::move(other));
+            enable_shared_from_this::operator=(std::move(other));
+
+            m_callback.widget = this;
+            m_type = std::move(other.m_type);
+            m_enabled = std::move(other.m_enabled);
+            m_visible = std::move(other.m_visible);
+            m_parent = nullptr;
+            m_mouseHover = std::move(other.m_mouseHover);
+            m_mouseDown = std::move(other.m_mouseDown);
+            m_focused = std::move(other.m_focused);
+            m_animationTimeElapsed = std::move(other.m_animationTimeElapsed);
+            m_allowFocus = std::move(other.m_allowFocus);
+            m_draggableWidget = std::move(other.m_draggableWidget);
+            m_containerWidget = std::move(other.m_containerWidget);
+            m_toolTip = std::move(other.m_toolTip);
+            m_renderer = std::move(other.m_renderer);
+            m_showAnimations = std::move(other.m_showAnimations);
+            m_fontCached = std::move(other.m_fontCached);
+            m_opacityCached = std::move(other.m_opacityCached);
+
+            m_position.x.getImpl()->parentWidget = this;
+            m_position.x.getImpl()->recalculate();
+
+            m_position.y.getImpl()->parentWidget = this;
+            m_position.y.getImpl()->recalculate();
+
+            m_size.x.getImpl()->parentWidget = this;
+            m_size.x.getImpl()->recalculate();
+
+            m_size.y.getImpl()->parentWidget = this;
+            m_size.y.getImpl()->recalculate();
+
+            m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
+
+            other.m_renderer = nullptr;
+        }
+
+        return *this;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Widget::setRenderer(std::shared_ptr<RendererData> rendererData)
+    {
+        std::shared_ptr<RendererData> oldData = m_renderer->getData();
+
+        // If no font is given then try to use the one from the parent
+        if (m_parent && m_parent->getRenderer()->getFont() && (rendererData->propertyValuePairs.find("font") == rendererData->propertyValuePairs.end()))
+            rendererData->propertyValuePairs["font"] = ObjectConverter(m_parent->getRenderer()->getFont());
+
+        // Update the data
+        m_renderer->unsubscribe(this);
+        m_renderer->setData(rendererData);
+        m_renderer->subscribe(this, [this](const std::string& property) { rendererChangedCallback(property); });
+
+        // Tell the widget about all the updated properties, both new ones and old ones that were now reset to their default value
+        auto oldIt = oldData->propertyValuePairs.begin();
+        auto newIt = rendererData->propertyValuePairs.begin();
+        while (oldIt != oldData->propertyValuePairs.end() && newIt != rendererData->propertyValuePairs.end())
+        {
+            if (oldIt->first < newIt->first)
+            {
+                // Update values that no longer exist in the new renderer and are now reset to the default value
+                rendererChanged(oldIt->first);
+                ++oldIt;
+            }
+            else
+            {
+                // Update changed and new properties
+                rendererChanged(newIt->first);
+
+                if (newIt->first < oldIt->first)
+                    ++newIt;
+                else
+                {
+                    ++oldIt;
+                    ++newIt;
+                }
+            }
+        }
+        while (oldIt != oldData->propertyValuePairs.end())
+        {
+            rendererChanged(oldIt->first);
+            ++oldIt;
+        }
+        while (newIt != rendererData->propertyValuePairs.end())
+        {
+            rendererChanged(newIt->first);
+            ++newIt;
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    WidgetRenderer* Widget::getRenderer() const
+    {
+        return m_renderer.get();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -234,8 +380,14 @@ namespace tgui
     {
         if (m_parent)
             return m_parent->getAbsolutePosition() + m_parent->getChildWidgetsOffset() + getPosition();
-        else
-            return getPosition();
+        return getPosition();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    sf::Vector2f Widget::getWidgetOffset() const
+    {
+        return sf::Vector2f{0, 0};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,13 +405,13 @@ namespace tgui
 
         switch (type)
         {
-            case ShowAnimationType::Fade:
+        case ShowAnimationType::Fade:
             {
-                addAnimation(m_showAnimations, std::make_shared<priv::FadeAnimation>(shared_from_this(), 0.f, getOpacity(), duration));
-                setOpacity(0);
+                addAnimation(m_showAnimations, std::make_shared<priv::FadeAnimation>(shared_from_this(), 0.f, m_opacityCached, duration));
+                getRenderer()->setOpacity(0);
                 break;
             }
-            case ShowAnimationType::Scale:
+        case ShowAnimationType::Scale:
             {
                 addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), getPosition() + (getSize() / 2.f), getPosition(), duration));
                 addAnimation(m_showAnimations, std::make_shared<priv::ResizeAnimation>(shared_from_this(), sf::Vector2f{0, 0}, getSize(), duration));
@@ -267,13 +419,13 @@ namespace tgui
                 setSize(0, 0);
                 break;
             }
-            case ShowAnimationType::SlideFromLeft:
+        case ShowAnimationType::SlideFromLeft:
             {
                 addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), sf::Vector2f{-getFullSize().x, getPosition().y}, getPosition(), duration));
                 setPosition({-getFullSize().x, getPosition().y});
                 break;
             }
-            case ShowAnimationType::SlideFromRight:
+        case ShowAnimationType::SlideFromRight:
             {
                 if (getParent())
                 {
@@ -285,13 +437,13 @@ namespace tgui
 
                 break;
             }
-            case ShowAnimationType::SlideFromTop:
+        case ShowAnimationType::SlideFromTop:
             {
                 addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), sf::Vector2f{getPosition().x, -getFullSize().y}, getPosition(), duration));
                 setPosition({getPosition().x, -getFullSize().y});
                 break;
             }
-            case ShowAnimationType::SlideFromBottom:
+        case ShowAnimationType::SlideFromBottom:
             {
                 if (getParent())
                 {
@@ -320,49 +472,79 @@ namespace tgui
 
     void Widget::hideWithEffect(ShowAnimationType type, sf::Time duration)
     {
-        auto opacity = getOpacity();
         auto position = getPosition();
         auto size = getSize();
 
         switch (type)
         {
-            case ShowAnimationType::Fade:
+        case ShowAnimationType::Fade:
             {
-                addAnimation(m_showAnimations, std::make_shared<priv::FadeAnimation>(shared_from_this(), opacity, 0.f, duration, [=](){ hide(); setOpacity(opacity); }));
+                float opacity = m_opacityCached;
+                addAnimation(m_showAnimations, std::make_shared<priv::FadeAnimation>(shared_from_this(), m_opacityCached, 0.f, duration, [=]()
+                                                                                 {
+                                                                                     hide();
+                                                                                     getRenderer()->setOpacity(opacity);
+                                                                                 }));
                 break;
             }
-            case ShowAnimationType::Scale:
+        case ShowAnimationType::Scale:
             {
-                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, position + (size / 2.f), duration, [=](){ hide(); setPosition(position); setSize(size); }));
-                addAnimation(m_showAnimations, std::make_shared<priv::ResizeAnimation>(shared_from_this(), size, sf::Vector2f{0, 0}, duration, [=](){ hide(); setPosition(position); setSize(size); }));
+                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, position + (size / 2.f), duration, [=]()
+                                                                                 {
+                                                                                     hide();
+                                                                                     setPosition(position);
+                                                                                     setSize(size);
+                                                                                 }));
+                addAnimation(m_showAnimations, std::make_shared<priv::ResizeAnimation>(shared_from_this(), size, sf::Vector2f{0, 0}, duration, [=]()
+                                                                                   {
+                                                                                       hide();
+                                                                                       setPosition(position);
+                                                                                       setSize(size);
+                                                                                   }));
                 break;
             }
-            case ShowAnimationType::SlideToRight:
+        case ShowAnimationType::SlideToRight:
             {
                 if (getParent())
-                    addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{getParent()->getSize().x + getWidgetOffset().x, position.y}, duration, [=](){ hide(); setPosition(position); }));
+                    addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{getParent()->getSize().x + getWidgetOffset().x, position.y}, duration, [=]()
+                                                                                     {
+                                                                                         hide();
+                                                                                         setPosition(position);
+                                                                                     }));
                 else
                     sf::err() << "TGUI Warning: hideWithEffect(SlideToRight) does not work before widget has a parent." << std::endl;
 
                 break;
             }
-            case ShowAnimationType::SlideToLeft:
+        case ShowAnimationType::SlideToLeft:
             {
-                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{-getFullSize().x, position.y}, duration, [=](){ hide(); setPosition(position); }));
+                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{-getFullSize().x, position.y}, duration, [=]()
+                                                                                 {
+                                                                                     hide();
+                                                                                     setPosition(position);
+                                                                                 }));
                 break;
             }
-            case ShowAnimationType::SlideToBottom:
+        case ShowAnimationType::SlideToBottom:
             {
                 if (getParent())
-                    addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{position.x, getParent()->getSize().y + getWidgetOffset().y}, duration, [=](){ hide(); setPosition(position); }));
+                    addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{position.x, getParent()->getSize().y + getWidgetOffset().y}, duration, [=]()
+                                                                                     {
+                                                                                         hide();
+                                                                                         setPosition(position);
+                                                                                     }));
                 else
                     sf::err() << "TGUI Warning: hideWithEffect(SlideToBottom) does not work before widget has a parent." << std::endl;
 
                 break;
             }
-            case ShowAnimationType::SlideToTop:
+        case ShowAnimationType::SlideToTop:
             {
-                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{position.x, -getFullSize().y}, duration, [=](){ hide(); setPosition(position); }));
+                addAnimation(m_showAnimations, std::make_shared<priv::MoveAnimation>(shared_from_this(), position, sf::Vector2f{position.x, -getFullSize().y}, duration, [=]()
+                                                                                 {
+                                                                                     hide();
+                                                                                     setPosition(position);
+                                                                                 }));
                 break;
             }
         }
@@ -377,10 +559,9 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::disable(bool blockMouseEvents)
+    void Widget::disable()
     {
         m_enabled = false;
-        m_disabledBlockingMouseEvents = blockMouseEvents;
 
         // Change the mouse button state.
         m_mouseHover = false;
@@ -395,8 +576,7 @@ namespace tgui
     void Widget::focus()
     {
         if (m_parent)
-            m_parent->focusWidget(this);
-            /// TODO: Use shared_from_this instead (forces all widgets, including internal ones to be shared pointers)
+            m_parent->focusWidget(shared_from_this());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -409,14 +589,9 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::setOpacity(float opacity)
+    const std::string& Widget::getWidgetType() const
     {
-        if (opacity < 0)
-            m_opacity = 0;
-        else if (opacity > 1)
-            m_opacity = 1;
-        else
-            m_opacity = opacity;
+        return m_type;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +599,7 @@ namespace tgui
     void Widget::moveToFront()
     {
         if (m_parent)
-            m_parent->moveWidgetToFront(this);
+            m_parent->moveWidgetToFront(shared_from_this());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -432,12 +607,12 @@ namespace tgui
     void Widget::moveToBack()
     {
         if (m_parent)
-            m_parent->moveWidgetToBack(this);
+            m_parent->moveWidgetToBack(shared_from_this());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::setToolTip(Widget::Ptr toolTip)
+    void Widget::setToolTip(Ptr toolTip)
     {
         m_toolTip = toolTip;
     }
@@ -447,31 +622,6 @@ namespace tgui
     Widget::Ptr Widget::getToolTip()
     {
         return m_toolTip;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Widget::setFont(const Font& font)
-    {
-        m_font = font.getFont();
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<sf::Font> Widget::getFont() const
-    {
-        return m_font;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Widget::detachTheme()
-    {
-        if (m_theme)
-        {
-            m_theme->widgetDetached(this);
-            m_theme = nullptr;
-        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -505,19 +655,19 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::leftMousePressed(float, float)
+    void Widget::leftMousePressed(sf::Vector2f)
     {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::leftMouseReleased(float, float)
+    void Widget::leftMouseReleased(sf::Vector2f)
     {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::mouseMoved(float, float)
+    void Widget::mouseMoved(sf::Vector2f)
     {
         if (!m_mouseHover)
             mouseEnteredWidget();
@@ -537,7 +687,7 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Widget::mouseWheelMoved(int, int, int)
+    void Widget::mouseWheelScrolled(float, int, int)
     {
     }
 
@@ -578,29 +728,21 @@ namespace tgui
 
     Widget::Ptr Widget::askToolTip(sf::Vector2f mousePos)
     {
-        if (m_toolTip && mouseOnWidget(mousePos.x, mousePos.y))
+        if (m_toolTip && mouseOnWidget(mousePos))
             return getToolTip();
+        return nullptr;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Widget::rendererChanged(const std::string& property)
+    {
+        if (property == "opacity")
+            m_opacityCached = getRenderer()->getOpacity();
+        else if (property == "font")
+            m_fontCached = getRenderer()->getFont();
         else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Widget::attachTheme(std::shared_ptr<BaseTheme> theme)
-    {
-        detachTheme();
-        m_theme = theme;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Widget::reload(const std::string& primary, const std::string& secondary, bool)
-    {
-        m_primaryLoadingParameter = primary;
-        m_secondaryLoadingParameter = secondary;
-
-        if (m_theme && primary != "")
-            m_theme->initWidget(this, primary, secondary);
+            throw Exception{"Could not set property '" + property + "', widget of type '" + getWidgetType() + "' does not has this property."};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -621,38 +763,73 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool Widget::isDisabledBlockingMouseEvents() const
+    void Widget::rendererChangedCallback(const std::string& property)
     {
-        return m_disabledBlockingMouseEvents;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void WidgetRenderer::setProperty(std::string property, const std::string&)
-    {
-        throw Exception{"Could not set property '" + property + "', widget does not has this property."};
+        rendererChanged(property);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void WidgetRenderer::setProperty(std::string property, ObjectConverter&&)
+    void Widget::drawRectangleShape(sf::RenderTarget& target,
+                                    const sf::RenderStates& states,
+                                    sf::Vector2f size,
+                                    sf::Color color) const
     {
-        throw Exception{"Could not set property '" + property + "', widget does not has this property."};
+        sf::RectangleShape shape{size};
+
+        if (m_opacityCached < 1)
+            shape.setFillColor(Color::calcColorOpacity(color, m_opacityCached));
+        else
+            shape.setFillColor(color);
+
+        target.draw(shape, states);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    ObjectConverter WidgetRenderer::getProperty(std::string) const
+    void Widget::drawBorders(sf::RenderTarget& target,
+                             const sf::RenderStates& states,
+                             const Borders& borders,
+                             sf::Vector2f size,
+                             sf::Color color) const
     {
-        return {};
-    }
+        color = Color::calcColorOpacity(color, m_opacityCached);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // If size is too small then draw entire size as border
+        if ((size.x <= borders.left + borders.right) || (size.y <= borders.top + borders.bottom))
+        {
+            sf::RectangleShape border;
+            border.setFillColor(color);
+            border.setSize({size.x, size.y});
+            target.draw(border, states);
+        }
+        else // Draw borders in the normal way
+        {
+            //////////////////////
+            // 0--1/8---------6 //
+            // |              | //
+            // |   9------7   | //
+            // |   |      |   | //
+            // |   |      |   | //
+            // |   3------5   | //
+            // |              | //
+            // 2--------------4 //
+            //////////////////////
+            std::vector<sf::Vertex> vertices = {
+                {{0, 0}, color},
+                {{borders.left, 0}, color},
+                {{0, size.y}, color},
+                {{borders.left, size.y - borders.bottom}, color},
+                {{size.x, size.y}, color},
+                {{size.x - borders.right, size.y - borders.bottom}, color},
+                {{size.x, 0}, color},
+                {{size.x - borders.right, borders.top}, color},
+                {{borders.left, 0}, color},
+                {{borders.left, borders.top}, color}
+            };
 
-    std::map<std::string, ObjectConverter> WidgetRenderer::getPropertyValuePairs() const
-    {
-        return std::map<std::string, ObjectConverter>{};
+            target.draw(vertices.data(), vertices.size(), sf::PrimitiveType::TrianglesStrip, states);
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

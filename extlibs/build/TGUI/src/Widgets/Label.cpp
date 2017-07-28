@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,9 +23,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include <TGUI/Container.hpp>
 #include <TGUI/Widgets/Label.hpp>
-#include <TGUI/Loading/Theme.hpp>
 #include <TGUI/Clipping.hpp>
 
 #include <cmath>
@@ -34,18 +32,25 @@
 
 namespace tgui
 {
+    static std::map<std::string, ObjectConverter> defaultRendererValues =
+    {
+        {"borders", Borders{}},
+        {"bordercolor", Color{60, 60, 60}},
+        {"textcolor", Color{60, 60, 60}},
+        {"backgroundcolor", sf::Color::Transparent}
+    };
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Label::Label()
     {
+        m_type = "Label";
         m_callback.widgetType = "Label";
 
         addSignal<sf::String>("DoubleClicked");
 
-        m_renderer = std::make_shared<LabelRenderer>(this);
-        reload();
-
-        setTextSize(m_textSize);
+        m_renderer = aurora::makeCopied<LabelRenderer>();
+        setRenderer(RendererData::create(defaultRendererValues));
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,69 +67,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Label::Ptr Label::copy(Label::ConstPtr label)
+    Label::Ptr Label::copy(ConstPtr label)
     {
         if (label)
             return std::static_pointer_cast<Label>(label->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Label::setPosition(const Layout2d& position)
-    {
-        Widget::setPosition(position);
-
-        m_background.setPosition(getPosition());
-
-        if (getFont())
-        {
-            sf::Vector2f pos{std::round(getPosition().x + getRenderer()->getPadding().left),
-                             getPosition().y + getRenderer()->getPadding().top - getTextVerticalCorrection(getFont(), m_textSize, m_textStyle)};
-
-            if (m_verticalAlignment != VerticalAlignment::Top)
-            {
-                float totalHeight = getSize().y - getRenderer()->getPadding().top - getRenderer()->getPadding().bottom;
-                float totalTextHeight = m_lines.size() * getFont()->getLineSpacing(m_textSize);
-
-                if (m_verticalAlignment == VerticalAlignment::Center)
-                    pos.y += (totalHeight - totalTextHeight) / 2.f;
-                else if (m_verticalAlignment == VerticalAlignment::Bottom)
-                    pos.y += totalHeight - totalTextHeight;
-            }
-
-            if (m_horizontalAlignment == HorizontalAlignment::Left)
-            {
-                for (auto& line : m_lines)
-                {
-                    line.setPosition(pos.x, std::floor(pos.y));
-                    pos.y += getFont()->getLineSpacing(m_textSize);
-                }
-            }
-            else // Center or Right alignment
-            {
-                float totalWidth = getSize().x - getRenderer()->getPadding().left - getRenderer()->getPadding().right;
-
-                for (auto& line : m_lines)
-                {
-                    line.setPosition(0, 0);
-
-                    std::size_t lastChar = line.getString().getSize();
-                    while (lastChar > 0 && isWhitespace(line.getString()[lastChar-1]))
-                        lastChar--;
-
-                    float textWidth = line.findCharacterPos(lastChar).x;
-
-                    if (m_horizontalAlignment == HorizontalAlignment::Center)
-                        line.setPosition(std::round(pos.x + (totalWidth - textWidth) / 2.f), std::floor(pos.y));
-                    else if (m_horizontalAlignment == HorizontalAlignment::Right)
-                        line.setPosition(std::round(pos.x + totalWidth - textWidth), std::floor(pos.y));
-
-                    pos.y += getFont()->getLineSpacing(m_textSize);
-                }
-            }
-        }
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,27 +80,8 @@ namespace tgui
     {
         Widget::setSize(size);
 
-        m_background.setSize(getSize());
-
         // You are no longer auto-sizing
         m_autoSize = false;
-
-        rearrangeText();
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    sf::Vector2f Label::getFullSize() const
-    {
-        return {getSize().x + getRenderer()->getBorders().left + getRenderer()->getBorders().right,
-                getSize().y + getRenderer()->getBorders().top + getRenderer()->getBorders().bottom};
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Label::setFont(const Font& font)
-    {
-        Widget::setFont(font);
         rearrangeText();
     }
 
@@ -163,6 +91,13 @@ namespace tgui
     {
         m_string = string;
         rearrangeText();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    const sf::String& Label::getText() const
+    {
+        return m_string;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +123,7 @@ namespace tgui
     void Label::setHorizontalAlignment(HorizontalAlignment alignment)
     {
         m_horizontalAlignment = alignment;
-        updatePosition();
+        rearrangeText();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +138,7 @@ namespace tgui
     void Label::setVerticalAlignment(VerticalAlignment alignment)
     {
         m_verticalAlignment = alignment;
-        updatePosition();
+        rearrangeText();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,35 +150,6 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Label::setTextColor(const Color& color)
-    {
-        getRenderer()->setTextColor(color);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    const sf::Color& Label::getTextColor() const
-    {
-        return getRenderer()->m_textColor;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Label::setTextStyle(sf::Uint32 style)
-    {
-        m_textStyle = style;
-        rearrangeText();
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    sf::Uint32 Label::getTextStyle() const
-    {
-        return m_textStyle;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     void Label::setAutoSize(bool autoSize)
     {
         if (m_autoSize != autoSize)
@@ -251,6 +157,13 @@ namespace tgui
             m_autoSize = autoSize;
             rearrangeText();
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    bool Label::getAutoSize() const
+    {
+        return m_autoSize;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,32 +183,7 @@ namespace tgui
     {
         if (m_autoSize)
             return m_maximumTextWidth;
-        else
-            return getSize().x;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Label::setOpacity(float opacity)
-    {
-        Widget::setOpacity(opacity);
-
-        sf::Color textColor = calcColorOpacity(getRenderer()->m_textColor, getOpacity());
-        for (auto& line : m_lines)
-#if SFML_VERSION_MAJOR > 2 || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR >= 4)
-            line.setFillColor(textColor);
-#else
-            line.setColor(textColor);
-#endif
-
-        m_background.setFillColor(calcColorOpacity(getRenderer()->m_backgroundColor, getOpacity()));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    sf::Vector2f Label::getWidgetOffset() const
-    {
-        return {getRenderer()->getBorders().left, getRenderer()->getBorders().top};
+        return getSize().x;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,11 +197,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Label::leftMouseReleased(float x, float y)
+    void Label::leftMouseReleased(sf::Vector2f pos)
     {
         bool mouseDown = m_mouseDown;
 
-        ClickableWidget::leftMouseReleased(x, y);
+        ClickableWidget::leftMouseReleased(pos);
 
         if (mouseDown)
         {
@@ -335,14 +223,51 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Label::reload(const std::string& primary, const std::string& secondary, bool force)
+    void Label::rendererChanged(const std::string& property)
     {
-        getRenderer()->setBackgroundColor(sf::Color::Transparent);
-        getRenderer()->setTextColor({60, 60, 60});
-        getRenderer()->setBorderColor({0, 0, 0});
+        if (property == "borders")
+        {
+            m_bordersCached = getRenderer()->getBorders();
+            rearrangeText();
+        }
+        else if (property == "padding")
+        {
+            m_paddingCached = getRenderer()->getPadding();
+            rearrangeText();
+        }
+        else if (property == "textstyle")
+        {
+            m_textStyleCached = getRenderer()->getTextStyle();
+            rearrangeText();
+        }
+        else if (property == "textcolor")
+        {
+            m_textColorCached = getRenderer()->getTextColor();
+            for (auto& line : m_lines)
+                line.setColor(m_textColorCached);
+        }
+        else if (property == "bordercolor")
+        {
+            m_borderColorCached = getRenderer()->getBorderColor();
+        }
+        else if (property == "backgroundcolor")
+        {
+            m_backgroundColorCached = getRenderer()->getBackgroundColor();
+        }
+        else if (property == "font")
+        {
+            Widget::rendererChanged(property);
+            rearrangeText();
+        }
+        else if (property == "opacity")
+        {
+            Widget::rendererChanged(property);
 
-        if (m_theme && primary != "")
-            Widget::reload(primary, secondary, force);
+            for (auto& line : m_lines)
+                line.setOpacity(m_opacityCached);
+        }
+        else
+            Widget::rendererChanged(property);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -363,322 +288,144 @@ namespace tgui
 
     void Label::rearrangeText()
     {
-        if (!getFont())
+        if (m_fontCached == nullptr)
             return;
 
         // Find the maximum width of one line
         float maxWidth = 0;
         if (m_autoSize)
             maxWidth = m_maximumTextWidth;
-        else if (getSize().x > getRenderer()->getPadding().left + getRenderer()->getPadding().right)
-            maxWidth = getSize().x - getRenderer()->getPadding().left - getRenderer()->getPadding().right;
-
-        m_lines.clear();
-        unsigned int index = 0;
-        unsigned int lineCount = 0;
-        float calculatedLabelWidth = 0;
-        bool bold = (m_textStyle & sf::Text::Bold) != 0;
-        while (index < m_string.getSize())
+        else
         {
-            lineCount++;
-            unsigned int oldIndex = index;
-
-            float width = 0;
-            sf::Uint32 prevChar = 0;
-            for (std::size_t i = index; i < m_string.getSize(); ++i)
-            {
-                float charWidth;
-                sf::Uint32 curChar = m_string[i];
-                if (curChar == '\n')
-                {
-                    index++;
-                    break;
-                }
-                else if (curChar == '\t')
-                    charWidth = static_cast<float>(getFont()->getGlyph(' ', m_textSize, bold).textureRect.width) * 4;
-                else
-                    charWidth = static_cast<float>(getFont()->getGlyph(curChar, m_textSize, bold).textureRect.width);
-
-                float kerning = static_cast<float>(getFont()->getKerning(prevChar, curChar, m_textSize));
-                if ((maxWidth == 0) || (width + charWidth + kerning <= maxWidth))
-                {
-                    if (curChar == '\t')
-                        width += (static_cast<float>(getFont()->getGlyph(' ', m_textSize, bold).advance) * 4) + kerning;
-                    else
-                        width += static_cast<float>(getFont()->getGlyph(curChar, m_textSize, bold).advance) + kerning;
-
-                    index++;
-                }
-                else
-                    break;
-
-                prevChar = curChar;
-            }
-
-            calculatedLabelWidth = std::max(calculatedLabelWidth, width);
-
-            // Every line contains at least one character
-            if (index == oldIndex)
-                index++;
-
-            // Implement the word-wrap
-            if (m_string[index-1] != '\n')
-            {
-                unsigned int indexWithoutWordWrap = index;
-
-                if ((index < m_string.getSize()) && (!isWhitespace(m_string[index])))
-                {
-                    unsigned int wordWrapCorrection = 0;
-                    while ((index > oldIndex) && (!isWhitespace(m_string[index - 1])))
-                    {
-                        wordWrapCorrection++;
-                        index--;
-                    }
-
-                    // The word can't be split but there is no other choice, it does not fit on the line
-                    if ((index - oldIndex) <= wordWrapCorrection)
-                        index = indexWithoutWordWrap;
-                }
-            }
-
-            // Add the next line
-            m_lines.emplace_back();
-            m_lines.back().setFont(*getFont());
-            m_lines.back().setCharacterSize(getTextSize());
-            m_lines.back().setStyle(getTextStyle());
-#if SFML_VERSION_MAJOR > 2 || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR >= 4)
-            m_lines.back().setFillColor(calcColorOpacity(getRenderer()->m_textColor, getOpacity()));
-#else
-            m_lines.back().setColor(calcColorOpacity(getRenderer()->m_textColor, getOpacity()));
-#endif
-
-            if ((index < m_string.getSize()) && (m_string[index-1] != '\n'))
-                m_lines.back().setString(m_string.substring(oldIndex, index - oldIndex) + "\n");
-            else
-                m_lines.back().setString(m_string.substring(oldIndex, index - oldIndex));
-
-            // If the next line starts with just a space, then the space need not be visible
-            if ((index < m_string.getSize()) && (m_string[index] == ' '))
-            {
-                if ((index == 0) || (!isWhitespace(m_string[index-1])))
-                {
-                    // But two or more spaces indicate that it is not a normal text and the spaces should not be ignored
-                    if (((index + 1 < m_string.getSize()) && (!isWhitespace(m_string[index + 1]))) || (index + 1 == m_string.getSize()))
-                        index++;
-                }
-            }
+            if (getSize().x > m_bordersCached.left + m_bordersCached.right + m_paddingCached.left + m_paddingCached.right)
+                maxWidth = getSize().x - m_bordersCached.left - m_bordersCached.right - m_paddingCached.left - m_paddingCached.right;
+            else // There is no room for text
+                return;
         }
 
-        // There is always at least one line
-        lineCount = std::max(1u, lineCount);
+        // Fit the text in the available space
+        sf::String string = Text::wordWrap(maxWidth, m_string, m_fontCached, m_textSize, m_textStyleCached & sf::Text::Bold);
 
+        // Split the string in multiple lines
+        m_lines.clear();
+        float width = 0;
+        size_t searchPosStart = 0;
+        size_t newLinePos = 0;
+        while (newLinePos != sf::String::InvalidPos)
+        {
+            newLinePos = string.find('\n', searchPosStart);
+
+            m_lines.emplace_back();
+            m_lines.back().setCharacterSize(getTextSize());
+            m_lines.back().setFont(m_fontCached);
+            m_lines.back().setStyle(m_textStyleCached);
+            m_lines.back().setColor(m_textColorCached);
+            m_lines.back().setOpacity(m_opacityCached);
+
+            if (newLinePos != sf::String::InvalidPos)
+                m_lines.back().setString(string.substring(searchPosStart, newLinePos - searchPosStart));
+            else
+                m_lines.back().setString(string.substring(searchPosStart));
+
+            if (m_lines.back().getSize().x > width)
+                width = m_lines.back().getSize().x;
+
+            searchPosStart = newLinePos + 1;
+        }
+
+        Outline outline = m_paddingCached + m_bordersCached;
+
+        // Update the size of the label
         if (m_autoSize)
         {
-            m_size = {std::max(calculatedLabelWidth, maxWidth) + getRenderer()->getPadding().left + getRenderer()->getPadding().right,
-                      (lineCount * getFont()->getLineSpacing(m_textSize)) + getRenderer()->getPadding().top + getRenderer()->getPadding().bottom};
-
-            m_background.setSize(getSize());
+            m_size = {std::max(width, maxWidth) + outline.left + outline.right,
+                (std::max<size_t>(m_lines.size(), 1) * m_fontCached.getLineSpacing(m_textSize)) + Text::calculateExtraVerticalSpace(m_fontCached, m_textSize, m_textStyleCached) + outline.top + outline.bottom};
         }
 
-        updatePosition();
+        // Update the line positions
+        {
+            if ((getSize().x <= outline.left + outline.right) || (getSize().y <= outline.top + outline.bottom))
+                return;
+
+            sf::Vector2f pos{outline.left, outline.top};
+
+            if (m_verticalAlignment != VerticalAlignment::Top)
+            {
+                float totalHeight = getSize().y - outline.top - outline.bottom;
+                float totalTextHeight = m_lines.size() * m_fontCached.getLineSpacing(m_textSize);
+
+                if (m_verticalAlignment == VerticalAlignment::Center)
+                    pos.y += (totalHeight - totalTextHeight) / 2.f;
+                else if (m_verticalAlignment == VerticalAlignment::Bottom)
+                    pos.y += totalHeight - totalTextHeight;
+            }
+
+            if (m_horizontalAlignment == HorizontalAlignment::Left)
+            {
+                float lineSpacing = m_fontCached.getLineSpacing(m_textSize);
+                for (auto& line : m_lines)
+                {
+                    line.setPosition(pos.x, pos.y);
+                    pos.y += lineSpacing;
+                }
+            }
+            else // Center or Right alignment
+            {
+                float totalWidth = getSize().x - outline.left - outline.right;
+
+                for (auto& line : m_lines)
+                {
+                    line.setPosition(0, 0);
+
+                    size_t lastChar = line.getString().getSize();
+                    while (lastChar > 0 && isWhitespace(line.getString()[lastChar - 1]))
+                        lastChar--;
+
+                    float textWidth = line.findCharacterPos(lastChar).x;
+
+                    if (m_horizontalAlignment == HorizontalAlignment::Center)
+                        line.setPosition(pos.x + ((totalWidth - textWidth) / 2.f), pos.y);
+                    else if (m_horizontalAlignment == HorizontalAlignment::Right)
+                        line.setPosition(pos.x + totalWidth - textWidth, pos.y);
+
+                    pos.y += m_fontCached.getLineSpacing(m_textSize);
+                }
+            }
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Label::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        if (m_autoSize)
+        states.transform.translate(round(getPosition().x), round(getPosition().y));
+
+        sf::Vector2f innerSize = {getSize().x - m_bordersCached.left - m_bordersCached.right, getSize().y - m_bordersCached.top - m_bordersCached.bottom};
+
+        // Draw the borders
+        if (m_bordersCached != Borders{0})
         {
-            // Draw the background
-            if (m_background.getFillColor() != sf::Color::Transparent)
-                target.draw(m_background, states);
-
-            // Draw the text
-            for (auto& line : m_lines)
-                target.draw(line, states);
-        }
-        else
-        {
-            // Draw the background
-            if (m_background.getFillColor() != sf::Color::Transparent)
-                target.draw(m_background, states);
-
-            // Set the clipping for all draw calls that happen until this clipping object goes out of scope
-            Padding padding = getRenderer()->getPadding();
-            Clipping clipping{target, states, {getPosition().x + padding.left, getPosition().y + padding.top}, {getSize().x - padding.left - padding.right, getSize().y - padding.top - padding.bottom}};
-
-            // Draw the text
-            for (auto& line : m_lines)
-                target.draw(line, states);
+            drawBorders(target, states, m_bordersCached, getSize(), m_borderColorCached);
+            states.transform.translate({m_bordersCached.left, m_bordersCached.top});
         }
 
-        getRenderer()->draw(target, states);
-    }
+        // Draw the background
+        if (m_backgroundColorCached != sf::Color::Transparent)
+            drawRectangleShape(target, states, innerSize, m_backgroundColorCached);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setProperty(std::string property, const std::string& value)
-    {
-        property = toLower(property);
-        if (property == "textcolor")
-            setTextColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolor")
-            setBackgroundColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "bordercolor")
-            setBorderColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "borders")
-            setBorders(Deserializer::deserialize(ObjectConverter::Type::Borders, value).getBorders());
-        else if (property == "padding")
-            setPadding(Deserializer::deserialize(ObjectConverter::Type::Borders, value).getBorders());
-        else
-            WidgetRenderer::setProperty(property, value);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setProperty(std::string property, ObjectConverter&& value)
-    {
-        property = toLower(property);
-
-        if (value.getType() == ObjectConverter::Type::Borders)
+        // Apply clipping when needed
+        std::unique_ptr<Clipping> clipping;
+        if (!m_autoSize)
         {
-            if (property == "borders")
-                setBorders(value.getBorders());
-            else if (property == "padding")
-                setPadding(value.getBorders());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
+            innerSize.x -= m_paddingCached.left + m_paddingCached.right;
+            innerSize.y -= m_paddingCached.top + m_paddingCached.bottom;
+
+            clipping = std::make_unique<Clipping>(target, states, sf::Vector2f{m_paddingCached.left, m_paddingCached.top}, innerSize);
         }
-        else if (value.getType() == ObjectConverter::Type::Color)
-        {
-            if (property == "textcolor")
-                setTextColor(value.getColor());
-            else if (property == "backgroundcolor")
-                setBackgroundColor(value.getColor());
-            else if (property == "bordercolor")
-                setBorderColor(value.getColor());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else
-            WidgetRenderer::setProperty(property, std::move(value));
-    }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjectConverter LabelRenderer::getProperty(std::string property) const
-    {
-        property = toLower(property);
-
-        if (property == "borders")
-            return m_borders;
-        else if (property == "padding")
-            return m_padding;
-        else if (property == "textcolor")
-            return m_textColor;
-        else if (property == "backgroundcolor")
-            return m_backgroundColor;
-        else if (property == "bordercolor")
-            return m_borderColor;
-        else
-            return WidgetRenderer::getProperty(property);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, ObjectConverter> LabelRenderer::getPropertyValuePairs() const
-    {
-        auto pairs = WidgetRenderer::getPropertyValuePairs();
-        pairs["TextColor"] = m_textColor;
-        pairs["BackgroundColor"] = m_backgroundColor;
-        pairs["BorderColor"] = m_borderColor;
-        pairs["Borders"] = m_borders;
-        pairs["Padding"] = m_padding;
-        return pairs;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setPadding(const Padding& padding)
-    {
-        if (padding != getPadding())
-        {
-            WidgetPadding::setPadding(padding);
-            m_label->rearrangeText();
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setTextColor(const Color& color)
-    {
-        m_textColor = color;
-
-        sf::Color textColor = calcColorOpacity(m_textColor, m_label->getOpacity());
-		for (auto& line : m_label->m_lines)
-#if SFML_VERSION_MAJOR > 2 || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR >= 4)
-            line.setFillColor(textColor);
-#else
-            line.setColor(textColor);
-#endif
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setBackgroundColor(const Color& color)
-    {
-        m_backgroundColor = color;
-        m_label->m_background.setFillColor(calcColorOpacity(m_backgroundColor, m_label->getOpacity()));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::setBorderColor(const Color& color)
-    {
-        m_borderColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void LabelRenderer::draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
-        // Draw the borders around the button
-        if (m_borders != Borders{0, 0, 0, 0})
-        {
-            sf::Vector2f position = m_label->getPosition();
-            sf::Vector2f size = m_label->getSize();
-
-            // Draw left border
-            sf::RectangleShape border({m_borders.left, size.y + m_borders.top});
-            border.setPosition(position.x - m_borders.left, position.y - m_borders.top);
-            border.setFillColor(calcColorOpacity(m_borderColor, m_label->getOpacity()));
-            target.draw(border, states);
-
-            // Draw top border
-            border.setSize({size.x + m_borders.right, m_borders.top});
-            border.setPosition(position.x, position.y - m_borders.top);
-            target.draw(border, states);
-
-            // Draw right border
-            border.setSize({m_borders.right, size.y + m_borders.bottom});
-            border.setPosition(position.x + size.x, position.y);
-            target.draw(border, states);
-
-            // Draw bottom border
-            border.setSize({size.x + m_borders.left, m_borders.bottom});
-            border.setPosition(position.x - m_borders.left, position.y + size.y);
-            target.draw(border, states);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<WidgetRenderer> LabelRenderer::clone(Widget* widget)
-    {
-        auto renderer = std::make_shared<LabelRenderer>(*this);
-        renderer->m_label = static_cast<Label*>(widget);
-        return renderer;
+        // Draw the text
+        for (const auto& line : m_lines)
+            line.draw(target, states);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

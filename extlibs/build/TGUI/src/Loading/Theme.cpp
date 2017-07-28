@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -24,26 +24,9 @@
 
 
 #include <TGUI/Loading/Theme.hpp>
+#include <TGUI/Exception.hpp>
 #include <TGUI/Loading/Serializer.hpp>
-#include <TGUI/Widgets/Button.hpp>
-#include <TGUI/Widgets/ChatBox.hpp>
-#include <TGUI/Widgets/CheckBox.hpp>
-#include <TGUI/Widgets/ChildWindow.hpp>
-#include <TGUI/Widgets/ComboBox.hpp>
-#include <TGUI/Widgets/Knob.hpp>
-#include <TGUI/Widgets/Label.hpp>
-#include <TGUI/Widgets/ListBox.hpp>
-#include <TGUI/Widgets/MenuBar.hpp>
-#include <TGUI/Widgets/MessageBox.hpp>
-#include <TGUI/Widgets/Panel.hpp>
-#include <TGUI/Widgets/ProgressBar.hpp>
-#include <TGUI/Widgets/EditBox.hpp>
-#include <TGUI/Widgets/RadioButton.hpp>
-#include <TGUI/Widgets/Scrollbar.hpp>
-#include <TGUI/Widgets/Slider.hpp>
-#include <TGUI/Widgets/SpinButton.hpp>
-#include <TGUI/Widgets/Tab.hpp>
-#include <TGUI/Widgets/TextBox.hpp>
+#include <TGUI/Global.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,335 +34,156 @@ namespace tgui
 {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::map<std::string, std::function<Widget::Ptr()>> BaseTheme::m_constructors =
+    std::shared_ptr<BaseThemeLoader> Theme::m_themeLoader = std::make_shared<DefaultThemeLoader>();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Theme::Theme(const std::string& primary) :
+        m_primary(primary)
+    {
+        if (!primary.empty())
+            m_themeLoader->preload(primary);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Theme::load(const std::string& primary)
+    {
+        m_primary = primary;
+        m_themeLoader->preload(primary);
+
+        // Update the existing renderers
+        for (auto& pair : m_renderers)
         {
-            {"button", std::make_shared<Button>},
-            {"chatbox", std::make_shared<ChatBox>},
-            {"checkbox", std::make_shared<CheckBox>},
-            {"childwindow", std::make_shared<ChildWindow>},
-            {"combobox", std::make_shared<ComboBox>},
-            {"editbox", std::make_shared<EditBox>},
-            {"knob", std::make_shared<Knob>},
-            {"label", std::make_shared<Label>},
-            {"listbox", std::make_shared<ListBox>},
-            {"menubar", std::make_shared<MenuBar>},
-            {"messagebox", std::make_shared<MessageBox>},
-            {"panel", std::make_shared<Panel>},
-            {"progressbar", std::make_shared<ProgressBar>},
-            {"radiobutton", std::make_shared<RadioButton>},
-            {"scrollbar", std::make_shared<Scrollbar>},
-            {"slider", std::make_shared<Slider>},
-            {"spinbutton", std::make_shared<SpinButton>},
-            {"tab", std::make_shared<Tab>},
-            {"textbox", std::make_shared<TextBox>}
-        };
+            auto& renderer = pair.second;
+            auto oldData = renderer;
 
-    std::shared_ptr<BaseThemeLoader> BaseTheme::m_themeLoader = std::make_shared<DefaultThemeLoader>();
+            /// TODO: Exceptions should not be used for such situations!
+            ///       Add a function to ThemeLoader that lists which sections exist.
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Try to load the new renderer
+            const std::map<sf::String, sf::String>* properties;
+            try
+            {
+                properties = &m_themeLoader->load(m_primary, pair.first);
+            }
+            catch (const Exception&)
+            {
+                // Exceptions are ignored. When a renderer was loaded from the old theme but is no longer found
+                // in the new theme then just ignore it and keep the old renderer.
+                continue;
+            }
 
-    void BaseTheme::widgetAttached(Widget* widget)
-    {
-        widget->attachTheme(shared_from_this());
+            // Keep track of the old font
+            Font oldFont;
+            if (renderer->propertyValuePairs.find("font") != pair.second->propertyValuePairs.end())
+                oldFont = renderer->propertyValuePairs["font"].getFont();
+
+            // Update the property-value pairs of the renderer
+            renderer->propertyValuePairs = std::map<std::string, ObjectConverter>{};
+            for (const auto& property : *properties)
+                renderer->propertyValuePairs[property.first] = ObjectConverter(property.second);
+
+            // If there used to be a font but no new font was set then keep the old font
+            if ((properties->find("font") == properties->end()) && (oldFont != nullptr))
+                renderer->propertyValuePairs["font"] = ObjectConverter(oldFont);
+
+            // Tell the widgets that were using this renderer about all the updated properties, both new ones and old ones that were now reset to their default value
+            auto oldIt = oldData->propertyValuePairs.begin();
+            auto newIt = renderer->propertyValuePairs.begin();
+            while (oldIt != oldData->propertyValuePairs.end() && newIt != renderer->propertyValuePairs.end())
+            {
+                if (oldIt->first < newIt->first)
+                {
+                    // Update values that no longer exist in the new renderer and are now reset to the default value
+                    for (const auto& observer : renderer->observers)
+                        observer.second(oldIt->first);
+
+                    ++oldIt;
+                }
+                else
+                {
+                    // Update changed and new properties
+                    for (const auto& observer : renderer->observers)
+                        observer.second(newIt->first);
+
+                    if (newIt->first < oldIt->first)
+                        ++newIt;
+                    else
+                    {
+                        ++oldIt;
+                        ++newIt;
+                    }
+                }
+            }
+            while (oldIt != oldData->propertyValuePairs.end())
+            {
+                for (const auto& observer : renderer->observers)
+                    observer.second(oldIt->first);
+
+                ++oldIt;
+            }
+            while (newIt != renderer->propertyValuePairs.end())
+            {
+                for (const auto& observer : renderer->observers)
+                    observer.second(newIt->first);
+
+                ++newIt;
+            }
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BaseTheme::widgetDetached(Widget*)
+    std::shared_ptr<RendererData> Theme::getRenderer(const std::string& id)
     {
+        std::string lowercaseSecondary = toLower(id);
+
+        // If we already have this renderer in cache then just return it
+        auto it = m_renderers.find(lowercaseSecondary);
+        if (it != m_renderers.end())
+            return it->second;
+
+        m_renderers[lowercaseSecondary] = RendererData::create();
+        auto& properties = m_themeLoader->load(m_primary, lowercaseSecondary);
+        for (const auto& property : properties)
+            m_renderers[lowercaseSecondary]->propertyValuePairs[property.first] = ObjectConverter(property.second);
+
+        return m_renderers[lowercaseSecondary];
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BaseTheme::setConstructFunction(const std::string& type, const std::function<Widget::Ptr()>& constructor)
+    void Theme::addRenderer(const std::string& id, std::shared_ptr<RendererData> renderer)
     {
-        m_constructors[toLower(type)] = constructor;
+        m_renderers[id] = renderer;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BaseTheme::setThemeLoader(const std::shared_ptr<BaseThemeLoader>& themeLoader)
+    bool Theme::removeRenderer(const std::string& id)
+    {
+        auto it = m_renderers.find(id);
+        if (it != m_renderers.end())
+        {
+            m_renderers.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Theme::setThemeLoader(std::shared_ptr<BaseThemeLoader> themeLoader)
     {
         m_themeLoader = themeLoader;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BaseTheme::widgetReload(Widget* widget, const std::string& primary, const std::string& secondary, bool force)
+    std::shared_ptr<BaseThemeLoader> Theme::getThemeLoader()
     {
-        widget->reload(primary, secondary, force);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Theme::Theme(const std::string& filename) :
-        m_filename(filename)
-    {
-        std::string::size_type slashPos = m_filename.find_last_of("/\\");
-        if (slashPos != std::string::npos)
-            m_resourcePath = m_filename.substr(0, slashPos+1);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Theme::Ptr Theme::create(const std::string& filename)
-    {
-        return std::make_shared<Theme>(filename);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    WidgetConverter Theme::load(std::string className)
-    {
-        className = toLower(className);
-
-        std::string widgetType;
-        if (m_filename != "")
-        {
-            if (m_widgetTypes.find(className) != m_widgetTypes.end())
-                widgetType = m_widgetTypes[className];
-            else
-                widgetType = toLower(m_themeLoader->load(m_filename, className, m_widgetProperties[className]));
-        }
-        else // Load the white theme
-        {
-            widgetType = className;
-        }
-
-        auto constructor = m_constructors[widgetType];
-        if (constructor)
-        {
-            Widget::Ptr widget = constructor();
-            m_widgets[widget.get()] = className;
-            m_widgetTypes[className] = widgetType;
-
-            widgetAttached(widget.get());
-            widgetReload(widget.get(), m_filename, className, true);
-
-            return WidgetConverter{widget};
-        }
-        else
-            throw Exception{"Failed to load widget of type '" + widgetType + "'. No constructor function was set for that type."};
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::reload(const std::string& filename)
-    {
-        m_filename = filename;
-
-        m_resourcePath = "";
-        std::string::size_type slashPos = m_filename.find_last_of("/\\");
-        if (slashPos != std::string::npos)
-            m_resourcePath = m_filename.substr(0, slashPos+1);
-
-        m_widgetTypes.clear();
-        m_widgetProperties.clear();
-
-        for (auto& widget : m_widgets)
-        {
-            std::string widgetType;
-            if (m_filename != "")
-            {
-                if (m_widgetTypes.find(widget.second) != m_widgetTypes.end())
-                    widgetType = m_widgetTypes[widget.second];
-                else
-                {
-                    m_widgetProperties[widget.second].clear();
-                    widgetType = toLower(m_themeLoader->load(m_filename, widget.second, m_widgetProperties[widget.second]));
-                }
-            }
-            else
-                widgetType = widget.second;
-
-            m_widgetTypes[widget.second] = widgetType;
-            widgetReload(widget.first, filename, widget.second, false);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::reload(std::string oldClassName, std::string newClassName)
-    {
-        oldClassName = toLower(oldClassName);
-        newClassName = toLower(newClassName);
-
-        // If we don't have the new class name in the cache then check if the theme loader has it
-        if (m_filename != "")
-        {
-            if (m_widgetTypes.find(newClassName) == m_widgetTypes.end())
-            {
-                m_widgetProperties[newClassName].clear();
-                m_themeLoader->load(m_filename, newClassName, m_widgetProperties[newClassName]);
-            }
-        }
-
-        // Reload all the widget that match the old class name
-        for (auto& widget : m_widgets)
-        {
-            if (widget.second == oldClassName)
-            {
-                widget.second = newClassName;
-                widgetReload(widget.first, m_filename, newClassName, false);
-            }
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::reload(Widget::Ptr widget, std::string className)
-    {
-        className = toLower(className);
-
-        // If we don't have the class name in the cache then check if the theme loader has it
-        std::string widgetType;
-        if (m_filename != "")
-        {
-            if (m_widgetTypes.find(className) != m_widgetTypes.end())
-                widgetType = m_widgetTypes[className];
-            else
-            {
-                m_widgetProperties[className].clear();
-                widgetType = toLower(m_themeLoader->load(m_filename, className, m_widgetProperties[className]));
-            }
-        }
-        else // Load the white theme
-        {
-            widgetType = className;
-            if (!m_constructors[widgetType])
-                throw Exception{"Failed to reload widget of type '" + widgetType + "'. No constructor function was set for that type."};
-        }
-
-        widgetAttached(widget.get());
-        widgetReload(widget.get(), m_filename, className, false);
-
-        m_widgetTypes[className] = widgetType;
-        m_widgets[widget.get()] = className;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<Theme> Theme::clone() const
-    {
-        auto theme = std::make_shared<Theme>(*this);
-        theme->m_widgets.clear();
-        return theme;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::widgetDetached(Widget* widget)
-    {
-        auto it = m_widgets.find(widget);
-        if (it != m_widgets.end())
-            m_widgets.erase(it);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    WidgetConverter Theme::internalLoad(const std::string& filename, const std::string& className)
-    {
-        if (filename != m_filename)
-            throw Exception{"Internal load failed in theme because wrong filename was given"};
-
-        return load(className);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::setProperty(std::string className, const std::string& property, const std::string& value)
-    {
-        className = toLower(className);
-        m_widgetProperties[className][toLower(property)] = value;
-
-        for (auto& pair : m_widgets)
-        {
-            if (pair.second == className)
-                pair.first->getRenderer()->setProperty(property, value);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::setProperty(std::string className, const std::string& property, ObjectConverter&& value)
-    {
-        className = toLower(className);
-        m_widgetProperties[className][toLower(property)] = Serializer::serialize(std::move(value));
-
-        for (auto& pair : m_widgets)
-        {
-            if (pair.second == className)
-                pair.first->getRenderer()->setProperty(property, std::move(value));
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::string Theme::getProperty(std::string className, std::string property) const
-    {
-        className = toLower(className);
-        property = toLower(property);
-        if (m_widgetProperties.find(className) != m_widgetProperties.end())
-        {
-            if (m_widgetProperties.at(className).find(property) != m_widgetProperties.at(className).end())
-                return m_widgetProperties.at(className).at(property);
-        }
-
-        return "";
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, std::string> Theme::getPropertyValuePairs(std::string className) const
-    {
-        className = toLower(className);
-        if (m_widgetProperties.find(className) != m_widgetProperties.end())
-            return m_widgetProperties.at(className);
-        else
-            return std::map<std::string, std::string>{};
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void Theme::initWidget(Widget* widget, std::string filename, std::string className)
-    {
-        if (filename != m_filename)
-            throw Exception{"Theme tried to init widget which gave a wrong filename"};
-
-        // Temporarily change the resource path to load relative from the theme file
-        std::string oldResourcePath = getResourcePath();
-
-        bool resourcePathChanged = false;
-        if (!m_resourcePathLock && !m_resourcePath.empty())
-        {
-            m_resourcePathLock = true;
-            resourcePathChanged = true;
-            setResourcePath(oldResourcePath + m_resourcePath);
-        }
-
-        try
-        {
-            for (auto& property : m_widgetProperties[className])
-                widget->getRenderer()->setProperty(property.first, property.second);
-        }
-        catch (Exception& e)
-        {
-            // Restore the resource path before throwing
-            if (resourcePathChanged)
-            {
-                setResourcePath(oldResourcePath);
-                m_resourcePathLock = false;
-            }
-            throw e;
-        }
-
-        // Restore the resource path
-        if (resourcePathChanged)
-        {
-            setResourcePath(oldResourcePath);
-            m_resourcePathLock = false;
-        }
+        return m_themeLoader;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

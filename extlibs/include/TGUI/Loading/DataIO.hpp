@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -29,6 +29,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <TGUI/Config.hpp>
+#include <SFML/System/String.hpp>
 #include <sstream>
 #include <memory>
 #include <vector>
@@ -66,18 +67,18 @@ namespace tgui
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         struct ValueNode
         {
-            ValueNode(Node* p = nullptr, const std::string& v = "") : parent(p), value(v) {}
+            ValueNode(const sf::String& v = "") : value(v)
+            {
+            }
 
-            Node* parent;
-            std::string value;
-
+            sf::String value;
             bool listNode = false;
-            std::vector<std::string> valueList;
+            std::vector<sf::String> valueList;
         };
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Parse a widget file
+        /// @brief Parses a widget file
         ///
         /// @param stream  Stream containing the widget file
         ///
@@ -88,27 +89,13 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Emit the widget file
+        /// @brief Emits the widget file
         ///
         /// @param rootNode Root node of the tree of nodes that is to be converted to a string stream
         /// @param stream   Stream to which the widget file will be added
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         static void emit(std::shared_ptr<Node> rootNode, std::stringstream& stream);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private:
-
-        static std::vector<std::string> convertNodesToLines(std::shared_ptr<Node> node);
-
-        static std::string parseSection(std::stringstream& stream, std::shared_ptr<Node> node, const std::string& sectionName);
-
-        static std::string parseKeyValue(std::stringstream& stream, std::shared_ptr<Node> node, const std::string& key);
-
-        static std::string readLine(std::stringstream& stream);
-
-        static std::string readWord(std::stringstream& stream);
     };
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

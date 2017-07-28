@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -24,6 +24,7 @@
 
 
 #include <TGUI/Signal.hpp>
+#include <TGUI/to_string.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,8 +39,8 @@ namespace tgui
 
     Signal::Signal(std::vector<std::vector<std::string>>&& types)
     {
-        std::size_t maxSize = 0;
-        for (auto& typeList : types)
+        size_t maxSize = 0;
+        for (const auto& typeList : types)
             maxSize += typeList.size();
 
         m_allowedTypes = types;
@@ -82,44 +83,27 @@ namespace tgui
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    SignalWidgetBase::SignalWidgetBase(const SignalWidgetBase& copy)
-    {
-        for (auto& signal : copy.m_signals)
-            m_signals[signal.first] = std::make_shared<Signal>(*signal.second);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    SignalWidgetBase& SignalWidgetBase::operator=(const SignalWidgetBase& right)
-    {
-        if (this != &right)
-        {
-            for (auto& signal : right.m_signals)
-                m_signals[signal.first] = std::make_shared<Signal>(*signal.second);
-        }
-
-        return *this;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     void SignalWidgetBase::disconnect(unsigned int id)
     {
         for (auto& signal : m_signals)
         {
-            if (signal.second->disconnect(id))
+            if (signal.second.disconnect(id))
                 return;
         }
 
-        throw Exception{"Failed to disconnect signal handler. There is no function bound to the given id " + tgui::to_string(id) + "."};
+        throw Exception{"Failed to disconnect signal handler. There is no function bound to the given id " + to_string(id) + "."};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void SignalWidgetBase::disconnectAll(const std::string& signalName)
     {
-        for (auto& name : extractSignalNames(signalName))
-            m_signals.at(toLower(name))->disconnectAll();
+        for (const auto& name : extractSignalNames(signalName))
+        {
+            auto it = m_signals.find(toLower(name));
+            if (it != m_signals.end())
+                it->second.disconnectAll();
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,15 +111,15 @@ namespace tgui
     void SignalWidgetBase::disconnectAll()
     {
         for (auto& signal : m_signals)
-            signal.second->disconnectAll();
+            signal.second.disconnectAll();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     bool SignalWidgetBase::isSignalBound(std::string&& name)
     {
-        assert(m_signals[toLower(name)]);
-        return !m_signals[toLower(name)]->isEmpty() || !m_signals[toLower(name)]->m_functionsEx.empty();
+        assert(m_signals.find(toLower(name)) != m_signals.end());
+        return !m_signals[toLower(name)].isEmpty() || !m_signals[toLower(name)].m_functionsEx.empty();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +135,7 @@ namespace tgui
             if (token != "")
                 names.push_back(token);
 
-            input.erase(0, pos+1);
+            input.erase(0, pos + 1);
         }
 
         if (input != "")

@@ -5,12 +5,12 @@ project(GHS)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/extlibs/find/")
 
 add_subdirectory(extlibs/build/json)
-add_subdirectory(extlibs/build/TGUI)
 
 file(GLOB PG_GHS include/*.h)
 file(GLOB HD_GHS src/*.cpp)
 
 find_package(SFML 2 REQUIRED graphics window system network audio)
+add_subdirectory(extlibs/build/TGUI)
 
 include_directories(include/)
 include_directories(extlibs/include/)

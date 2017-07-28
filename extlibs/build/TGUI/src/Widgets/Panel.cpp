@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -30,27 +30,27 @@
 
 namespace tgui
 {
+    static std::map<std::string, ObjectConverter> defaultRendererValues =
+    {
+        {"bordercolor", sf::Color::Black},
+        {"backgroundcolor", sf::Color::Transparent}
+    };
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     Panel::Panel(const Layout2d& size)
     {
         m_callback.widgetType = "Panel";
+        m_type = "Panel";
 
         addSignal<sf::Vector2f>("MousePressed");
         addSignal<sf::Vector2f>("MouseReleased");
         addSignal<sf::Vector2f>("Clicked");
 
-        m_renderer = std::make_shared<PanelRenderer>(this);
-        reload();
+        m_renderer = aurora::makeCopied<PanelRenderer>();
+        setRenderer(RendererData::create(defaultRendererValues));
 
         setSize(size);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Panel::Panel(const Layout& width, const Layout& height) :
-        Panel{Layout2d{width, height}}
-    {
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,197 +62,100 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    Panel::Ptr Panel::copy(Panel::ConstPtr panel)
+    Panel::Ptr Panel::copy(ConstPtr panel)
     {
         if (panel)
             return std::static_pointer_cast<Panel>(panel->clone());
-        else
-            return nullptr;
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    bool Panel::mouseOnWidget(float x, float y) const
+    sf::Vector2f Panel::getChildWidgetsOffset() const
     {
-        return sf::FloatRect{getPosition().x, getPosition().y, getSize().x, getSize().y}.contains(x, y);
+        return {m_paddingCached.left + m_bordersCached.left, m_paddingCached.top + m_bordersCached.top};
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Panel::leftMousePressed(float x, float y)
+    bool Panel::mouseOnWidget(sf::Vector2f pos) const
     {
-        if (mouseOnWidget(x, y))
-        {
-            m_mouseDown = true;
-
-            m_callback.mouse.x = static_cast<int>(x - getPosition().x);
-            m_callback.mouse.y = static_cast<int>(y - getPosition().y);
-            sendSignal("MousePressed", sf::Vector2f{x - getPosition().x, y - getPosition().y});
-        }
-
-        Container::leftMousePressed(x, y);
+        return sf::FloatRect{0, 0, getSize().x, getSize().y}.contains(pos);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void Panel::leftMouseReleased(float x , float y)
+    void Panel::leftMousePressed(sf::Vector2f pos)
     {
-        if (mouseOnWidget(x, y))
-        {
-            m_callback.mouse.x = static_cast<int>(x - getPosition().x);
-            m_callback.mouse.y = static_cast<int>(y - getPosition().y);
-            sendSignal("MouseReleased", sf::Vector2f{x - getPosition().x, y - getPosition().y});
+        m_mouseDown = true;
 
-            if (m_mouseDown)
-                sendSignal("Clicked", sf::Vector2f{x - getPosition().x, y - getPosition().y});
-        }
+        m_callback.mouse.x = static_cast<int>(pos.x);
+        m_callback.mouse.y = static_cast<int>(pos.y);
+        sendSignal("MousePressed", pos);
+
+        Container::leftMousePressed(pos);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Panel::leftMouseReleased(sf::Vector2f pos)
+    {
+        m_callback.mouse.x = static_cast<int>(pos.x);
+        m_callback.mouse.y = static_cast<int>(pos.y);
+        sendSignal("MouseReleased", pos);
+
+        if (m_mouseDown)
+            sendSignal("Clicked", pos);
 
         m_mouseDown = false;
 
-        Container::leftMouseReleased(x, y);
+        Container::leftMouseReleased(pos);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    void Panel::rendererChanged(const std::string& property)
+    {
+        if (property == "borders")
+        {
+            m_bordersCached = getRenderer()->getBorders();
+        }
+        else if (property == "bordercolor")
+        {
+            m_borderColorCached = getRenderer()->getBorderColor();
+        }
+        else if (property == "backgroundcolor")
+        {
+            m_backgroundColorCached = getRenderer()->getBackgroundColor();
+        }
+        else
+            Group::rendererChanged(property);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     void Panel::draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
-        // Set the position
         states.transform.translate(getPosition());
 
+        // Draw the borders
+        if (m_bordersCached != Borders{0})
+        {
+            drawBorders(target, states, m_bordersCached, getSize(), m_borderColorCached);
+            states.transform.translate({m_bordersCached.left, m_bordersCached.top});
+        }
+
         // Draw the background
-        if (m_backgroundColor != sf::Color::Transparent)
-        {
-            sf::RectangleShape background(getSize());
-            background.setFillColor(calcColorOpacity(m_backgroundColor, getOpacity()));
-            target.draw(background, states);
-        }
+        sf::Vector2f innerSize = {getSize().x - m_bordersCached.left - m_bordersCached.right, getSize().y - m_bordersCached.top - m_bordersCached.bottom};
+        drawRectangleShape(target, states, innerSize, m_backgroundColorCached);
 
-        // Draw the widgets
-        {
-            Clipping clipping{target, states, {}, getSize()};
+        states.transform.translate(m_paddingCached.left, m_paddingCached.top);
+        innerSize.x -= m_paddingCached.left + m_paddingCached.right;
+        innerSize.y -= m_paddingCached.top + m_paddingCached.bottom;
 
-            drawWidgetContainer(&target, states);
-        }
-
-        // Draw the borders around the panel
-        if (getRenderer()->m_borders != Borders{0, 0, 0, 0})
-        {
-            Borders& borders = getRenderer()->m_borders;
-            sf::Vector2f size = getSize();
-
-            // Draw left border
-            sf::RectangleShape border({borders.left, size.y + borders.top});
-            border.setPosition(-borders.left, -borders.top);
-            border.setFillColor(calcColorOpacity(getRenderer()->m_borderColor, getOpacity()));
-            target.draw(border, states);
-
-            // Draw top border
-            border.setSize({size.x + borders.right, borders.top});
-            border.setPosition(0, -borders.top);
-            target.draw(border, states);
-
-            // Draw right border
-            border.setSize({borders.right, size.y + borders.bottom});
-            border.setPosition(size.x, 0);
-            target.draw(border, states);
-
-            // Draw bottom border
-            border.setSize({size.x + borders.left, borders.bottom});
-            border.setPosition(-borders.left, size.y);
-            target.draw(border, states);
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void PanelRenderer::setProperty(std::string property, const std::string& value)
-    {
-        property = toLower(property);
-        if (property == "borders")
-            setBorders(Deserializer::deserialize(ObjectConverter::Type::Borders, value).getBorders());
-        else if (property == "bordercolor")
-            setBorderColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else if (property == "backgroundcolor")
-            setBackgroundColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
-        else
-            WidgetRenderer::setProperty(property, value);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void PanelRenderer::setProperty(std::string property, ObjectConverter&& value)
-    {
-        property = toLower(property);
-
-        if (value.getType() == ObjectConverter::Type::Borders)
-        {
-            if (property == "borders")
-                setBorders(value.getBorders());
-            else
-                return WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::Color)
-        {
-            if (property == "bordercolor")
-                setBorderColor(value.getColor());
-            else if (property == "backgroundcolor")
-                setBackgroundColor(value.getColor());
-            else
-                WidgetRenderer::setProperty(property, std::move(value));
-        }
-        else
-            WidgetRenderer::setProperty(property, std::move(value));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjectConverter PanelRenderer::getProperty(std::string property) const
-    {
-        property = toLower(property);
-
-        if (property == "borders")
-            return m_borders;
-        else if (property == "bordercolor")
-            return m_borderColor;
-        else if (property == "backgroundcolor")
-            return m_panel->m_backgroundColor;
-        else
-            return WidgetRenderer::getProperty(property);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, ObjectConverter> PanelRenderer::getPropertyValuePairs() const
-    {
-        auto pairs = WidgetRenderer::getPropertyValuePairs();
-        pairs["BackgroundColor"] = m_panel->m_backgroundColor;
-        pairs["BorderColor"] = m_borderColor;
-        pairs["Borders"] = m_borders;
-        return pairs;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void PanelRenderer::setBackgroundColor(const Color& color)
-    {
-        m_panel->setBackgroundColor(color);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void PanelRenderer::setBorderColor(const Color& color)
-    {
-        m_borderColor = color;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<WidgetRenderer> PanelRenderer::clone(Widget* widget)
-    {
-        auto renderer = std::make_shared<PanelRenderer>(*this);
-        renderer->m_panel = static_cast<Panel*>(widget);
-        return renderer;
+        // Draw the child widgets
+        Clipping clipping{target, states, {}, innerSize};
+        drawWidgetContainer(&target, states);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

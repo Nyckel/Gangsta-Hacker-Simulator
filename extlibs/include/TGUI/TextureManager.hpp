@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -29,11 +29,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <TGUI/TextureData.hpp>
-#include <TGUI/Config.hpp>
-
+#include <memory>
 #include <list>
 #include <map>
-#include <memory>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,33 +45,33 @@ namespace tgui
     {
     public:
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Loads a texture.
+        /// @brief Loads a texture
         ///
-        /// @param texture    The texture object to store the loaded image.
-        /// @param filename   Filename of the image to load.
-        /// @param partRect   Load only part of the image. Don't pass this parameter if you want to load the full image.
+        /// @param texture    The texture object to store the loaded image
+        /// @param filename   Filename of the image to load
+        /// @param partRect   Load only part of the image. Don't pass this parameter if you want to load the full image
         ///
         /// The second time you call this function with the same filename, the previously loaded image will be reused.
         ///
-        /// @return False when the image could not be loaded, true otherwise.
+        /// @return Texture data when loaded successfully, nullptr otherwise
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static bool getTexture(Texture& texture, const std::string& filename, const sf::IntRect& partRect = sf::IntRect(0, 0, 0, 0));
+        static std::shared_ptr<TextureData> getTexture(Texture& texture, const std::string& filename, const sf::IntRect& partRect = sf::IntRect(0, 0, 0, 0));
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Share the image with another texture.
+        /// @brief Shares the image with another texture
         ///
-        /// @param textureDataToCopy  The original texture data that will now be reused.
+        /// @param textureDataToCopy  The original texture data that will now be reused
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         static void copyTexture(std::shared_ptr<TextureData> textureDataToCopy);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Removes the texture.
+        /// @brief Removes the texture
         ///
-        /// @param textureDataToRemove  The texture data that should be removed.
+        /// @param textureDataToRemove  The texture data that should be removed
         ///
         /// When no other texture is using the same image then the image will be removed from memory.
         ///

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -29,6 +29,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <TGUI/Config.hpp>
 #include <functional>
+#include <string>
 #include <memory>
 #include <vector>
 #include <set>
@@ -79,17 +80,17 @@ namespace tgui
         /// @brief Destructor
         ~LayoutImpl();
 
-        /// @brief Recalculate the value
+        /// @brief Recalculates the value
         void recalculate();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private:
 
-        // Calculate the value of a layout defined by a string
+        // Calculates the value of a layout defined by a string
         float parseLayoutString(std::string expression);
 
-        // Parse references to widgets from the layout strings
+        // Parses references to widgets from the layout strings
         float parseWidgetName(const std::string& expression, Widget* widget, const std::string& alreadyParsedPart = "");
 
 
@@ -188,7 +189,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Return the cached value of the layout
+        /// @brief Returns the cached value of the layout
         ///
         /// @return Value of the layout
         ///
@@ -198,7 +199,7 @@ namespace tgui
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
-        /// @brief Connect a callback function to call when the layout is updated
+        /// @brief Connects a callback function to call when the layout is updated
         ///
         /// @param callbackFunction  Function to call when layout value changes
         ///
@@ -283,7 +284,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Construct the layout based on a string which will be parsed to determine the value of the layout
+        /// @brief Constructs the layout based on a string which will be parsed to determine the value of the layout
         ///
         /// @param expression  String to parse
         ///
@@ -301,7 +302,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Return the cached value of the layout
+        /// @brief Returns the cached value of the layout
         ///
         /// @return Value of the layout
         ///
@@ -400,84 +401,84 @@ namespace tgui
     /// @brief * operator for the Layout2d class
     TGUI_API Layout2d operator*(Layout left, Layout2d right);
 
-    /// @brief Bind to the x position of the widget
+    /// @brief Binds to the x position of the widget
     TGUI_API Layout bindLeft(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the y position of the widget
+    /// @brief Binds to the y position of the widget
     TGUI_API Layout bindTop(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the width of the widget
+    /// @brief Binds to the width of the widget
     TGUI_API Layout bindWidth(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the height of the widget
+    /// @brief Binds to the height of the widget
     TGUI_API Layout bindHeight(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the right position of the widget
+    /// @brief Binds to the right position of the widget
     TGUI_API Layout bindRight(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the bottom of the widget
+    /// @brief Binds to the bottom of the widget
     TGUI_API Layout bindBottom(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the position of the widget
+    /// @brief Binds to the position of the widget
     TGUI_API Layout2d bindPosition(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the size of the widget
+    /// @brief Binds to the size of the widget
     TGUI_API Layout2d bindSize(std::shared_ptr<Widget> widget);
 
-    /// @brief Bind to the x position of the gui view
+    /// @brief Binds to the x position of the gui view
     TGUI_API Layout bindLeft(Gui& gui);
 
-    /// @brief Bind to the y position of the gui view
+    /// @brief Binds to the y position of the gui view
     TGUI_API Layout bindTop(Gui& gui);
 
-    /// @brief Bind to the width of the gui view
+    /// @brief Binds to the width of the gui view
     TGUI_API Layout bindWidth(Gui& gui);
 
-    /// @brief Bind to the height of the gui view
+    /// @brief Binds to the height of the gui view
     TGUI_API Layout bindHeight(Gui& gui);
 
-    /// @brief Bind to the right position of the gui view
+    /// @brief Binds to the right position of the gui view
     TGUI_API Layout bindRight(Gui& gui);
 
-    /// @brief Bind to the bottom position of the gui view
+    /// @brief Binds to the bottom position of the gui view
     TGUI_API Layout bindBottom(Gui& gui);
 
-    /// @brief Bind to the position of the gui view
+    /// @brief Binds to the position of the gui view
     TGUI_API Layout2d bindPosition(Gui& gui);
 
-    /// @brief Bind to the size of the gui view
+    /// @brief Binds to the size of the gui view
     TGUI_API Layout2d bindSize(Gui& gui);
 
-    /// @brief Bind to the minimum of two values
+    /// @brief Binds to the minimum of two values
     TGUI_API Layout bindMin(Layout value1, Layout value2);
 
-    /// @brief Bind to the maximum of two values
+    /// @brief Binds to the maximum of two values
     TGUI_API Layout bindMax(Layout value1, Layout value2);
 
-    /// @brief Bind to a value that remains between the minimum and maximum
+    /// @brief Binds to a value that remains between the minimum and maximum
     TGUI_API Layout bindRange(Layout minimum, Layout maximum, Layout value);
 
-    /// @brief Bind conditionally to one of the two layouts
+    /// @brief Binds conditionally to one of the two layouts
     TGUI_API Layout bindIf(Layout condition, Layout trueExpr, Layout falseExpr);
 
-    /// @brief Bind conditionally to one of the two layouts
+    /// @brief Binds conditionally to one of the two layouts
     TGUI_API Layout2d bindIf(Layout condition, Layout2d trueExpr, Layout2d falseExpr);
 
-    /// @brief Bind a string for a layout (you can also just create the layout directly with the string)
+    /// @brief Binds a string for a layout (you can also just create the layout directly with the string)
     TGUI_API Layout bindStr(const std::string& expression);
 
-    /// @brief Bind a string for a layout (you can also just create the layout directly with the string)
+    /// @brief Binds a string for a layout (you can also just create the layout directly with the string)
     TGUI_API Layout bindStr(const char* expression);
 
-    /// @brief Bind a string for a layout (you can also just create the layout directly with the string)
+    /// @brief Binds a string for a layout (you can also just create the layout directly with the string)
     TGUI_API Layout2d bindStr2d(const std::string& expression);
 
-    /// @brief Bind a string for a layout (you can also just create the layout directly with the string)
+    /// @brief Binds a string for a layout (you can also just create the layout directly with the string)
     TGUI_API Layout2d bindStr2d(const char* expression);
 
     // Put TGUI_IMPORT_LAYOUT_BIND_FUNCTIONS somewhere in your code to no longer have to put "tgui::" in front of the bind functions
     // without having to import everything from tgui in your namespace or writing all these using statements yourself.
-    #define TGUI_IMPORT_LAYOUT_BIND_FUNCTIONS \
+#define TGUI_IMPORT_LAYOUT_BIND_FUNCTIONS \
         using tgui::bindLeft; \
         using tgui::bindTop; \
         using tgui::bindWidth; \

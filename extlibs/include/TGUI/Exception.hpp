@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -38,19 +38,21 @@ namespace tgui
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if defined SFML_SYSTEM_WINDOWS && defined _MSC_VER
-    #pragma warning(disable:4275)
+#pragma warning(push)
+#pragma warning(disable:4275)
 #endif
 
-    class TGUI_API Exception : public std::runtime_error {
+    class TGUI_API Exception : public std::runtime_error
+    {
     public:
         explicit Exception(const std::string& argument) :
-            std::runtime_error(argument)
+            runtime_error(argument)
         {
         }
     };
 
 #if defined SFML_SYSTEM_WINDOWS && defined _MSC_VER
-    #pragma warning(default:4275)
+#pragma warning(pop)
 #endif
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,4 +61,3 @@ namespace tgui
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // TGUI_EXCEPTION_HPP
-

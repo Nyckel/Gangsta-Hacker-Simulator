@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,15 +27,13 @@
 #define TGUI_COMBO_BOX_HPP
 
 
-#include <TGUI/Widgets/Label.hpp>
 #include <TGUI/Widgets/ListBox.hpp>
+#include <TGUI/Renderers/ComboBoxRenderer.hpp>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
-    class ComboBoxRenderer;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Combo box widget
     ///
@@ -61,25 +59,25 @@ namespace tgui
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ComboBox();
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Copy constructor
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ComboBox(const ComboBox& other);
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Copy constructor
-        ///
-        /// @param copy  Instance to copy
-        ///
+        // Move constructor
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ComboBox(const ComboBox& copy);
-
+        ComboBox(ComboBox&& other);
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Overload of assignment operator
-        ///
-        /// @param right  Instance to assign
-        ///
-        /// @return Reference to itself
-        ///
+        // Copy assignment operator
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ComboBox& operator= (const ComboBox& right);
+        ComboBox& operator=(const ComboBox& other);
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Move assignment operator
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ComboBox& operator=(ComboBox&& other);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +86,7 @@ namespace tgui
         /// @return The new combo box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static ComboBox::Ptr create();
+        static Ptr create();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,39 +97,23 @@ namespace tgui
         /// @return The new combo box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static ComboBox::Ptr copy(ComboBox::ConstPtr comboBox);
+        static Ptr copy(ConstPtr comboBox);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Returns the renderer, which gives access to functions that determine how the widget is displayed
         ///
-        /// @return Reference to the renderer
+        /// @return Temporary pointer to the renderer
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ComboBoxRenderer> getRenderer() const
+        ComboBoxRenderer* getRenderer() const
         {
-            return std::static_pointer_cast<ComboBoxRenderer>(m_renderer);
+            return aurora::downcast<ComboBoxRenderer*>(m_renderer.get());
         }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the position of the widget
-        ///
-        /// This function completely overwrites the previous position.
-        /// See the move function to apply an offset based on the previous position instead.
-        /// The default position of a transformable widget is (0, 0).
-        ///
-        /// @param position  New position
-        ///
-        /// @see move, getPosition
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setPosition(const Layout2d& position) override;
-        using Transformable::setPosition;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the combo box.
+        /// @brief Changes the size of the combo box
         ///
         /// This size does not include the borders.
         ///
@@ -143,31 +125,9 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the full size of the combo box.
+        /// @brief Changes the number of items that are displayed in the list
         ///
-        /// The size returned by this function includes the borders.
-        ///
-        /// @return The full size of the combo box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getFullSize() const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the font of the text in the widget.
-        ///
-        /// @param font  The new font.
-        ///
-        /// When you don't call this function then the font from the parent widget will be used.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setFont(const Font& font) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the number of items that are displayed in the list.
-        ///
-        /// @param nrOfItemsInListToDisplay  The maximum number of items to display when the list of items is shown.
+        /// @param nrOfItemsInListToDisplay  The maximum number of items to display when the list of items is shown
         ///
         /// When there is no scrollbar then this is the maximum number of items.
         /// If there is one, then it will only become visible when there are more items than this number.
@@ -175,13 +135,13 @@ namespace tgui
         /// When set to zero then all items are shown (then there will never be a scrollbar).
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setItemsToDisplay(std::size_t nrOfItemsInListToDisplay);
+        void setItemsToDisplay(size_t nrOfItemsInListToDisplay);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the number of items that are displayed in the list.
+        /// @brief Returns the number of items that are displayed in the list
         ///
-        /// @return The maximum number of items to display when the list of items is shown.
+        /// @return The maximum number of items to display when the list of items is shown
         ///
         /// When there is no scrollbar then this is the maximum number of items.
         /// If there is one, then it will only become visible when there are more items than this number.
@@ -189,17 +149,14 @@ namespace tgui
         /// When set to zero then all items are shown (then there will never be a scrollbar).
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::size_t getItemsToDisplay() const
-        {
-            return m_nrOfItemsToDisplay;
-        }
+        size_t getItemsToDisplay() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Adds an item to the list, so that it can be selected later.
+        /// @brief Adds an item to the list, so that it can be selected later
         ///
         /// @param itemName  The name of the item you want to add (this is the text that will be displayed inside the combo box)
-        /// @param id        Optional unique id given to this item for the purpose to later identifying this item.
+        /// @param id        Optional unique id given to this item for the purpose to later identifying this item
         ///
         /// @return
         ///         - true when the item when it was successfully added
@@ -215,7 +172,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Selects an item from the list.
+        /// @brief Selects an item from the list
         ///
         /// When adding items to the combo box with the addItem function, none of them will be selected.
         /// If you don't want the combo box to stay empty until the user selects something, but you want a default item instead,
@@ -236,7 +193,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Selects an item from the list.
+        /// @brief Selects an item from the list
         ///
         /// When adding items to the combo box with the addItem function, none of them will be selected.
         /// If you don't want the combo box to stay empty until the user selects something, but you want a default item instead,
@@ -257,7 +214,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Selects an item in the list.
+        /// @brief Selects an item in the list
         ///
         /// @param index  Index of the item in the list
         ///
@@ -269,11 +226,11 @@ namespace tgui
         /// @see setSelectedItemById
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool setSelectedItemByIndex(std::size_t index);
+        bool setSelectedItemByIndex(size_t index);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Deselects the selected item.
+        /// @brief Deselects the selected item
         ///
         /// The combo box will be empty after this function is called.
         ///
@@ -282,7 +239,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Removes the item from the list with the given name.
+        /// @brief Removes the item from the list with the given name
         ///
         /// @param itemName  The item to remove
         ///
@@ -297,9 +254,9 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Removes the item that were added with the given id.
+        /// @brief Removes the item that were added with the given id
         ///
-        /// @param id  Id that was given to the addItem function.
+        /// @param id  Id that was given to the addItem function
         ///
         /// In case the id is not unique, only the first item with that id will be removed.
         ///
@@ -312,7 +269,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Removes the item from the list.
+        /// @brief Removes the item from the list
         ///
         /// @param index  Index of the item in the list
         ///
@@ -324,18 +281,18 @@ namespace tgui
         /// @see removeItemById
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool removeItemByIndex(std::size_t index);
+        bool removeItemByIndex(size_t index);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Removes all items from the list.
+        /// @brief Removes all items from the list
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         void removeAllItems();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the item name of the item with the given id.
+        /// @brief Returns the item name of the item with the given id
         ///
         /// @param id  The id of the item that was given to it when it was added
         ///
@@ -344,52 +301,40 @@ namespace tgui
         /// @return The requested item, or an empty string when no item matches the id
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::String getItemById(const sf::String& id) const
-        {
-            return m_listBox->getItemById(id);
-        }
+        sf::String getItemById(const sf::String& id) const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the currently selected item.
+        /// @brief Returns the currently selected item
         ///
         /// @return The selected item.
-        ///         When no item was selected then this function will return an empty string.
+        ///         When no item was selected then this function will return an empty string
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::String getSelectedItem() const
-        {
-            return m_listBox->getSelectedItem();
-        }
+        sf::String getSelectedItem() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get the id of the selected item.
+        /// @brief Gets the id of the selected item
         ///
         /// @return The id of the selected item, which was the optional id passed to the addItem function.
-        ///         When no item was selected then this function returns 0.
+        ///         When no item was selected then this function returns 0
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::String getSelectedItemId() const
-        {
-            return m_listBox->getSelectedItemId();
-        }
+        sf::String getSelectedItemId() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get the index of the selected item.
+        /// @brief Gets the index of the selected item
         ///
         /// @return The index of the selected item, or -1 when no item was selected
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        int getSelectedItemIndex() const
-        {
-            return m_listBox->getSelectedItemIndex();
-        }
+        int getSelectedItemIndex() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes an item with name originalValue to newValue.
+        /// @brief Changes an item with name originalValue to newValue
         ///
         /// @param originalValue The name of the item which you want to change
         /// @param newValue      The new name for that item
@@ -405,7 +350,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the name of an item with the given id to newValue.
+        /// @brief Changes the name of an item with the given id to newValue
         ///
         /// @param id       The unique id of the item which you want to change
         /// @param newValue The new name for that item
@@ -421,7 +366,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the name of an item at the given index to newValue.
+        /// @brief Changes the name of an item at the given index to newValue
         ///
         /// @param index    The index of the item which you want to change
         /// @param newValue The new name for that item
@@ -431,7 +376,7 @@ namespace tgui
         ///        - false when the index was too high
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool changeItemByIndex(std::size_t index, const sf::String& newValue);
+        bool changeItemByIndex(size_t index, const sf::String& newValue);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,14 +385,11 @@ namespace tgui
         /// @return Number of items inside the combo box
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::size_t getItemCount()
-        {
-            return m_listBox->getItemCount();
-        }
+        size_t getItemCount() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Return a copy of the items in the combo box
+        /// @brief Returns a copy of the items in the combo box
         ///
         /// @return items
         ///
@@ -456,7 +398,7 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Return a copy of the item ids in the combo box
+        /// @brief Returns a copy of the item ids in the combo box
         ///
         /// @return item ids
         ///
@@ -467,80 +409,25 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the scrollbar.
-        ///
-        /// @param scrollbar The new scrollbar to use
-        ///
-        /// Pass a nullptr to remove the scrollbar. Note that when removing the scrollbar while there are too many items
-        /// to fit in the list then the excess items will be removed.
-        ///
-        /// The scrollbar should have no parent and you should not change it yourself.
-        /// The function is meant to be used like this:
-        /// @code
-        /// comboBox->setScrollbar(theme->load("scrollbar"));
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setScrollbar(Scrollbar::Ptr scrollbar);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Access the scrollbar
-        ///
-        /// @return scrollbar that can be displayed next to the list
-        ///
-        /// You should not change the scrollbar yourself.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Scrollbar::Ptr getScrollbar() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change the internal list box
-        ///
-        /// @return listBox  The new list box used to display all the items
-        ///
-        /// The list box should have no parent and you should not longer change it after calling this function.
-        /// The function is meant to be used like this:
-        /// @code
-        /// comboBox->setListBox(theme->load("ListBox"));
-        /// @endcode
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setListBox(ListBox::Ptr listBox);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the internal list box
-        ///
-        /// @return The list box used to display all the items
-        ///
-        /// You should not change this list box yourself.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ListBox::Ptr getListBox() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the maximum items that the combo box can contain.
+        /// @brief Changes the maximum items that the combo box can contain
         ///
         /// @param maximumItems  The maximum items inside the combo box.
-        ///                      When the maximum is set to 0 then the limit will be disabled.
+        ///                      When the maximum is set to 0 then the limit will be disabled
         ///
         /// If no scrollbar was loaded then there is always a limitation because there will be a limited space for the items.
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setMaximumItems(std::size_t maximumItems = 0);
+        void setMaximumItems(size_t maximumItems = 0);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the maximum items that the combo box can contain.
+        /// @brief Returns the maximum items that the combo box can contain
         ///
         /// @return The maximum items inside the list.
-        ///         If the function returns 0 then there is no limit.
+        ///         If the function returns 0 then there is no limit
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::size_t getMaximumItems() const;
+        size_t getMaximumItems() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -564,74 +451,61 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the opacity of the widget.
-        ///
-        /// @param opacity  The opacity of the widget. 0 means completely transparent, while 1 (default) means fully opaque.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setOpacity(float opacity) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the distance between the position where the widget is drawn and where the widget is placed
-        ///
-        /// This is basically the width and height of the optional borders drawn around widgets.
-        ///
-        /// @return Offset of the widget
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual sf::Vector2f getWidgetOffset() const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /// This function is called when the widget is added to a container.
         /// You should not call this function yourself.
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setParent(Container* parent) override;
+        void setParent(Container* parent) override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual bool mouseOnWidget(float x, float y) const override;
+        bool mouseOnWidget(sf::Vector2f pos) const override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void leftMousePressed(float x, float y) override;
+        void leftMousePressed(sf::Vector2f pos) override;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @internal
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void mouseWheelMoved(int delta, int x, int y) override;
+        void mouseWheelScrolled(float delta, int x, int y) override;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Draw the widget to a render target
+        ///
+        /// @param target Render target to draw to
+        /// @param states Current render states
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Reload the widget
+        /// @brief Function called when one of the properties of the renderer is changed
         ///
-        /// @param primary    Primary parameter for the loader
-        /// @param secondary  Secondary parameter for the loader
-        /// @param force      Try to only change the looks of the widget and not alter the widget itself when false
-        ///
-        /// @throw Exception when the connected theme could not create the widget
-        ///
-        /// When primary is an empty string the built-in white theme will be used.
+        /// @param property  Lowercase name of the property that was changed
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void reload(const std::string& primary = "", const std::string& secondary = "", bool force = false) override;
+        void rendererChanged(const std::string& property) override;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Makes a copy of the widget
+        // Returns the size without the borders
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual Widget::Ptr clone() const override
-        {
-            return std::make_shared<ComboBox>(*this);
-        }
+        sf::Vector2f getInnerSize() const;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Update the height of the internal list box
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void updateListBoxHeight();
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -665,9 +539,12 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
+        // Makes a copy of the widget
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+        Widget::Ptr clone() const override
+        {
+            return std::make_shared<ComboBox>(*this);
+        }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -675,317 +552,28 @@ namespace tgui
 
         // The number of items to display. If there is a scrollbar then you can scroll to see the other.
         // If there is no scrollbar then this will be the maximum amount of items.
-        std::size_t m_nrOfItemsToDisplay = 0;
+        size_t m_nrOfItemsToDisplay = 0;
 
         // Internally a list box is used to store all items
-        ListBox::Ptr m_listBox = std::make_shared<ListBox>();
+        ListBox::Ptr m_listBox = ListBox::create();
 
-        Label m_text;
+        Text m_text;
 
-        friend class ComboBoxRenderer;
+        Sprite m_spriteBackground;
+        Sprite m_spriteArrowUp;
+        Sprite m_spriteArrowDown;
+        Sprite m_spriteArrowUpHover;
+        Sprite m_spriteArrowDownHover;
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    };
-
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class TGUI_API ComboBoxRenderer : public WidgetRenderer, public WidgetBorders, public WidgetPadding
-    {
-    public:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor
-        ///
-        /// @param comboBox  The combo box that is connected to the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ComboBoxRenderer(ComboBox* comboBox) : m_comboBox{comboBox} {}
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new serialized value that you like to assign to the property
-        ///
-        /// @throw Exception when deserialization fails or when the widget does not have this property.
-        /// @throw Exception when loading scrollbar fails with the theme connected to the list box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, const std::string& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Change a property of the renderer
-        ///
-        /// @param property  The property that you would like to change
-        /// @param value     The new value that you like to assign to the property.
-        ///                  The ObjectConverter is implicitly constructed from the possible value types.
-        ///
-        /// @throw Exception for unknown properties or when value was of a wrong type.
-        /// @throw Exception when loading scrollbar fails with the theme connected to the list box
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setProperty(std::string property, ObjectConverter&& value) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Retrieve the value of a certain property
-        ///
-        /// @param property  The property that you would like to retrieve
-        ///
-        /// @return The value inside a ObjectConverter object which you can extract with the correct get function or
-        ///         an ObjectConverter object with type ObjectConverter::Type::None when the property did not exist.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual ObjectConverter getProperty(std::string property) const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Get a map with all properties and their values
-        ///
-        /// @return Property-value pairs of the renderer
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::map<std::string, ObjectConverter> getPropertyValuePairs() const override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the background color that will be used inside the combo box.
-        ///
-        /// @param backgroundColor  The color of the background of the combo box
-        ///
-        /// This color will be ignored when a background image was set.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundColor(const Color& backgroundColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the background color of the arrow that will be used inside the combo box.
-        ///
-        /// @param color  The color of the arrow background of the combo box
-        ///
-        /// This will overwrite the color in both normal and hover states.
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /// @see setArrowBackgroundColorNormal
-        /// @see setArrowBackgroundColorHover
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowBackgroundColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the background color of the arrow when the mouse is not on top of the combo box
-        ///
-        /// @param color  The color of the arrow background in normal state
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowBackgroundColorNormal(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the background color of the arrow when the mouse is standing on top of the combo box
-        ///
-        /// @param color  The color of the arrow background in hover state
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowBackgroundColorHover(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the color of the arrow that will be used inside the combo box.
-        ///
-        /// @param color  The color of the arrow of the combo box
-        ///
-        /// This will overwrite the color in both normal and hover states.
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /// @see setArrowColorNormal
-        /// @see setArrowColorHover
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowColor(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the color of the arrow when the mouse is not on top of the combo box
-        ///
-        /// @param color  The color of the arrow in normal state
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowColorNormal(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the color of the arrow when the mouse is standing on top of the combo box
-        ///
-        /// @param color  The color of the arrow in hover state
-        ///
-        /// This color will be ignored when a up and down image were loaded for the normal state.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowColorHover(const Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the text color that will be used inside the combo box.
-        ///
-        /// @param textColor  The color of the text
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTextColor(const Color& textColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the border color text that will be used inside the combo box.
-        ///
-        /// @param borderColor  The color of the borders
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBorderColor(const Color& borderColor);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the background image
-        ///
-        /// @param texture  New background texture
-        ///
-        /// When this image is set, the background color property will be ignored.
-        /// Pass an empty string to unset the image, in this case the background color property will be used again.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setBackgroundTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the arrow up image
-        ///
-        /// @param texture  New arrow up texture
-        ///
-        /// When this image and the down image are set, the arrow color properties will be ignored.
-        /// Pass an empty string to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowUpTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the arrow down image
-        ///
-        /// @param texture  New arrow down texture
-        ///
-        /// When this image and the up image are set, the arrow color properties will be ignored.
-        /// Pass an empty string to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowDownTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the arrow up image when the mouse is on top of the arrow
-        ///
-        /// @param texture  New arrow up hover texture
-        ///
-        /// Pass an empty string to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowUpHoverTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the arrow down image when the mouse is on top of the arrow
-        ///
-        /// @param texture  New arrow down hover texture
-        ///
-        /// Pass an empty string to unset the image.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setArrowDownHoverTexture(const Texture& texture);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size of the borders.
-        ///
-        /// @param borders  The size of the borders
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setBorders(const Borders& borders) override;
-        using WidgetBorders::setBorders;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the padding of the list box.
-        ///
-        /// This padding will be scaled together with the background image.
-        /// If there is no background image, or when 9-slice scaling is used, the padding will be exactly what you pass here.
-        ///
-        /// @param padding  The padding width and height
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual void setPadding(const Padding& padding) override;
-        using WidgetPadding::setPadding;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the renderer of the list box
-        ///
-        /// @return The list box used to display all the items
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<ListBoxRenderer> getListBox() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the widget on the render target.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private:
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Returns the padding, which is possibly scaled with the background image.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Padding getScaledPadding() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Makes a copy of the renderer
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        virtual std::shared_ptr<WidgetRenderer> clone(Widget* widget) override;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected:
-
-        ComboBox* m_comboBox;
-
-        Texture   m_backgroundTexture;
-
-        Texture   m_textureArrowUpNormal;
-        Texture   m_textureArrowUpHover;
-        Texture   m_textureArrowDownNormal;
-        Texture   m_textureArrowDownHover;
-
-        sf::Color m_textColor;
-        sf::Color m_arrowBackgroundColorNormal;
-        sf::Color m_arrowBackgroundColorHover;
-        sf::Color m_arrowColorNormal;
-        sf::Color m_arrowColorHover;
-
-        friend class ComboBox;
+        // Cached renderer properties
+        Borders m_bordersCached;
+        Padding m_paddingCached;
+        Color m_borderColorCached;
+        Color m_backgroundColorCached;
+        Color m_arrowColorCached;
+        Color m_arrowColorHoverCached;
+        Color m_arrowBackgroundColorCached;
+        Color m_arrowBackgroundColorHoverCached;
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     };
@@ -996,4 +584,3 @@ namespace tgui
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // TGUI_COMBO_BOX_HPP
-

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -27,41 +27,14 @@
 
 #include <SFML/Config.hpp>
 
-#ifndef SFML_STATIC
-
-    #ifdef SFML_SYSTEM_WINDOWS
-
-        // Windows compilers need specific (and different) keywords for export and import
-        #ifdef tgui_EXPORTS
-            #define TGUI_API __declspec(dllexport)
-        #else
-            #define TGUI_API __declspec(dllimport)
-        #endif
-
-    #else // Linux, FreeBSD, Mac OS X
-
-        // GCC 4 has special keywords for showing/hidding symbols
-        #if __GNUC__ >= 4
-            #define TGUI_API __attribute__ ((__visibility__ ("default")))
-        #else
-            #define TGUI_API
-        #endif
-
-    #endif
-
-#else
-
-    // Static build doesn't need import/export macros
-    #define TGUI_API
-    #define TGUI_API
-
-#endif
+#define TGUI_API
+#define TGUI_API
 
 
 // Version of the library
 #define TGUI_VERSION_MAJOR 0
-#define TGUI_VERSION_MINOR 7
-#define TGUI_VERSION_PATCH 4
+#define TGUI_VERSION_MINOR 8
+#define TGUI_VERSION_PATCH 0
 
 
 #endif // TGUI_CONFIG_HPP

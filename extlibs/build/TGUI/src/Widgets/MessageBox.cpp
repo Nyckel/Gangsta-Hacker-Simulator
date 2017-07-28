@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -30,58 +30,84 @@
 
 namespace tgui
 {
+    static std::map<std::string, ObjectConverter> defaultRendererValues =
+    {
+        {"borders", Borders{1}},
+        {"bordercolor", sf::Color::Black},
+        {"titlecolor", sf::Color::Black},
+        {"titlebarcolor", sf::Color::White},
+        {"backgroundcolor", Color{230, 230, 230}},
+        {"distancetoside", 3.f},
+        {"paddingbetweenbuttons", 1.f},
+        {"textcolor", sf::Color::Black}
+    };
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     MessageBox::MessageBox()
     {
+        m_type = "MessageBox";
         m_callback.widgetType = "MessageBox";
 
         addSignal<sf::String>("ButtonPressed");
 
-        m_renderer = std::make_shared<MessageBoxRenderer>(this);
-        reload();
+        m_renderer = aurora::makeCopied<MessageBoxRenderer>();
+        setRenderer(RendererData::create(defaultRendererValues));
+
+        getRenderer()->getCloseButton()->propertyValuePairs["borders"] = {Borders{1}};
+        getRenderer()->getMaximizeButton()->propertyValuePairs["borders"] = {Borders{1}};
+        getRenderer()->getMinimizeButton()->propertyValuePairs["borders"] = {Borders{1}};
 
         add(m_label, "#TGUI_INTERNAL$MessageBoxText#");
         m_label->setTextSize(m_textSize);
 
+        setTitleButtons(None);
         setSize({400, 150});
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    MessageBox::MessageBox(const MessageBox& messageBoxToCopy) :
-        ChildWindow      {messageBoxToCopy},
-        m_loadedThemeFile(messageBoxToCopy.m_loadedThemeFile), // Did not compile in VS2013 when using braces
-        m_buttonClassName(messageBoxToCopy.m_buttonClassName), // Did not compile in VS2013 when using braces
-        m_textSize       {messageBoxToCopy.m_textSize}
+    MessageBox::MessageBox(const MessageBox& other) :
+        ChildWindow {other},
+        m_loadedThemeFile(other.m_loadedThemeFile), // Did not compile in VS2013 when using braces
+        m_buttonClassName(other.m_buttonClassName), // Did not compile in VS2013 when using braces
+        m_textSize {other.m_textSize}
     {
-        m_label = Label::copy(messageBoxToCopy.m_label);
-        add(m_label, "#TGUI_INTERNAL$MessageBoxText#");
+        m_label = get<Label>("#TGUI_INTERNAL$MessageBoxText#");
 
-        for (auto it = messageBoxToCopy.m_buttons.begin(); it != messageBoxToCopy.m_buttons.end(); ++it)
+        for (unsigned int i = 0; i < m_widgets.size(); ++i)
         {
-            Button::Ptr button = Button::copy(*it);
-            button->disconnectAll();
-            button->connect("Pressed", [=]() { m_callback.text = button->getText(); sendSignal("ButtonPressed", button->getText()); });
+            if ((m_widgetNames[i].getSize() > 32) && (m_widgetNames[i].substring(0, 32) == "#TGUI_INTERNAL$MessageBoxButton:"))
+            {
+                auto button = std::dynamic_pointer_cast<Button>(m_widgets[i]);
 
-            m_buttons.push_back(button);
+                button->disconnectAll("Pressed");
+                button->connect("Pressed", [=]()
+                            {
+                                m_callback.text = button->getText();
+                                sendSignal("ButtonPressed", button->getText());
+                            });
+                m_buttons.push_back(button);
+            }
         }
+
+        rearrange();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    MessageBox& MessageBox::operator= (const MessageBox& right)
+    MessageBox& MessageBox::operator=(const MessageBox& other)
     {
-        if (this != &right)
+        if (this != &other)
         {
-            MessageBox temp(right);
-            ChildWindow::operator=(right);
+            MessageBox temp(other);
+            ChildWindow::operator=(temp);
 
-            std::swap(m_loadedThemeFile, temp.m_loadedThemeFile);
-            std::swap(m_buttonClassName, temp.m_buttonClassName);
-            std::swap(m_buttons,         temp.m_buttons);
-            std::swap(m_label,           temp.m_label);
-            std::swap(m_textSize,        temp.m_textSize);
+            swap(m_loadedThemeFile, temp.m_loadedThemeFile);
+            swap(m_buttonClassName, temp.m_buttonClassName);
+            swap(m_buttons, temp.m_buttons);
+            swap(m_label, temp.m_label);
+            std::swap(m_textSize, temp.m_textSize);
         }
 
         return *this;
@@ -96,25 +122,11 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    MessageBox::Ptr MessageBox::copy(MessageBox::ConstPtr messageBox)
+    MessageBox::Ptr MessageBox::copy(ConstPtr messageBox)
     {
         if (messageBox)
             return std::static_pointer_cast<MessageBox>(messageBox->clone());
-        else
-            return nullptr;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void MessageBox::setFont(const Font& font)
-    {
-        ChildWindow::setFont(font);
-        m_label->setFont(font);
-
-        for (unsigned int i = 0; i < m_buttons.size(); ++i)
-            m_buttons[i]->setFont(font);
-
-        rearrange();
+        return nullptr;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,36 +140,60 @@ namespace tgui
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    const sf::String& MessageBox::getText() const
+    {
+        return m_label->getText();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void MessageBox::setTextSize(unsigned int size)
     {
         m_textSize = size;
 
         m_label->setTextSize(size);
 
-        for (unsigned int i = 0; i < m_buttons.size(); ++i)
-            m_buttons[i]->setTextSize(m_textSize);
+        for (auto& button : m_buttons)
+            button->setTextSize(m_textSize);
 
         rearrange();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    unsigned int MessageBox::getTextSize() const
+    {
+        return m_textSize;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     void MessageBox::addButton(const sf::String& caption)
     {
-        Button::Ptr button;
-        if (!getTheme() || m_buttonClassName.empty())
-            button = std::make_shared<Button>();
-        else
-            button = getTheme()->internalLoad(getPrimaryLoadingParameter(), m_buttonClassName);
-
+        auto button = Button::create(caption);
+        button->setRenderer(getRenderer()->getButton());
         button->setTextSize(m_textSize);
-        button->setText(caption);
-        button->connect("Pressed", [=](){ m_callback.text = caption; sendSignal("ButtonPressed", caption); });
+        button->connect("Pressed", [=]()
+                    {
+                        m_callback.text = caption;
+                        sendSignal("ButtonPressed", caption);
+                    });
 
-        add(button, "#TGUI_INTERNAL$MessageBoxButton$" + caption + "#");
+        add(button, "#TGUI_INTERNAL$MessageBoxButton:" + caption + "#");
         m_buttons.push_back(button);
 
         rearrange();
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::vector<sf::String> MessageBox::getButtons() const
+    {
+        std::vector<sf::String> buttonTexts;
+        for (auto& button : m_buttons)
+            buttonTexts.emplace_back(button->getText());
+
+        return buttonTexts;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,14 +204,14 @@ namespace tgui
         float buttonHeight = 24;
 
         // Calculate the button size
-        if (getFont())
+        if (m_fontCached)
         {
-            buttonWidth = 5.0f * getFont()->getLineSpacing(m_textSize);
-            buttonHeight = getFont()->getLineSpacing(m_textSize) / 0.85f;
+            buttonWidth = 5.0f * m_fontCached.getLineSpacing(m_textSize);
+            buttonHeight = m_fontCached.getLineSpacing(m_textSize) / 0.85f;
 
-            for (unsigned int i = 0; i < m_buttons.size(); ++i)
+            for (const auto& button : m_buttons)
             {
-                float width = sf::Text(m_buttons[i]->getText(), *getFont(), m_textSize).getLocalBounds().width;
+                float width = sf::Text(button->getText(), *m_fontCached.getFont(), m_textSize).getLocalBounds().width;
                 if (buttonWidth < width * 10.0f / 9.0f)
                     buttonWidth = width * 10.0f / 9.0f;
             }
@@ -184,14 +220,14 @@ namespace tgui
         // Calculate the space needed for the buttons
         float distance = buttonHeight * 2.0f / 3.0f;
         float buttonsAreaWidth = distance;
-        for (unsigned int i = 0; i < m_buttons.size(); ++i)
+        for (auto& button : m_buttons)
         {
-            m_buttons[i]->setSize({buttonWidth, buttonHeight});
-            buttonsAreaWidth += m_buttons[i]->getSize().x + distance;
+            button->setSize({buttonWidth, buttonHeight});
+            buttonsAreaWidth += button->getSize().x + distance;
         }
 
         // Calculate the suggested size of the window
-        sf::Vector2f size = {2*distance + m_label->getSize().x, 3*distance + m_label->getSize().y + buttonHeight};
+        sf::Vector2f size = {2 * distance + m_label->getSize().x, 3 * distance + m_label->getSize().y + buttonHeight};
 
         // Make sure the buttons fit inside the message box
         if (buttonsAreaWidth > size.x)
@@ -205,122 +241,42 @@ namespace tgui
 
         // Set the buttons on the correct position
         float leftPosition = 0;
-        float topPosition = 2*distance + m_label->getSize().y;
-        for (unsigned int i = 0; i < m_buttons.size(); ++i)
+        float topPosition = 2 * distance + m_label->getSize().y;
+        for (auto& button : m_buttons)
         {
-            leftPosition += distance + ((size.x - buttonsAreaWidth) / (m_buttons.size()+1));
-            m_buttons[i]->setPosition({leftPosition, topPosition});
-            leftPosition += m_buttons[i]->getSize().x;
+            leftPosition += distance + ((size.x - buttonsAreaWidth) / (m_buttons.size() + 1));
+            button->setPosition({leftPosition, topPosition});
+            leftPosition += button->getSize().x;
         }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void MessageBox::reload(const std::string& primary, const std::string& secondary, bool force)
+    void MessageBox::rendererChanged(const std::string& property)
     {
-        ChildWindow::reload(primary, secondary, force);
-
-        if (!m_theme || primary == "")
-            getRenderer()->setTextColor({0, 0, 0});
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void MessageBoxRenderer::setProperty(std::string property, const std::string& value)
-    {
-        property = toLower(property);
-
         if (property == "textcolor")
-            setTextColor(Deserializer::deserialize(ObjectConverter::Type::Color, value).getColor());
+        {
+            m_label->getRenderer()->setTextColor(getRenderer()->getTextColor());
+        }
         else if (property == "button")
-            m_messageBox->m_buttonClassName = Deserializer::deserialize(ObjectConverter::Type::String, value).getString();
-        else if (property == "childwindow")
         {
-            if (m_messageBox->getTheme() == nullptr)
-                throw Exception{"Failed to load scrollbar, ChatBox has no connected theme to load the scrollbar with"};
+            const auto& renderer = getRenderer()->getButton();
+            for (auto& button : m_buttons)
+                button->setRenderer(renderer);
+        }
+        else if (property == "font")
+        {
+            ChildWindow::rendererChanged(property);
 
-            tgui::ChildWindow::Ptr childWindow = m_messageBox->getTheme()->internalLoad(
-                                                        m_messageBox->m_primaryLoadingParameter,
-                                                        Deserializer::deserialize(ObjectConverter::Type::String, value).getString()
-                                                    );
+            m_label->getRenderer()->setFont(m_fontCached);
 
-            for (auto& pair : childWindow->getRenderer()->getPropertyValuePairs())
-                setProperty(pair.first, std::move(pair.second));
+            for (auto& button : m_buttons)
+                button->getRenderer()->setFont(m_fontCached);
+
+            rearrange();
         }
         else
-            ChildWindowRenderer::setProperty(property, value);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void MessageBoxRenderer::setProperty(std::string property, ObjectConverter&& value)
-    {
-        property = toLower(property);
-
-        if (value.getType() == ObjectConverter::Type::Color)
-        {
-            if (property == "textcolor")
-                setTextColor(value.getColor());
-            else
-                ChildWindowRenderer::setProperty(property, std::move(value));
-        }
-        else if (value.getType() == ObjectConverter::Type::String)
-        {
-            if (property == "button")
-                m_messageBox->m_buttonClassName = value.getString();
-            else if (property == "childwindow")
-            {
-                if (m_messageBox->getTheme() == nullptr)
-                    throw Exception{"Failed to load scrollbar, ChatBox has no connected theme to load the scrollbar with"};
-
-                tgui::ChildWindow::Ptr childWindow = m_messageBox->getTheme()->internalLoad(m_messageBox->m_primaryLoadingParameter, value.getString());
-
-                for (auto& pair : childWindow->getRenderer()->getPropertyValuePairs())
-                    setProperty(pair.first, std::move(pair.second));
-            }
-            else
-                ChildWindowRenderer::setProperty(property, std::move(value));
-        }
-        else
-            ChildWindowRenderer::setProperty(property, std::move(value));
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    ObjectConverter MessageBoxRenderer::getProperty(std::string property) const
-    {
-        property = toLower(property);
-
-        if (property == "textcolor")
-            return m_messageBox->m_label->getTextColor();
-        else
-            return ChildWindowRenderer::getProperty(property);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::map<std::string, ObjectConverter> MessageBoxRenderer::getPropertyValuePairs() const
-    {
-        auto pairs = ChildWindowRenderer::getPropertyValuePairs();
-        pairs["TextColor"] = m_messageBox->m_label->getTextColor();
-        return pairs;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void MessageBoxRenderer::setTextColor(const Color& color)
-    {
-        m_messageBox->m_label->setTextColor(color);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    std::shared_ptr<WidgetRenderer> MessageBoxRenderer::clone(Widget* widget)
-    {
-        auto renderer = std::make_shared<MessageBoxRenderer>(*this);
-        renderer->m_messageBox = static_cast<MessageBox*>(widget);
-        return renderer;
+            ChildWindow::rendererChanged(property);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

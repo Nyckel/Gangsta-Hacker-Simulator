@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -29,54 +29,69 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <TGUI/TextureData.hpp>
-#include <TGUI/TextureManager.hpp>
-
-#include <TGUI/Global.hpp>
-
+#include <SFML/System/String.hpp>
 #include <functional>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace tgui
 {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class TGUI_API Texture : public sf::Transformable, public sf::Drawable
+    class TGUI_API Texture
     {
     public:
 
         using ImageLoaderFunc = std::function<std::shared_ptr<sf::Image>(const sf::String&)>;
-        using TextureLoaderFunc = std::function<bool(Texture&, const sf::String&, const sf::IntRect&)>;
+        using TextureLoaderFunc = std::function<std::shared_ptr<TextureData>(Texture&, const sf::String&, const sf::IntRect&)>;
 
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief The way the image should be scaled
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        enum class ScalingType
-        {
-            Normal,     ///< The image is not split and scaled normally
-            Horizontal, ///< Image is split in Left, Middle and Right parts. Left and Right keep ratio, Middle gets stretched
-            Vertical,   ///< Image is split in Top, Middle and Bottom parts. Top and Bottom keep ratio, Middle gets stretched
-            NineSlice   ///< Image is split in 9 parts. Corners keep size, sides are stretched in one direction, middle is stretched in both directions
-        };
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Default constructor
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Texture() {}
+        Texture()
+        {
+        }
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor that created the texture.
+        /// @brief Constructor that created the texture
         ///
-        /// @param id         Id for the the image to load (for the default loader, the id is the filename).
-        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image.
+        /// @param id         Id for the the image to load (for the default loader, the id is the filename)
+        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image
+        /// @param middlePart Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Texture(const char* id,
+                const sf::IntRect& partRect = sf::IntRect(0, 0, 0, 0),
+                const sf::IntRect& middlePart = sf::IntRect(0, 0, 0, 0))
+            : Texture(sf::String{id}, partRect, middlePart)
+        {
+        }
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Constructor that created the texture
+        ///
+        /// @param id         Id for the the image to load (for the default loader, the id is the filename)
+        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image
+        /// @param middlePart Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
+        ///
+        /// This constructor just calls the corresponding load function.
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Texture(std::string id,
+                const sf::IntRect& partRect = sf::IntRect(0, 0, 0, 0),
+                const sf::IntRect& middlePart = sf::IntRect(0, 0, 0, 0))
+            : Texture(sf::String{id}, partRect, middlePart)
+        {
+        }
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Constructor that created the texture
+        ///
+        /// @param id         Id for the the image to load (for the default loader, the id is the filename)
+        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image
         /// @param middlePart Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
         ///
         /// This constructor just calls the corresponding load function.
@@ -88,10 +103,10 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Constructor that created the texture from an existing sf::Texture.
+        /// @brief Constructor that created the texture from an existing sf::Texture
         ///
-        /// @param texture    Existing texture to copy.
-        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image.
+        /// @param texture    Existing texture to copy
+        /// @param partRect   Load only part of the image. Pass an empty rectangle if you want to load the full image
         /// @param middlePart Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
         ///
         /// The texture will be copied, you do not have to keep the sf::Texture alive after calling this function.
@@ -106,35 +121,48 @@ namespace tgui
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Copy constructor
-        ///
-        /// @param texture  Instance to copy
-        ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Texture(const Texture& texture);
-
+        Texture(const Texture&);
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Virtual destructor
+        /// @brief Move constructor
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Texture(Texture&&);
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Destructor
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ~Texture();
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Overload of copy assignment operator
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Texture& operator=(const Texture&);
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Overload of assignment operator
-        ///
-        /// @param right  Instance to assign
-        ///
-        /// @return Reference to itself
-        ///
+        /// @brief Move assignment
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Texture& operator=(const Texture& right);
+        Texture& operator=(Texture&&);
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Creates the texture from an existing sf::Texture.
+        /// @brief Creates the texture
         ///
-        /// @param texture    Existing texture to copy.
-        /// @param partRect   Load only part of the texture. Don't pass this parameter if you want to load the full image.
+        /// @param id         Id for the the image to load (for the default loader, the id is the filename)
+        /// @param partRect   Load only part of the image. Don't pass this parameter if you want to load the full image
+        /// @param middleRect Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void load(const sf::String& id,
+                  const sf::IntRect& partRect = {},
+                  const sf::IntRect& middleRect = {});
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Creates the texture from an existing sf::Texture
+        ///
+        /// @param texture    Existing texture to copy
+        /// @param partRect   Load only part of the texture. Don't pass this parameter if you want to load the full image
         /// @param middleRect Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
         ///
         /// The texture will be copied, you do not have to keep the sf::Texture alive after calling this function.
@@ -146,76 +174,21 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Creates the texture.
-        ///
-        /// @param id         Id for the the image to load (for the default loader, the id is the filename).
-        /// @param partRect   Load only part of the image. Don't pass this parameter if you want to load the full image.
-        /// @param middleRect Choose the middle part of the image for 9-slice scaling (relative to the part defined by partRect)
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void load(const sf::String& id,
-                  const sf::IntRect& partRect = {},
-                  const sf::IntRect& middleRect = {});
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the texture
-        ///
-        /// @param data       New texture data
-        /// @param middleRect Choose the middle part of the image part to determine scaling (e.g. 9-slice scaling)
-        ///
-        /// This function is not intended to be used directly, except from custom loaders.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTexture(std::shared_ptr<TextureData> data, const sf::IntRect& middleRect = {});
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @brief Returns the id that was used to load the texture (for the default loader, the id is the filename)
         ///
         /// @return Id of the texture
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::string getId() const;
+        const sf::String& getId() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns a reference to the texture data.
+        /// @brief Returns the texture data
         ///
         /// @return Data of the texture
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<TextureData>& getData();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the constant texture data.
-        ///
-        /// @return Read-only data of the texture
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::shared_ptr<const TextureData> getData() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the size that the image will have when drawing
-        ///
-        /// @param size  Size of the image
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setSize(const sf::Vector2f& size);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the size that the image has when drawing
-        ///
-        /// @return Size of the image
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::Vector2f getSize() const
-        {
-            return m_size;
-        }
+        std::shared_ptr<TextureData> getData() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,80 +197,11 @@ namespace tgui
         /// @return Size of the image like it was when loaded (no scaling applied)
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::Vector2f getImageSize() const
-        {
-            return sf::Vector2f{m_data->texture.getSize()};
-        }
+        sf::Vector2f getImageSize() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Set the global color of the sprite
-        ///
-        /// This color is modulated (multiplied) with the sprite's texture. It can be used to colorize the sprite,
-        /// or change its global opacity.
-        ///
-        /// By default, the sprite's color is opaque white.
-        ///
-        /// @param color  New color of the sprite
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setColor(const sf::Color& color);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the global color of the sprite
-        ///
-        /// This color is modulated (multiplied) with the sprite's texture. It can be used to colorize the sprite,
-        /// or change its global opacity.
-        ///
-        /// By default, the sprite's color is opaque white.
-        ///
-        /// @return Current color of the sprite
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        const sf::Color& getColor() const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Changes the part of the texture that should be drawn
-        ///
-        /// @param textureRect Visible part of the texture
-        ///
-        /// Set this to (0, 0, 0, 0) to show the entire texture
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setTextureRect(const sf::FloatRect& textureRect)
-        {
-            m_textureRect = textureRect;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the part of the texture that is drawn
-        ///
-        /// @return Visible part of the texture
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::FloatRect getTextureRect() const
-        {
-            return m_textureRect;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the middle rect of the texture which is used for 9-slice scaling
-        ///
-        /// @return Middle rect of the texture
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        sf::IntRect getMiddleRect() const
-        {
-            return m_middleRect;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Enable or disable the smooth filter.
+        /// @brief Enables or disable the smooth filter
         ///
         /// When the filter is activated, the texture appears smoother so that pixels are less noticeable.
         /// However if you want the texture to look exactly the same as its source file, you should leave it disabled.
@@ -312,101 +216,34 @@ namespace tgui
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Tell whether the smooth filter is enabled or not.
+        /// @brief Tells whether the smooth filter is enabled or not
         ///
         /// @return True if smoothing is enabled, false if it is disabled
         ///
         /// @see setSmooth
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool isSmooth() const
-        {
-            return m_data->texture.isSmooth();
-        }
+        bool isSmooth() const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Check if a certain pixel is transparent.
+        /// @brief Returns the middle rect of the texture which is used for 9-slice scaling
         ///
-        /// @param x  global X coordinate of the pixel
-        /// @param y  global Y coordinate of the pixel
+        /// @return Middle rect of the texture
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        sf::IntRect getMiddleRect() const;
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Checks if a certain pixel is transparent
+        ///
+        /// @param pos  Coordinate of the pixel
         ///
         /// @return True when the pixel is transparent, false when it is not
         ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool isTransparentPixel(float x, float y) const;
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the way in which the image is being scaled.
-        ///
-        /// @return Scaling type
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ScalingType getScalingType() const
-        {
-            return m_scalingType;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Check if the texture has been correctly loaded
-        ///
-        /// @return True if texture was initialized
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        bool isLoaded() const
-        {
-            return m_loaded;
-        }
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Sets a different image loader
-        ///
-        /// @param func  New image loader function
-        ///
-        /// The image loader will be called inside the texture loader to create the sf::Image.
-        ///
-        /// The default loader will simply load the image from a file.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static void setImageLoader(const ImageLoaderFunc& func);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Sets a different texture loader
-        ///
-        /// @param func  New texture loader function
-        ///
-        /// The texture loader will initialize this Texture object.
-        ///
-        /// The default loader will use an internal texture manager to prevent the same thing from being loaded twice.
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static void setTextureLoader(const TextureLoaderFunc& func);
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the used image loader
-        ///
-        /// @return Image loader that is currently being used
-        ///
-        /// @see setImageLoader
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static ImageLoaderFunc getImageLoader();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// @brief Returns the used texture loader
-        ///
-        /// @return Texture loader that is currently being used
-        ///
-        /// @see setTextureLoader
-        ///
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        static TextureLoaderFunc getTextureLoader();
+        bool isTransparentPixel(sf::Vector2u pos) const;
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,40 +268,78 @@ namespace tgui
         void setDestructCallback(const std::function<void(std::shared_ptr<TextureData>)> func);
 
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Sets a different image loader
+        ///
+        /// @param func  New image loader function
+        ///
+        /// The image loader will be called inside the texture loader to create the sf::Image.
+        ///
+        /// The default loader will simply load the image from a file.
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        static void setImageLoader(const ImageLoaderFunc& func);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Returns the used image loader
+        ///
+        /// @return Image loader that is currently being used
+        ///
+        /// @see setImageLoader
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        static ImageLoaderFunc getImageLoader();
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Sets a different texture loader
+        ///
+        /// @param func  New texture loader function
+        ///
+        /// The texture loader will initialize this Texture object.
+        ///
+        /// The default loader will use an internal texture manager to prevent the same thing from being loaded twice.
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        static void setTextureLoader(const TextureLoaderFunc& func);
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @brief Returns the used texture loader
+        ///
+        /// @return Texture loader that is currently being used
+        ///
+        /// @see setTextureLoader
+        ///
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        static TextureLoaderFunc getTextureLoader();
+
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private:
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Update the vertices of the internal vertex array
+        /// @brief Changes the texture data
+        ///
+        /// @param data       New texture data
+        /// @param middleRect Choose the middle part of the image part to determine scaling (e.g. 9-slice scaling)
+        ///
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void updateVertices();
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Draws the texture
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+        void setTextureData(std::shared_ptr<TextureData> data, const sf::IntRect& middleRect = {});
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     private:
-        std::shared_ptr<TextureData> m_data = std::make_shared<TextureData>();
-        std::vector<sf::Vertex> m_vertices;
 
-        sf::Vector2f  m_size;
-        sf::IntRect   m_middleRect;
-        sf::FloatRect m_textureRect;
-        sf::Color     m_vertexColor = sf::Color::White;
+        std::shared_ptr<TextureData> m_data = nullptr;
 
-        ScalingType   m_scalingType = ScalingType::Normal;
-
-        bool m_loaded = false;
-        std::string m_id;
+        sf::IntRect m_middleRect;
+        sf::String m_id;
 
         std::function<void(std::shared_ptr<TextureData>)> m_copyCallback;
         std::function<void(std::shared_ptr<TextureData>)> m_destructCallback;
+
         static TextureLoaderFunc m_textureLoader;
         static ImageLoaderFunc m_imageLoader;
     };

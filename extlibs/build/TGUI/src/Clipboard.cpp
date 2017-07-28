@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// TGUI - Texus's Graphical User Interface
+// TGUI - Texus' Graphical User Interface
 // Copyright (C) 2012-2017 Bruno Van de Velde (vdv_b@tgui.eu)
 //                         Koushtav Chakrabarty (koushtav@fleptic.eu)
 //
@@ -24,11 +24,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-#include <SFML/Config.hpp>
 #include <TGUI/Clipboard.hpp>
 
 #ifdef SFML_SYSTEM_WINDOWS
-    #include <windows.h>
+#include <windows.h>
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,16 +44,16 @@ namespace tgui
 
     sf::String Clipboard::get()
     {
-    #ifdef SFML_SYSTEM_WINDOWS
+#ifdef SFML_SYSTEM_WINDOWS
         if (m_isWindowHandleSet)
         {
             if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(m_windowHandle))
             {
                 HGLOBAL hGlobal = GetClipboardData(CF_TEXT);
-                if (hGlobal != NULL)
+                if (hGlobal != nullptr)
                 {
                     const char* lpszData = static_cast<const char*>(GlobalLock(hGlobal));
-                    if (lpszData != NULL)
+                    if (lpszData != nullptr)
                     {
                         m_contents = lpszData;
 
@@ -65,7 +64,7 @@ namespace tgui
                 CloseClipboard();
             }
         }
-    #endif
+#endif
 
         return m_contents;
     }
@@ -76,7 +75,7 @@ namespace tgui
     {
         m_contents = contents;
 
-    #ifdef SFML_SYSTEM_WINDOWS
+#ifdef SFML_SYSTEM_WINDOWS
         if (m_isWindowHandleSet)
         {
             if (OpenClipboard(m_windowHandle))
@@ -84,10 +83,10 @@ namespace tgui
                 EmptyClipboard();
 
                 HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, m_contents.getSize() + 1);
-                if (hGlobal != NULL)
+                if (hGlobal != nullptr)
                 {
                     char* pchData = static_cast<char*>(GlobalLock(hGlobal));
-                    if (pchData != NULL)
+                    if (pchData != nullptr)
                     {
                         memcpy(pchData, m_contents.toAnsiString().c_str(), m_contents.getSize() + 1);
                         SetClipboardData(CF_TEXT, hGlobal);
@@ -101,7 +100,7 @@ namespace tgui
                 CloseClipboard();
             }
         }
-    #endif
+#endif
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,4 +115,3 @@ namespace tgui
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
