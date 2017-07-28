@@ -20,12 +20,12 @@ UIButton::UIButton(sf::Font *pFont, sf::Vector2f pPosition, std::string pString,
 	addHoverState(sf::Color(113, 248, 192), sf::Color::Black, sf::Color(113, 248, 192));
 	text.setFont(*font);
 }
-UIButton::UIButton(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow) : Label(pFont, pColor, pString, characterSize, pWindow) {
+/*UIButton::UIButton(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow) : Label(pFont, pColor, pString, characterSize, pWindow) {
 	clickable = true;
 	addBackgroundRect(sf::Color::Black, sf::Color(228, 71, 98));
 	addHoverState(sf::Color(113, 248, 192), sf::Color::Black, sf::Color(113, 248, 192));
 	text.setFont(*font);
-}
+}*/
 
 
 

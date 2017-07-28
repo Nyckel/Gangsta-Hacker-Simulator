@@ -17,7 +17,7 @@ public:
 
 	UIButton(sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
 	UIButton(sf::Font *pFont, sf::Vector2f pPosition, std::string pString = "Default string", int characterSize = 15);
-	UIButton(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow);
+	//UIButton(sf::Font *pFont, sf::Color pColor, std::string pString, int characterSize, sf::RenderWindow* pWindow);
 
 	UIButton(sf::Font *pFont, sf::Color pColor, sf::Vector2f pPosition, sf::Vector2f pSize, std::string pString, int characterSize);
 
