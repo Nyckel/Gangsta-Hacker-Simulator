@@ -3,6 +3,7 @@
 
 class Character;
 
+int Company::compannyIds = 0;
 
 Company::Company()
 {
@@ -20,7 +21,7 @@ Company::Company()
 	//displayStatistics();
 	//std::cout << "\t";
 	//system("pause");
-	compId = Company::generateUniqueId();
+	companyId = Company::compannyIds++;
 }
 
 Company::Company(std::string pName) {//This is for the player
@@ -41,7 +42,7 @@ Company::Company(std::string pName) {//This is for the player
 	//displayStatistics();
 	//std::cout << "\t";
 	//system("pause");
-	compId = generateUniqueId();
+	companyId = Company::compannyIds++;
 }
 
 Company::Company(std::string pName, int pRenown, int pBalance) { 
@@ -52,7 +53,7 @@ Company::Company(std::string pName, int pRenown, int pBalance) {
 	allowedExploit = false;
 	allowedPostExploit = false;
 
-	compId = generateUniqueId();
+	companyId = Company::compannyIds++;
 }
 
 
@@ -150,28 +151,4 @@ void Company::updateActivities(std::chrono::microseconds elapsed) {
 
 void Company::createTechTree() {
 	technologyTree = TechTree("ressources/jsons/techTree.json");
-}
-
-
-bool Company::isAllowedScan() const { return allowedScan; }
-bool Company::isAllowedExploit() const { return allowedExploit; }
-bool Company::isAllowedPostExploit() const { return allowedPostExploit; }
-
-
-std::string Company::generateUniqueId()
-{
-	auto len = 10;
-	char s[10];
-	static const char alphanum[] =
-		"0123456789"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz";
-
-	for (int i = 0; i < len; ++i) {
-		s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
-	}
-
-	//s[len] = 0;
-	std::cout << "Str: " << std::string(s) << std::endl;
-	return std::string(s);
 }

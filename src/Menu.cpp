@@ -35,11 +35,10 @@ Menu::Menu(std::vector<std::pair<std::string, std::function<void()>* >> pMap, st
 	menuSize.y = buttonSize.y*pMap.size() + interButtonPadding * (pMap.size() - 1);
 
 	for (int i = 0; i < pMap.size(); i++) {
-		UIButton* currentUIButton;
 		if (i > 0)
 			buttonPosition.y += (buttonSize.y + interButtonPadding);
 
-		currentUIButton = new UIButton(pFont, pColor, buttonPosition, buttonSize, pMap.at(i).first, pCharacterSize);
+		UIButton* currentUIButton = new UIButton(pFont, pColor, buttonPosition, buttonSize, pMap.at(i).first, pCharacterSize);
 		std::cout << "In menu.cpp >> [0]:" << pMap.at(i).first << " [1]:" << &pMap[i].second << std::endl;
 		currentUIButton->setName(pMap.at(i).first);
 		currentUIButton->click = pMap[i].second;

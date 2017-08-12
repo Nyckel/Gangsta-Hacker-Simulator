@@ -42,24 +42,24 @@ private:
 public:
 	~Game();
 
-	Company createCompany();
+	//Company createCompany();
 	//void run(Company* pMainCompany);
-	void startNew();
-	void run();
+	//void startNew();
+	//void run();
 	//Start scenario ?
 	//void pause();
 	//void resume;
 
-	void computeDeltaTime();
+	//void computeDeltaTime();
 	//void updateActivities(long long elapsed);
-	void updateActivities(std::chrono::microseconds elapsed);
+	//void updateActivities(std::chrono::microseconds elapsed);
 
-	Mission* getCurrentMissionOf(Character *pChar);
-	void setCurrentMissionOf(Character *pChar, Mission *pMission);
-	void displayMissionsOfCharacter(Character *pChar);
+	//Mission* getCurrentMissionOf(Character *pChar);
+	//void setCurrentMissionOf(Character *pChar, Mission *pMission);
+	//void displayMissionsOfCharacter(Character *pChar);
 
-	int getNbOfMissionsFor(Character *pChar);
-	int getNbOfMissionsFor(Company *pCompany);
+	//int getNbOfMissionsFor(Character *pChar);
+	//int getNbOfMissionsFor(Company *pCompany);
 	void handleEvents();
 	void update(std::chrono::microseconds elapsed);
 	void draw();

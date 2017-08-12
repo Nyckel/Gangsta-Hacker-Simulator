@@ -2,14 +2,15 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <map>
 
 #include "Character.h"
 #include "StringAttribute.h"
 #include "IntAttribute.h"
 #include "Mission.h"
 #include "Entity.h"
-
 #include "TechTree.h"
+
 
 class Company : public Entity //Compagny data for other than targets will be loaded in data files
 {
@@ -21,7 +22,11 @@ private:
 
 	StringAttribute name;
 	StringAttribute description;
-	std::string compId;
+	int companyId;
+
+	std::map<std::string,Company> knownCompanies;
+	std::vector<Mission> activeMissions;
+	std::vector<Mission> finishedMissions;
 
 	bool isTarget; // If true, other booleans discared
 	//Maybe put on individual elements (servers, characters, ...)
@@ -63,11 +68,14 @@ public:
 	//void updateActivities(const long long elapsed);
 	void updateActivities(std::chrono::microseconds elapsed);
 
-	bool isAllowedScan() const;
-	bool isAllowedExploit() const;
-	bool isAllowedPostExploit() const;
+	bool isAllowedScan() const { return allowedScan; }
+	bool isAllowedExploit() const { return allowedExploit; }
+	bool isAllowedPostExploit() const { return allowedPostExploit; }
 
-	static std::string generateUniqueId();
+	int getCompanyId() const { return companyId; }
+	void setCompanyId(int pId) { companyId = { pId }; }
+
+	static int compannyIds;
 
 };
 

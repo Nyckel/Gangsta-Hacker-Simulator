@@ -1,25 +1,29 @@
 #include "World.h"
 
-
-
-World::World()
+void World::createFirstCompany()
 {
+	std::string companyName;
+	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
+	std::cin >> companyName;
+	auto company = Company(companyName);
+	company.createTechTree();
+	playableCompanies.push_back(company);
 }
 
-
-World::~World()
+void World::loadMissions()
 {
-	for (auto elt : organisations)
-		delete elt;
-	for (auto elt : peopleAlone)
-		delete elt;
-}
+	//Create Characters and companies
+	Character badGuysDirector { "Brandon", Male, false };
+	Character goodGuysDirector { "Michelle", Female, false };
+	Company goodGuys { "ThegoodGuys", 1, 0 };
+	goodGuys.addCharacter(&goodGuysDirector);
 
+	//Create Missions and set people giving these missions
+	Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", goodGuys.getCompanyId(), 0, 0, 0, 100);
+	Mission defend("Protect bob", "X company has reasons to believe that someone is trying to hack them, they ask for help",goodGuys.getCompanyId(), 1, 100, 0, 0);
+	attack.setApplicant(badGuysDirector.getCharacterId());
+	defend.setApplicant(goodGuysDirector.getCharacterId());
 
-void World::addOrganisation(Company* pComp) {
-	organisations.push_back(pComp);
-}
-
-std::vector<Company*> World::getOrganisations() {
-	return organisations;
+	missions.push_back(attack);
+	missions.push_back(defend);
 }

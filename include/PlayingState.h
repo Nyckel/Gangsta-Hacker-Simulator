@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <memory>
 #include "GameState.h"
 #include "Company.h"
 #include "Mission.h"
@@ -9,6 +10,7 @@ class PlayingState : public GameState
 {
 
 private:
+	std::unique_ptr<World> world;
 	std::string saveFilename; //Changed when saved in a new file
 	std::vector<Company*>playerCompanies; //Can put a character in another company (time to change...)
 	std::vector<Company*> companies; //Every other company (bot, targets, other players...)

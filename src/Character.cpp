@@ -1,7 +1,11 @@
 #include "Character.h"
 
+int Character::characterIds = 0;
 
 Character::Character(bool pPlayable){
+
+	characterId = characterIds++;
+
 	gender = Male;
 	playable = pPlayable;
 	currentActivityIndex = -1;
@@ -33,6 +37,10 @@ Character::Character(bool pPlayable){
 }
 
 Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
+
+	characterId = characterIds++;
+
+	playable = { pPlayable };
 	name = { pName };
 	currentActivityIndex = -1;
 

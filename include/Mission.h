@@ -4,9 +4,6 @@
 #include <iostream>
 #include <memory>
 
-#include "Company.h"
-#include "Character.h"
-
 /*Have to put somewhere what the mission goal is
 	-> Min level of reinforced equipements
 	-> Max vulnerabilities left
@@ -19,10 +16,6 @@
 
 //Have to put a list of all things to discover or discovered
 
-//class Company;
-
-class Company;
-
 class Mission
 {
 
@@ -30,12 +23,12 @@ private:
 	std::string title;
 	std::string description;
 
-	Character *assignedTo;
-	Character *applicant;
+	int assignedTo; // CharacterId
+	int applicant; // CharacterId
 
-	std::vector<Entity*> sponsor;
-	std::vector<std::shared_ptr<Company>> targetArray;
-	std::vector<Company*> companiesDoing; // Can be shared for COOP 
+	std::vector<int> sponsor;
+	std::vector<int> targetArray; // List of Company Ids
+	std::vector<int> companiesDoing; // Can be shared for COOP 
 
 	int securityLevel;
 	int whitePercentage;
@@ -47,26 +40,25 @@ private:
 
 public:
 	Mission();
-	Mission(std::string pTitle, std::string pDescription, std::shared_ptr<Company> pTarget, int pLevel, int pW, int pG, int pB);
-	~Mission();
+	Mission(std::string pTitle, std::string pDescription, int pTargetCompanyId, int pLevel, int pW, int pG, int pB);
 
 
-	void headLines();
+	void headLines() const;
 	void details();
-	void displayAllTargetsStatistics();
-	void addTarget(std::shared_ptr<Company> newTarget);
+	//void displayAllTargetsStatistics();
+	void addTarget(int newTargetId);
 
-	void assignToCharacter(Character* pChar);
-	void assignToCompany(Company* pCompany);
-	void setApplicant(Character *pChar);
+	void assignToCharacter(int pCharacterId);
+	void assignToCompany(int pCompanyId);
+	void setApplicant(int characterId) { applicant = characterId; };
 	void setFinished();
-	bool isFinished();
+	bool isFinished() const { return finished; }
 
-	bool isAssignedTo(Character* pChar);
-	bool isAssignedTo(Company* pCompany);
-	bool isCurrent();
+	bool isAssignedToCharacter(int pCharacterIdr) const;
+	bool isAssignedToCompany(int pCompany) const;
+	bool isCurrent() const { return current; }
 	void setCurrent(bool pCurrent);
-	Character* getCharacterAssigned();
-	std::vector<Company*> getCompaniesAssigned();
+	int getCharacterAssigned() const { return assignedTo; }
+	std::vector<int> getCompaniesAssigned() const { return companiesDoing; }
 };
 

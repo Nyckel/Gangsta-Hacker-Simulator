@@ -5,6 +5,12 @@ class Company;
 
 Mission::Mission()
 {
+
+	assignedTo = -1;
+	applicant = -1;
+	current = false;
+	finished = false;
+
 	title = "Tuto";
 	description = "Petite mission pour apprendre le game";
 	//Company* targetArray;
@@ -15,77 +21,64 @@ Mission::Mission()
 	blackPercentage = 100/3;
 }
 
-Mission::Mission(std::string pTitle, std::string pDescription, std::shared_ptr<Company> pTarget, int pLevel, int pW, int pG, int pB) {
-	title = pTitle;
-	description = pDescription;
+Mission::Mission(std::string pTitle, std::string pDescription, int pTargetCompanyId, int pLevel, int pW, int pG, int pB) 
+	: title{ pTitle }, description{ pDescription }, securityLevel{ pLevel }, whitePercentage{ pW }, greyPercentage{ pG }, blackPercentage{ pB } {
+
 	//Company* targetsArray;
-	targetArray.push_back(pTarget);
-	securityLevel = pLevel;
-	whitePercentage = pW;
-	greyPercentage = pG;
-	blackPercentage = pB;
+	applicant = -1;
+	current = false;
+	finished = false;
+	targetArray.push_back(pTargetCompanyId);
+
+	assignedTo ={};
+
 }
 
-
-Mission::~Mission()
-{
-	for (Company *cmp : companiesDoing) {
-		cmp = nullptr;
-	}
-}
-
-void Mission::headLines() {
-	std::cout << title << " (Given by: " << applicant->getName() << ") -> " << description << std::endl;
+void Mission::headLines() const {
+	std::cout << title << " (Given by: " << applicant << ") -> " << description << std::endl;
 }
 
 void Mission::details() {
 	std::cout << "Mission brief" << std::endl;
 	std::cout << "\tTitle: " << title << std::endl;
 	std::cout << "Description: " << description << std::endl;
-	std::cout << "The target is: " << std::endl;
-	displayAllTargetsStatistics();
+	std::cout << "The target(s) is/are : " << std::endl;
+	for (auto target : targetArray)
+		std::cout << target << std::endl;
+	//displayAllTargetsStatistics();
 }
 
-void Mission::displayAllTargetsStatistics() {
-	for (int i = 0; i < targetArray.size(); i++) {
-		targetArray.at(i)->displayStatistics();
-	}
+//void Mission::displayAllTargetsStatistics() {
+//	for (int i = 0; i < targetArray.size(); i++) {
+//		targetArray.at(i)->displayStatistics();
+//	}
+//}
+
+void Mission::addTarget(int newTargetId) {
+	targetArray.push_back(newTargetId);
 }
 
-void Mission::addTarget(std::shared_ptr<Company> newTarget) {
-	targetArray.push_back(newTarget);
+void Mission::assignToCharacter(int pCharacterId) {
+	assignedTo = pCharacterId;
 }
-
-void Mission::assignToCharacter(Character *pChar) {
-	assignedTo = pChar;
-}
-void Mission::assignToCompany(Company* pCompany) {
+void Mission::assignToCompany(int pCompany) {
 	companiesDoing.push_back(pCompany);
 }
-void Mission::setApplicant(Character *pChar) {
-	applicant = pChar;
-}
-
 void Mission::setFinished() {
 	finished = true;
 }
-Character* Mission::getCharacterAssigned() {
-	return assignedTo;
+
+bool Mission::isAssignedToCharacter(int pCharacterIdr) const {
+	return (assignedTo == pCharacterIdr);
 }
-std::vector<Company*> Mission::getCompaniesAssigned() {
-	return companiesDoing;
-}
-bool Mission::isAssignedTo(Character* pChar) {
-	return (assignedTo == pChar);
-}
-bool Mission::isAssignedTo(Company* pCompany) {
+bool Mission::isAssignedToCompany(int pCompany) const
+{
 	bool assigned = false;
-	for (Company *comp : companiesDoing) {
+	for (auto comp : companiesDoing) {
 		if (comp == pCompany)
 			assigned = true;
 	}
 	return assigned;
 }
-bool Mission::isFinished() { return finished;  }
-bool Mission::isCurrent() { return current; }
+
 void Mission::setCurrent(bool pCurrent) { current = pCurrent; }

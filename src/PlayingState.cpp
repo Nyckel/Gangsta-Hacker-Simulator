@@ -22,12 +22,14 @@ void ClrScrn(char attrib) {
 
 PlayingState::PlayingState()
 {
+	world = std::make_unique<World>(World());
 	system("cls");
 	std::cout << "Switching to PlayingState" << std::endl;
 	std::cout << std::endl << "\tCreating new game..." << std::endl;
-	playerCompanies.push_back(createCompany());
+	world->createFirstCompany();
+	//playerCompanies.push_back(createCompany());
 	std::cout << "\tCompany created" << std::endl;
-	playerCompanies.at(0)->createTechTree();
+	//playerCompanies.at(0)->createTechTree();
 
 
 	running = true;
@@ -40,7 +42,8 @@ PlayingState::PlayingState()
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start); //Why not as an object attribute
 																					   //Or multipliate the timer for every action (code, research,...) by a speed coef -> but wouldn't speed up animations ?
 
-	testMissions();
+	//testMissions();
+	world->loadMissions();
 }
 
 
@@ -92,64 +95,64 @@ void PlayingState::draw() {
 
 }
 
-Company* PlayingState::createCompany() {
-	std::string companyName;
-	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
-	std::cin >> companyName;
-	Company* newCompany = new Company(companyName);
-
-	return newCompany;
-}
-
-void PlayingState::testMissions() {
-
-	//Create Characters and companies
-	Character badGuysDirector("Brandon", Male, false);
-	Character goodGuysDirector("Michelle", Female, false);
-	Company *goodGuys = new Company("ThegoodGuys", 1, 0);
-	goodGuys->addCharacter(&goodGuysDirector);	
-
-	//Create Missions and set people giving these missions
-	Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", std::make_shared<Company>(*goodGuys), 0, 0, 0, 100);
-	Mission defend("Protect bob", "X company has reasons to believe that someone is trying to hack them, they ask for help", std::make_shared<Company>(*goodGuys), 1, 100, 0, 0);
-	attack.setApplicant(&badGuysDirector);
-	defend.setApplicant(&goodGuysDirector);
-
-	// Affect these missions
-	Company *mainCompany = playerCompanies.at(0);
-	if (mainCompany->getNbCharacters() != 0)
-		if (mainCompany->getCharacter(0) != nullptr) {
-
-			attack.assignToCompany(mainCompany);
-			defend.assignToCompany(mainCompany);
-			attack.assignToCharacter(mainCompany->getCharacter(0));
-			defend.assignToCharacter(mainCompany->getCharacter(0));
-			missions.push_back(&attack);
-			missions.push_back(&defend);
-			setCurrentMissionOf(mainCompany->getCharacter(0), &attack);
-			//displayMissionsOfCharacter(mainCompany->getCharacter(0));
-			//system("pause");
-		}
-		else {
-			std::cout << "Mission could not be affected to character";
-			system("pause");
-			exit(1);
-		}
-	else {
-		//std::cout << "There are " << mainCompany->getNbCharacters() << "characters in the comany" << std::endl;
-	}
-
-
-#pragma region testsActivities
-	Activity actTest;
-	mainCompany->getCharacter(0)->addPossibleActivity(&actTest);
-	mainCompany->getCharacter(0)->setCurrentActivity(0);
-	mainCompany->getCharacter(0)->getCurrentActivity()->start();
-	//std::cout << "Time elapsed (just started): " << mainCompany->getCharacter(0)->getCurrentActivity()->getTimeElapsed().count() << std::endl;
-	//std::cout << "Current activity in .. is : " << mainCompany->getCharacter(0)->getCurrentActivityIndex() << std::endl;
-#pragma endregion
-}
-
+//Company* PlayingState::createCompany() {
+//	std::string companyName;
+//	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
+//	std::cin >> companyName;
+//	Company* newCompany = new Company(companyName);
+//
+//	return newCompany;
+////}
+//
+//void PlayingState::testMissions() {
+//
+//	//Create Characters and companies
+//	Character badGuysDirector("Brandon", Male, false);
+//	Character goodGuysDirector("Michelle", Female, false);
+//	Company *goodGuys = new Company("ThegoodGuys", 1, 0);
+//	goodGuys->addCharacter(&goodGuysDirector);
+//
+//	//Create Missions and set people giving these missions
+//	Mission attack("Hack bob", "Hi, we need to break these guys, we'll pay you a lot if you hack X company", goodGuys->getCompanyId(), 0, 0, 0, 100);
+//	Mission defend("Protect bob", "X company has reasons to believe that someone is trying to hack them, they ask for help", goodGuys->getCompanyId(), 1, 100, 0, 0);
+//	attack.setApplicant(badGuysDirector.getCharacterId());
+//	defend.setApplicant(goodGuysDirector.getCharacterId());
+//
+//	// Affect these missions
+//	Company *mainCompany = playerCompanies.at(0);
+//	if (mainCompany->getNbCharacters() != 0)
+//		if (mainCompany->getCharacter(0) != nullptr) {
+//
+//			attack.assignToCompany(mainCompany->getCompanyId());
+//			defend.assignToCompany(mainCompany->getCompanyId());
+//			attack.assignToCharacter(mainCompany->getCharacter(0)->getCharacterId());
+//			defend.assignToCharacter(mainCompany->getCharacter(0)->getCharacterId());
+//			missions.push_back(&attack);
+//			missions.push_back(&defend);
+//			setCurrentMissionOf(mainCompany->getCharacter(0), &attack);
+//			//displayMissionsOfCharacter(mainCompany->getCharacter(0));
+//			//system("pause");
+//		}
+//		else {
+//			std::cout << "Mission could not be affected to character";
+//			system("pause");
+//			exit(1);
+//		}
+//	else {
+//		//std::cout << "There are " << mainCompany->getNbCharacters() << "characters in the comany" << std::endl;
+//	}
+//
+//
+//#pragma region testsActivities
+//	Activity actTest;
+//	mainCompany->getCharacter(0)->addPossibleActivity(&actTest);
+//	mainCompany->getCharacter(0)->setCurrentActivity(0);
+//	mainCompany->getCharacter(0)->getCurrentActivity()->start();
+//	//std::cout << "Time elapsed (just started): " << mainCompany->getCharacter(0)->getCurrentActivity()->getTimeElapsed().count() << std::endl;
+//	//std::cout << "Current activity in .. is : " << mainCompany->getCharacter(0)->getCurrentActivityIndex() << std::endl;
+//#pragma endregion
+//}
+//
 
 void PlayingState::setCurrentMissionOf(Character *pChar, Mission *pMission) {
 	Mission *old = getCurrentMissionOf(pChar);
@@ -162,7 +165,7 @@ void PlayingState::setCurrentMissionOf(Character *pChar, Mission *pMission) {
 Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 	Mission* current = nullptr;
 	for (int i = 0; i < missions.size(); i++) {
-		if (missions.at(i)->getCharacterAssigned() == pChar && missions.at(i)->isCurrent()) {
+		if (missions.at(i)->getCharacterAssigned() == pChar->getCharacterId() && missions.at(i)->isCurrent()) {
 			current = missions.at(i);
 			//std::cout << "Current mission of " << pChar->getName() << " found!" << std::endl;
 		}
@@ -187,7 +190,7 @@ void PlayingState::displayMissionsOfCharacter(Character *pChar) {
 	if (getNbOfMissionsFor(pChar) > 1) {
 		std::cout << "Other missions : " << std::endl;
 		for (Mission* mission : missions) {
-			if (mission->isAssignedTo(pChar) && mission != current && !(mission->isFinished())) {
+			if (mission->isAssignedToCharacter(pChar->getCharacterId()) && mission != current && !(mission->isFinished())) {
 				std::cout << "\t";
 				mission->headLines();
 			}
@@ -200,7 +203,7 @@ void PlayingState::displayMissionsOfCharacter(Character *pChar) {
 int PlayingState::getNbOfMissionsFor(Character *pChar) {
 	auto nbMissions = 0;
 	for (auto* mission : missions) {
-		if (mission->isAssignedTo(pChar))
+		if (mission->isAssignedToCharacter(pChar->getCharacterId()))
 			nbMissions++;
 	}
 	return nbMissions;

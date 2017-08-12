@@ -30,6 +30,7 @@ private:
 	StringAttribute name;
 	std::vector<Activity> possibleActivities;
 	int currentActivityIndex;
+	int characterId;
 
 	IntAttribute renown;
 	IntAttribute balance;
@@ -83,6 +84,9 @@ public:
 	void getActivityPoints(Activity *pAct);
 	bool isDoingSomething() const;
 
+	int getCharacterId() const { return characterId; }
+
+	static int characterIds;
 
 
 private: void deleteAttribute(Attribute* pAttr);
@@ -93,5 +97,3 @@ private: void deleteAttribute(Attribute* pAttr);
 
 	
 };
-
-

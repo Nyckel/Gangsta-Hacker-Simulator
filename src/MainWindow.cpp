@@ -3,17 +3,18 @@
 
 
 
-MainWindow::MainWindow()
+MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0")/*, gui{window}*/
 {
 	//window = new sf::RenderWindow(sf::VideoMode(800, 600), "Gangsta Hacker Simulator 1.0");
-	sf::RenderWindow window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0");
-	tgui::Gui gui{ window };
+	 
+
 	window.setPosition(sf::Vector2i(0, 0));
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
 	dummyComponent = new Component();
 	hoveredClickableComponent = dummyComponent;
 	componentsAtLevel = std::vector<std::vector<Component*>>();
+
 
 }
 
@@ -43,6 +44,7 @@ void MainWindow::update() {
 			comp->draw(window);
 		}
 	}
+	//gui.draw();
 	window.display();
 }
 
@@ -127,13 +129,6 @@ Menu* MainWindow::createMainMenu() {
 	//titleFont->loadFromFile("ressources/fonts/nasalization-rg.ttf");
 	titleFont->loadFromFile("ressources/fonts/SourceCodePro-Regular.ttf");
 	//titleFont->loadFromFile("../ressources/fonts/nasalization-rg.ttf");
-
-	//Label title(titleFont, sf::Color::White, "Gangsta Hacker Simulator", 50, window);
-	//title.setPadding(20, 20);
-	//title.setPosition(title.getPosition().x, 10);
-	//title.addBackgroundRect();
-	//title.setName("Title");
-	//addComponent(&title);
 
 	dummyComponent = new Component();
 
@@ -230,6 +225,7 @@ void MainWindow::handleEvents() {
 			}
 		}
 	}
+	//gui.handleEvent(event);
 }
 
 std::vector<sf::Event> MainWindow::getEvents() {
