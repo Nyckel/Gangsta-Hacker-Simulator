@@ -35,7 +35,7 @@ bool Component::isCursorHover(sf::Vector2f pCursorPosition)
 }
 bool Component::isClickable() const { return clickable; }
 void Component::setClickable(bool pClickable) { clickable = pClickable; }
-void Component::draw(const sf::RenderWindow & pWindow)
+void Component::draw(sf::RenderWindow & pWindow)
 {
 	//For debug purpose
 	//std::cout << "In function draw of Component" << std::endl;

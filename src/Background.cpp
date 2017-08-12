@@ -48,7 +48,7 @@ Background::~Background()
 {
 }
 
-void Background::draw(sf::RenderWindow* pWindow) {
+void Background::draw(sf::RenderWindow& pWindow) {
 	for (int i = 0; i < shapes.size(); i++) {
 		shapes.at(i).draw(pWindow);
 	}

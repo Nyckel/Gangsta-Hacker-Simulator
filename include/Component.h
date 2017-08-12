@@ -17,7 +17,7 @@ class Component
 public:
 	//std::string(Component::*clickAction)(void) = &Component::getName;
 	std::function<void()>* click;// = &Component::printName;
-	void(Component:: *click2)(void) = &Component::printName;
+	//void(Component:: *click2)(void) = &Component::printName;
 	//std::function<void()> click;
 	Component();
 	~Component();
@@ -31,7 +31,7 @@ public:
 	bool isClickable() const;
 	void setClickable(bool pClickable);
 
-	virtual void draw(const sf::RenderWindow& pWindow);
+	virtual void draw(sf::RenderWindow& pWindow);
 	std::string getName() const;
 	void printName();
 	void setName(std::string pName);

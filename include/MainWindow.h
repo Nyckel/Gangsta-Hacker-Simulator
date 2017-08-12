@@ -21,7 +21,7 @@ private:
 	Component* dummyComponent;
 	std::vector<Component*> hoveredComponents;
 	sf::RenderWindow window;
-	//tgui::Gui gui;
+	tgui::Gui gui;
 	std::vector<Component*> components;
 	std::vector<std::vector<Component*>> componentsAtLevel;
 

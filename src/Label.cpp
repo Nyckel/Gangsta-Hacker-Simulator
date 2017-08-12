@@ -83,8 +83,9 @@ Label::~Label()
 {
 }
 
-void Label::draw(sf::RenderWindow *pWindow) {
-	if (pWindow != nullptr) {
+void Label::draw(sf::RenderWindow& pWindow) {
+	std::cout << "In draw of Label " << std::endl;
+	//if (pWindow != nullptr) {
 		if (isinhoverstate && &overState != nullptr) {
 			overState.draw(pWindow);
 		}
@@ -96,7 +97,7 @@ void Label::draw(sf::RenderWindow *pWindow) {
 		if (!text.getString().isEmpty() && &text != nullptr) {
 			if (isinhoverstate && &overText != nullptr) {
 				overText.setFont(*font);
-				pWindow->draw(overText);
+				pWindow.draw(overText);
 			}
 			else {
 				text.setFont(*font);
@@ -105,17 +106,17 @@ void Label::draw(sf::RenderWindow *pWindow) {
 				std::cout << "??? Font adress from draw : " << &font << std::endl;
 				std::cout << "Font adress from text : " << text.getFont() << std::endl;
 				std::cout << "////" << text.getFont()->getInfo().family << std::endl;*/
-				pWindow->draw(text);
+				pWindow.draw(text);
  				//std::cout << "7" << std::endl;
 			}
 		}
 		else {
 			//std::cout << "label text is null" << std::endl;
 		}
-	}
-	else {
-		std::cout << "pWindow is null in draw function of class Label" << std::endl;
-	}
+	//}
+	//else {
+	//	std::cout << "pWindow is null in draw function of class Label" << std::endl;
+	//}
 }
 
 

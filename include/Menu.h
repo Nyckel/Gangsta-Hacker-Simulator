@@ -30,7 +30,7 @@ public:
 	
 	~Menu();
 
-	virtual void draw(const sf::RenderWindow& pWindow);
+	void draw(sf::RenderWindow& pWindow) override;
 	void build();
 	int positionOf(Component *pComp);
 

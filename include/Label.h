@@ -28,7 +28,7 @@ public:
 
 	~Label();
 
-	virtual void draw(sf::RenderWindow *pWindow);
+	void draw(sf::RenderWindow &pWindow) override;
 
 	void addBackgroundRect();
 	void addBackgroundRect(sf::Color pBack, sf::Color pRect);

@@ -3,7 +3,7 @@
 
 
 
-MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0")/*, gui{window}*/
+MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0"), gui{window}
 {
 	//window = new sf::RenderWindow(sf::VideoMode(800, 600), "Gangsta Hacker Simulator 1.0");
 	 
@@ -41,10 +41,11 @@ void MainWindow::update() {
 	//}
 	for (std::vector<Component*> components : componentsAtLevel) {
 		for (Component* comp : components) {
+			std::cout << "Component : " << comp->getName() << std::endl;
 			comp->draw(window);
 		}
 	}
-	//gui.draw();
+	gui.draw();
 	window.display();
 }
 

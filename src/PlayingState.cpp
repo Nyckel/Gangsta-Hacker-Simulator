@@ -85,9 +85,9 @@ GameState* PlayingState::update(std::chrono::microseconds elapsed) {
 	//displayMissionsOfCharacter(playerCompanies.at(0).getCharacter(0));
 	playerCompanies.at(0)->getCharacter(0)->displayStatistics();
 	if (!playerCompanies.at(0)->getCharacter(0)->isDoingSomething()) {
-		auto actMenu = window->createActivityMenu();
-		window->clearComponents();
-		window->addComponent(actMenu);
+		//auto actMenu = window->createActivityMenu();
+		//window->clearComponents();
+		//window->addComponent(actMenu);
 	}
 	return nullptr;
 }

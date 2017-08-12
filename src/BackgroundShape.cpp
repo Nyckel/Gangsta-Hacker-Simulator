@@ -46,8 +46,8 @@ BackgroundShape::~BackgroundShape()
 {
 }
 
-void BackgroundShape::draw(sf::RenderWindow* pWindow) {
-	pWindow->draw(shape);
+void BackgroundShape::draw(sf::RenderWindow& pWindow) const {
+	pWindow.draw(shape);
 }
 
 void BackgroundShape::setPosition(int x, int y) {

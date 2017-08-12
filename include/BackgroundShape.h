@@ -31,7 +31,7 @@ public:
 
 	~BackgroundShape();
 
-	void draw(sf::RenderWindow* pWindow);
+	void draw(sf::RenderWindow& pWindow) const;
 	void setPosition(int x, int y);
 	void setColor(sf::Color pColor);
 	void setSize(sf::Vector2f pSize);

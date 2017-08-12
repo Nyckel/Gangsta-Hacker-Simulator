@@ -132,11 +132,11 @@ GameState* MainMenuState::update(std::chrono::microseconds elapsed) {
 			/*window->getMenuStateActions()->promptNewOrLoadGame();*/
 			std::cout << "Switch to playingState" << std::endl;
 			return new PlayingState();// if we load a game we assign the saved file to the state before returning
-		} else if (menuChoice == "Options") {
+		} if (menuChoice == "Options") {
 			//window->getMenuActions->showOptions();
 			//window->showOptions();
 			std::cout << "Window->showOptions();" << std::endl;
-		} else if (menuChoice == "Exit") {
+		} if (menuChoice == "Exit") {
 			std::cout << "Closing window..." << std::endl;
 			window->close();
 		}
@@ -156,7 +156,7 @@ void MainMenuState::validateEntry() {
 		if (*hoveredClickableComponent != window->getDummyComponent()) {
 			std::cout << "(state) Clicked on " << (*hoveredClickableComponent)->getName() << std::endl;
 			/*hoveredClickableComponent->click = [this]() { hoveredClickableComponent->printName(); };*/
-			(*hoveredClickableComponent)->click2;
+			//(*hoveredClickableComponent)->click2;
 			//hoveredClickableComponent->click;
 			menuChoice = (*hoveredClickableComponent)->getName();
 		}
