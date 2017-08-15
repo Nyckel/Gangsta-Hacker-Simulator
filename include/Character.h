@@ -28,8 +28,8 @@ private:
 	bool playable;
 
 	StringAttribute name;
-	std::vector<Activity> possibleActivities;
-	int currentActivityIndex;
+	Activity* currentActivity; // replace by an observer_ptr when implemented
+
 	int characterId;
 
 	IntAttribute renown;
@@ -76,10 +76,10 @@ public:
 	//void displayMissions();
 	//Mission* getCurrentMission();
 
-	void addPossibleActivity(const Activity* pAct);
-	void setCurrentActivity(const int pIndex);
-	Activity* getCurrentActivity();
-	int getCurrentActivityIndex() const;
+	//void addPossibleActivity(const Activity* pAct);
+	void setCurrentActivity(Activity* pAct);
+	Activity* getCurrentActivity() const;
+	//int getCurrentActivityIndex() const;
 	void updateActivity(std::chrono::microseconds elapsed);
 	void getActivityPoints(Activity *pAct);
 	bool isDoingSomething() const;
@@ -90,7 +90,7 @@ public:
 
 
 private: void deleteAttribute(Attribute* pAttr);
-		 void deletePossibleActivity(int pIndex);
+		 //void deletePossibleActivity(int pIndex);
 		 void checkLevels();
 
 	//Create activity from a TechTreeElement object

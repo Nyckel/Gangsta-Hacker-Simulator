@@ -18,7 +18,7 @@ class GameState
 protected:
 	GameState() {};
 	MainWindow* window;
-	World world;
+	std::unique_ptr<World> world;
 
 public:
 
@@ -29,7 +29,7 @@ public:
 	virtual void resume() = 0;
 
 	virtual void handleEvents() = 0;
-	virtual GameState* update(std::chrono::microseconds elapsed) = 0;
+	virtual std::unique_ptr<GameState> update(std::chrono::microseconds elapsed) = 0;
 	virtual void draw() = 0;
 
 	void changeState(GameState *state) {

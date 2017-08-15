@@ -1,4 +1,5 @@
 #include "Company.h"
+#include "../../../../../../Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/VC/Tools/MSVC/14.10.25017/include/filesystem"
 
 
 class Character;

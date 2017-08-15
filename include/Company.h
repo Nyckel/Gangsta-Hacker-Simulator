@@ -75,6 +75,8 @@ public:
 	int getCompanyId() const { return companyId; }
 	void setCompanyId(int pId) { companyId = { pId }; }
 
+	void giveMission(Mission pMission) { missions.push_back(pMission); }
+
 	static int compannyIds;
 
 };

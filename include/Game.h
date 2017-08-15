@@ -19,7 +19,7 @@ private:
 
 	static MainWindow *display;
 	static Game *instance;
-	GameState* currentState = nullptr;
+	std::unique_ptr<GameState> currentState = nullptr;
 
 	std::string saveFilename; //Changed when saved in a new file
 	std::vector<Company>playerCompanies; //Can put a character in another company (time to change...)
@@ -63,7 +63,7 @@ public:
 	void handleEvents();
 	void update(std::chrono::microseconds elapsed);
 	void draw();
-	void changeState(GameState* newState);
+	void changeState(std::unique_ptr<GameState> newState);
 	bool isRunning();
 
 

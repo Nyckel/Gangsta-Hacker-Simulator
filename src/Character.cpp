@@ -8,7 +8,7 @@ Character::Character(bool pPlayable){
 
 	gender = Male;
 	playable = pPlayable;
-	currentActivityIndex = -1;
+	currentActivity = nullptr;
 
 	name = { "Chappie" };//*new Attribute(std::string("Chappie"));
 	renown = { 0 };
@@ -42,7 +42,7 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 
 	playable = { pPlayable };
 	name = { pName };
-	currentActivityIndex = -1;
+	currentActivity = nullptr;
 
 	gender = pGender;
 	renown = { 0 };
@@ -138,9 +138,9 @@ Character::~Character()
 	deleteAttribute(&level_exploit);
 	deleteAttribute(&level_postExploit)*/;
 
-	for (int i = 0; i < possibleActivities.size(); i++) {
-		//deletePossibleActivity(i);
-	}
+	//for (int i = 0; i < possibleActivities.size(); i++) {
+	//	//deletePossibleActivity(i);
+	//}
 }
 void Character::deleteAttribute(Attribute* pAttr) {
 	if (pAttr != NULL) {
@@ -184,34 +184,20 @@ void Character::displayMissions() {
 	}
 }*/
 
-void Character::addPossibleActivity(const Activity* pAct) {
-	possibleActivities.push_back(*pAct);
+//void Character::addPossibleActivity(const Activity* pAct) {
+//	possibleActivities.push_back(*pAct);
+//}
+void Character::setCurrentActivity(Activity* pAct) {
+	currentActivity = { pAct };
 }
-void Character::setCurrentActivity(int pIndex) {
-	if (possibleActivities.size() > pIndex) {
-		currentActivityIndex = pIndex;
-		possibleActivities.at(currentActivityIndex).start();
-		// Or have a pointer called currentActivity and maybe remove this activity from vector possibleAct
-	}
-	else //Asked to set as current activity index out of vector
-	{
-		std::cout << "Size of possibleActivities <= pIndex" << std::endl;
-	}
+Activity* Character::getCurrentActivity() const{
+	return currentActivity;
 }
-Activity* Character::getCurrentActivity() {
-	if (currentActivityIndex != -1) {
-		if (possibleActivities.size() > currentActivityIndex) {
-			return &(possibleActivities.at(currentActivityIndex));
-		}
-	}
-	return nullptr;
-}
-int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
+//int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
-	std::cout << "CurrentActivityIndex debbut : " << currentActivityIndex << std::endl;
-	if (currentActivityIndex != -1) {
-		Activity* currentActivity = &possibleActivities.at(currentActivityIndex);
+	std::cout << "CurrentActivityIndex debut : " << currentActivity << std::endl;
+	if (currentActivity != nullptr) {
 		currentActivity->update(elapsed);//Things are discovered in updateActivity() in a function using randomness and skills or only time (conf)	
 		//Maybe send back discovered things from here (send pointer to vector of discovered things) or 
 		if (currentActivity->isFinished()) {
@@ -221,9 +207,9 @@ void Character::updateActivity(std::chrono::microseconds elapsed){
 			// Advance missions status
 			
 			//deletePossibleActivity(currentActivityIndex);
-			std::cout << "Current activity finished, currentActivityIndex: "<< currentActivityIndex << std::endl;
+			std::cout << "Current activity finished, it was : "<< currentActivity->getName() << std::endl;
 			system("pause");
-			currentActivityIndex = -1;
+			//currentActivity = nullptr;
 		}
 	}
 	else {
@@ -259,23 +245,23 @@ void Character::getActivityPoints(Activity *pAct) {
 
 	checkLevels();
 	//Update levels and orientation(w/g/b)
-	currentActivityIndex = -1;
+	currentActivity = nullptr;
 
 }
-
-void Character::deletePossibleActivity(int pIndex) {
-	//if (currentActivityIndex != pIndex) {
-		delete(&(possibleActivities.at(pIndex)));
-		possibleActivities.erase(possibleActivities.begin() + pIndex);
-	//}
-	//else {
-		//std::cout << "Trying to delete current activity (" << possibleActivities.at(currentActivityIndex).getName() << ")" << std::endl;
-	//}
-}
+//
+//void Character::deletePossibleActivity(int pIndex) {
+//	//if (currentActivityIndex != pIndex) {
+//		delete(&(possibleActivities.at(pIndex)));
+//		possibleActivities.erase(possibleActivities.begin() + pIndex);
+//	//}
+//	//else {
+//		//std::cout << "Trying to delete current activity (" << possibleActivities.at(currentActivityIndex).getName() << ")" << std::endl;
+//	//}
+//}
 
 bool Character::isDoingSomething() const
 {
-	return (currentActivityIndex != -1);
+	return (currentActivity != nullptr);
 }
 
 

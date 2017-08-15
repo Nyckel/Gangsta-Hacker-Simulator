@@ -126,12 +126,12 @@ void MainMenuState::handleEvents() {
 		}
 	}
 }
-GameState* MainMenuState::update(std::chrono::microseconds elapsed) {
+std::unique_ptr<GameState> MainMenuState::update(std::chrono::microseconds elapsed) {
 	if (&menuChoice != nullptr && menuChoice != "") {
 		if (menuChoice == "Play") {
 			/*window->getMenuStateActions()->promptNewOrLoadGame();*/
 			std::cout << "Switch to playingState" << std::endl;
-			return new PlayingState();// if we load a game we assign the saved file to the state before returning
+			return std::make_unique<PlayingState>();// if we load a game we assign the saved file to the state before returning
 		} if (menuChoice == "Options") {
 			//window->getMenuActions->showOptions();
 			//window->showOptions();

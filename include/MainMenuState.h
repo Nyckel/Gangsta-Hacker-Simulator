@@ -17,7 +17,7 @@ public:
 	void resume() override;
 
 	void handleEvents() override;
-	GameState* update(std::chrono::microseconds elapsed) override;
+	std::unique_ptr<GameState> update(std::chrono::microseconds elapsed) override;
 	void draw() override;
 
 private:

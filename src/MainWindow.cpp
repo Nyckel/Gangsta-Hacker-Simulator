@@ -36,12 +36,9 @@ void MainWindow::update() {
 	sf::Color windowBackgroundColor = sf::Color::Black;// sf::Color(44, 62, 80, 1.0);// sf::Color(10, 10, 10);
 	window.clear(windowBackgroundColor);
 
-	//for (int i = 0; i < components.size(); i++) {
-	//	components.at(i)->draw(window);
-	//}
 	for (std::vector<Component*> components : componentsAtLevel) {
 		for (Component* comp : components) {
-			std::cout << "Component : " << comp->getName() << std::endl;
+			//std::cout << "Component : " << comp->getName() << std::endl;
 			comp->draw(window);
 		}
 	}

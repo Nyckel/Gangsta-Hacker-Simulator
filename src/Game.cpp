@@ -46,9 +46,9 @@ void Game::draw() {
 
 void Game::update(std::chrono::microseconds elapsed) {
 	// Things happening here (delegate to state)
-	GameState* newState = currentState->update(elapsed);
+	std::unique_ptr<GameState> newState = currentState->update(elapsed);
 	if (newState != nullptr) {
-		changeState(newState);//Manage deletion of old state somewhere, and see how I do with those to keep in memory
+		changeState(move(newState));//Manage deletion of old state somewhere, and see how I do with those to keep in memory
 	}
 }
 
@@ -57,7 +57,6 @@ void Game::handleEvents() {
 	currentState->handleEvents();
 }
 
-void Game::changeState(GameState* newState) {
-	delete(currentState);
-	currentState = newState;
+void Game::changeState(std::unique_ptr<GameState> newState) {
+	currentState = std::move(newState);
 }

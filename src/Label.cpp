@@ -84,7 +84,7 @@ Label::~Label()
 }
 
 void Label::draw(sf::RenderWindow& pWindow) {
-	std::cout << "In draw of Label " << std::endl;
+	//std::cout << "In draw of Label " << std::endl;
 	//if (pWindow != nullptr) {
 		if (isinhoverstate && &overState != nullptr) {
 			overState.draw(pWindow);

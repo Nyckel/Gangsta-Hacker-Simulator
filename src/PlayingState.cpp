@@ -77,18 +77,20 @@ void PlayingState::resume() {
 void PlayingState::handleEvents() {
 
 }
-GameState* PlayingState::update(std::chrono::microseconds elapsed) {
+std::unique_ptr<GameState> PlayingState::update(std::chrono::microseconds elapsed) {
 	//system("cls");
 	ClrScrn(0x71);
 	//std::cout << "At pos 1 elapsed = " << elapsed.count() << std::endl;
 	updateActivities(elapsed);
+	// Generate some random things happening ? Missions arriving, random events...
+
 	//displayMissionsOfCharacter(playerCompanies.at(0).getCharacter(0));
-	playerCompanies.at(0)->getCharacter(0)->displayStatistics();
-	if (!playerCompanies.at(0)->getCharacter(0)->isDoingSomething()) {
+	//playerCompanies.at(0)->getCharacter(0)->displayStatistics();
+	//if (!playerCompanies.at(0)->getCharacter(0)->isDoingSomething()) {
 		//auto actMenu = window->createActivityMenu();
 		//window->clearComponents();
 		//window->addComponent(actMenu);
-	}
+	//}
 	return nullptr;
 }
 void PlayingState::draw() {
@@ -174,8 +176,9 @@ Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 }
 
 void PlayingState::updateActivities(std::chrono::microseconds elapsed) {
-	for (Company* cmp : playerCompanies) {
-		cmp->updateActivities(elapsed);
+	for (auto cmp : world->getPlayerCompanies()) {
+		cmp.updateActivities(elapsed);
+		cmp.getCharacter(0)->displayStatistics();
 	}
 }
 

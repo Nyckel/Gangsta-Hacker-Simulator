@@ -17,7 +17,7 @@ Main::Main(){
 	MainWindow window;
 	game = Game::getInstance();
 	Game::setDisplay(&window);
-	game->changeState(new MainMenuState(&window));
+	game->changeState(std::make_unique<MainMenuState>(&window));
 	
 	maxFps = 60;
 	computeDeltaTime();
