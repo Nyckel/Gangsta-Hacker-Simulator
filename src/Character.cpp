@@ -26,8 +26,7 @@ Character::Character(bool pPlayable){
 	}
 	
 	level_global = LevelAttribute(xpGlobal.getValue(), std::string("ressources/jsons/levels.json"));
-	std::cout << "In constructor level: " << std::endl << level_global.getIndex();
-	system("pause");
+	//std::cout << "In constructor level: " << std::endl << level_global.getIndex();
 	/*
 	level_recon = *new Attribute(0);
 	level_scan = *new Attribute(0);
@@ -82,7 +81,7 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 
 void Character::displayStatistics() {
 	std::cout << "\tName: " << name << std::endl;
-	if (getCurrentActivity() != nullptr) {
+	if (currentActivity != nullptr) {
 		std::cout << "\tCurrent activity: " << getCurrentActivity()->getName() << std::endl;
 		std::cout << "\tTime elapsed: " << getCurrentActivity()->getTimeElapsed().count() << std::endl;
 	}
@@ -143,7 +142,7 @@ Character::~Character()
 	//}
 }
 void Character::deleteAttribute(Attribute* pAttr) {
-	if (pAttr != NULL) {
+	if (pAttr != nullptr) {
 		//delete(pAttr);
 	}
 }
@@ -189,6 +188,7 @@ void Character::displayMissions() {
 //}
 void Character::setCurrentActivity(Activity* pAct) {
 	currentActivity = { pAct };
+	std::cout << name << " is now doing " << pAct->getName() << std::endl;
 }
 Activity* Character::getCurrentActivity() const{
 	return currentActivity;
@@ -196,8 +196,8 @@ Activity* Character::getCurrentActivity() const{
 //int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
-	std::cout << "CurrentActivityIndex debut : " << currentActivity << std::endl;
 	if (currentActivity != nullptr) {
+
 		currentActivity->update(elapsed);//Things are discovered in updateActivity() in a function using randomness and skills or only time (conf)	
 		//Maybe send back discovered things from here (send pointer to vector of discovered things) or 
 		if (currentActivity->isFinished()) {
@@ -207,13 +207,12 @@ void Character::updateActivity(std::chrono::microseconds elapsed){
 			// Advance missions status
 			
 			//deletePossibleActivity(currentActivityIndex);
-			std::cout << "Current activity finished, it was : "<< currentActivity->getName() << std::endl;
-			system("pause");
-			//currentActivity = nullptr;
+			std::cout << "Current activity finished" << std::endl;
+			currentActivity = nullptr;
 		}
 	}
 	else {
-		std::cout << "Current activity index is NULL" << std::endl;
+		std::cout << "my current activity index is NULL" << std::endl;
 	}
 	
 }
@@ -245,7 +244,6 @@ void Character::getActivityPoints(Activity *pAct) {
 
 	checkLevels();
 	//Update levels and orientation(w/g/b)
-	currentActivity = nullptr;
 
 }
 //
@@ -261,7 +259,7 @@ void Character::getActivityPoints(Activity *pAct) {
 
 bool Character::isDoingSomething() const
 {
-	return (currentActivity != nullptr);
+	return currentActivity != nullptr && currentActivity->isStarted();
 }
 
 

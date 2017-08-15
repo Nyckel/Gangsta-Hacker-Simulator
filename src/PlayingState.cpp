@@ -31,7 +31,6 @@ PlayingState::PlayingState()
 	std::cout << "\tCompany created" << std::endl;
 	//playerCompanies.at(0)->createTechTree();
 
-
 	running = true;
 	quit = false;
 
@@ -176,16 +175,16 @@ Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 }
 
 void PlayingState::updateActivities(std::chrono::microseconds elapsed) {
-	for (auto cmp : world->getPlayerCompanies()) {
+	for (Company& cmp : world->getPlayerCompanies()) {
 		cmp.updateActivities(elapsed);
-		cmp.getCharacter(0)->displayStatistics();
+		cmp.getCharacters()[0].displayStatistics();
 	}
 }
 
 
 void PlayingState::displayMissionsOfCharacter(Character *pChar) {
 	Mission *current = getCurrentMissionOf(pChar);
-	if (current != NULL) {
+	if (current != nullptr) {
 		std::cout << "Current mission : " << std::endl;
 		std::cout << "\t";
 		current->headLines();

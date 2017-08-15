@@ -36,6 +36,8 @@ private:
 	//Employees, email adresses, machines and servers, (map of equipements) -> each equipement and version has vulnerbilities
 	//Website ? Clients talking about you ? renown
 
+	std::vector<Activity> possibleActivities;
+
 	
 	std::vector<Character> characters;
 	std::vector<Mission> missions;
@@ -51,6 +53,8 @@ private:
 	IntAttribute bitcoins;
 	TechTree technologyTree;
 
+	void initDefaultActivities();
+
 public:
 	Company();
 	Company(std::string pName);
@@ -59,6 +63,7 @@ public:
 
 	Character createFirstCharacter();
 	Character* getCharacter(int index);
+	std::vector<Character>& getCharacters() { return characters; }
 	void addCharacter(Character *pChar);
 	void createTechTree();
 	int getNbCharacters() const { return characters.size(); }
@@ -76,6 +81,7 @@ public:
 	void setCompanyId(int pId) { companyId = { pId }; }
 
 	void giveMission(Mission pMission) { missions.push_back(pMission); }
+	std::vector<Activity>& getAvailableActivities() { return possibleActivities; }
 
 	static int compannyIds;
 

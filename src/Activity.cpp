@@ -4,15 +4,26 @@
 
 Activity::Activity()
 {
-	name = "Default activity name";
+	name = { "Default activity name" };
 	finished = false;
 	//Overload with character skills to compute duration
 	xp = 15;
 	orientation = Black;
 	allowed = false;
 	duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(5));
-	std::cout << "Activity will last " << duration.count() << std::endl;
-	system("pause");
+	//std::cout << "Activity " << name << "will last " << duration.count() << std::endl;
+	//system("pause");
+	elapsed = std::chrono::microseconds(0);
+	startTime = std::chrono::steady_clock::now();
+
+	typeAct = Research;
+	
+	xpRecon = {};
+	xpScan = {};
+	xpExploit = {};
+	xpPostExploit = {};
+
+	started = false;
 }
 
 
@@ -20,17 +31,18 @@ Activity::~Activity()
 {
 }
 
-void Activity::start() {//Add computation of duration...
+void Activity::start() {
+
 	startTime = std::chrono::steady_clock::now();
-	//std::cout << "Starting activity" << std::endl;
 	elapsed = std::chrono::microseconds(0);
+	started = true;
 }
 void Activity::update(std::chrono::microseconds pElapsed) {
-	elapsed += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startTime);
-	//elapsed += pElapsed;
-	std::cout << "Updating activity  (+" << pElapsed.count() << ") to " << elapsed.count() << std::endl;
-	std::cout << "Time left: " << duration.count() - elapsed.count() << std::endl;
-	//system("pause");
+
+	elapsed += pElapsed;
+	//std::cout << "Updating activity  (+" << pElapsed.count() << ") to " << elapsed.count() << std::endl;
+	//std::cout << "Time left: " << duration.count() - elapsed.count() << std::endl;
+
 	//Random things that can happen in the activity,
 	// bug in dev, new thing discovered while recon...
 	
@@ -44,7 +56,7 @@ void Activity::update(std::chrono::microseconds pElapsed) {
 		//Update tech tree or mission or...
 	} else
 	{
-		std::cout << "Activity not finished" << std::endl;
+		//std::cout << "Activity not finished" << std::endl;
 	}
 }
 
@@ -52,10 +64,7 @@ std::string Activity::getName() const { return name; }
 eActType Activity::getType() const { return typeAct;}
 eOrientation Activity::getOrientation() { return orientation; }
 
-int Activity::getXp() { return xp; }
-
 void Activity::setAllowed(bool pAllowed) { allowed = pAllowed; }
-bool Activity::isAllowed() { return allowed; }
 /*bool Activity::isAllowed(Mission *mission, bool isMission) { // Remove Mission param
 	if (isMission) {
 		//Check on element given in param or on a company 
@@ -66,15 +75,3 @@ bool Activity::isAllowed() { return allowed; }
 	}
 	//Else check if action is offensive
 }*/
-bool Activity::isFinished() { return finished; }
-
-bool Activity::isRecon() { return (typeAct == Recon); }
-bool Activity::isScan() { return (typeAct == Scan); }
-bool Activity::isExploit() { return (typeAct == Exploit); }
-bool Activity::isPostExploit() { { return (typeAct == PostExploit); } }
-
-bool Activity::isResearch() { return (typeAct == Research); }
-bool Activity::isDev() { return (typeAct == dev); }
-bool Activity::isHardWare() { return (typeAct == hardwareInstall); }
-bool Activity::isConference() { return (typeAct == conf); }
-std::chrono::microseconds Activity::getTimeElapsed() { return elapsed; }

@@ -1,5 +1,4 @@
 #include "Company.h"
-#include "../../../../../../Program Files (x86)/Microsoft Visual Studio/2017/Enterprise/VC/Tools/MSVC/14.10.25017/include/filesystem"
 
 
 class Character;
@@ -40,9 +39,10 @@ Company::Company(std::string pName) {//This is for the player
 
 	dollars = { 0 };
 	bitcoins = { 0 };
-	//displayStatistics();
-	//std::cout << "\t";
-	//system("pause");
+	
+	initDefaultActivities();
+	//characters[0].setCurrentActivity(&possibleActivities[0]);
+
 	companyId = Company::compannyIds++;
 }
 
@@ -105,7 +105,6 @@ Character* Company::getCharacter(int index) {
 		return nullptr;
 }
 
-
 void Company::displayStatistics(){
 	//system("cls");
 
@@ -139,17 +138,28 @@ std::vector<Mission*> Company::getRunningMissions() {
 
 void Company::updateActivities(std::chrono::microseconds elapsed) {
 
-	for (Character character : characters) {
+	for (Character& character : characters) {
 		if (character.isDoingSomething()) {
 			character.updateActivity(elapsed);//Add "characters.at(i)" param to get elements discovered by this character
 			// -> Things are discovered in updateActivity() in a function using randomness and skills
 		}
-		else {
+		else if (character.getCurrentActivity() != nullptr && !character.getCurrentActivity()->isStarted())	{
+			character.getCurrentActivity()->start();
+		} else {
 			std::cout << character.getName() << " is not doing anything" << std::endl;
+			//character.setCurrentActivity(&(possibleActivities[0]));
 		}
 	}
 }
 
 void Company::createTechTree() {
 	technologyTree = TechTree("ressources/jsons/techTree.json");
+	technologyTree.display();
+	system("pause");
+}
+
+void Company::initDefaultActivities()
+{
+	Activity defaultAct = {};
+	possibleActivities.push_back(defaultAct);
 }

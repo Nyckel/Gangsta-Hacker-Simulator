@@ -29,4 +29,7 @@ void World::loadMissions()
 	missions.push_back(attack);
 	missions.push_back(defend);
 	knownCompanies[goodGuys->getCompanyId()] = move(goodGuys);
+
+	playableCompanies.at(0).getCharacter(0)->setCurrentActivity(&playableCompanies.at(0).getAvailableActivities()[0]);
+
 }

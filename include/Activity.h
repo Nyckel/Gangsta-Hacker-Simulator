@@ -40,27 +40,32 @@ public:
 	~Activity();
 	void start();
 	void update(std::chrono::microseconds pElapsed);
+
+	bool started;
 	
 	std::string getName() const;
 	eActType getType() const;
 	eOrientation getOrientation();
 
-	int getXp();// How is an activity grey ? Research, dev, hardwareInstall..
-	std::chrono::microseconds getTimeElapsed();
+	int getXp() const { return xp; }// How is an activity grey ? Research, dev, hardwareInstall..
+	std::chrono::microseconds getTimeElapsed() const { return elapsed; }
 
 	void setAllowed(bool pAllowed);
-	bool isAllowed();
+	bool isAllowed() const { return allowed; }
 	//bool isAllowed(Mission *mission = NULL, bool isMission = false);
-	bool isFinished();
-	bool isResearch();
 
-	bool isRecon();
-	bool isScan();
-	bool isExploit();
-	bool isPostExploit();
+	bool isFinished() const { return finished; }
+	bool isResearch() const { return typeAct == Research; }
 
-	bool isDev();
-	bool isHardWare();
-	bool isConference();
+	bool isRecon() const { return typeAct == Recon; }
+	bool isScan() const { return typeAct == Scan; }
+	bool isExploit() const { return typeAct == Exploit; }
+	bool isPostExploit() const { return typeAct == PostExploit; }
+
+	bool isDev() const { return typeAct == dev; }
+	bool isHardWare() const { return typeAct == hardwareInstall; }
+	bool isConference() const { return typeAct == conf; }
+
+	bool isStarted() const { return started; }
 };
 
