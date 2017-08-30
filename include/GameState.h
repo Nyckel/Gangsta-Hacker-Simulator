@@ -35,5 +35,7 @@ public:
 	void changeState(GameState *state) {
 		/*pGame->changeState(state);*/
 	}
+
+	void setWindow(MainWindow* mw) { window = mw; }
 };
 

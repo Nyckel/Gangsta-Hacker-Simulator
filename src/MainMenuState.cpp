@@ -9,9 +9,11 @@ MainMenuState::MainMenuState(MainWindow* pWindow) {
 
 	window->addComponent(title);
 	window->addComponent(menu);*/
+
+	window->setBackground("ressources/images/2.jpg");
+	createMainTitle();
 	createMenu();
 }
-
 
 MainMenuState::~MainMenuState() {
 	delete(menu);
@@ -130,9 +132,11 @@ void MainMenuState::handleEvents() {
 std::unique_ptr<GameState> MainMenuState::update(std::chrono::microseconds elapsed) {
 	if (&menuChoice != nullptr && menuChoice != "") {
 		if (menuChoice == "Play") {
-			/*window->getMenuStateActions()->promptNewOrLoadGame();*/
-			std::cout << "Switch to playingState" << std::endl;
-			return std::make_unique<PlayingState>();// if we load a game we assign the saved file to the state before returning
+			window->clearAll();
+			auto ps = std::make_unique<PlayingState>();
+			ps->setWindow(window);//todo:replace by a move
+			return ps;// if we load a game we assign the saved file to the state before returning
+
 		} if (menuChoice == "Options") {
 			//window->getMenuActions->showOptions();
 			//window->showOptions();
@@ -169,9 +173,15 @@ void MainMenuState::validateEntry() {
 
 void MainMenuState::createMenu()
 {
+	auto customTheme = window->getTheme();
+
 	auto bPlay = tgui::Button::create("Play");
 	auto bOpti = tgui::Button::create("Options");
 	auto bQuit = tgui::Button::create("Exit");
+
+	bPlay->setRenderer(customTheme.getRenderer("Button"));
+	bOpti->setRenderer(customTheme.getRenderer("Button"));
+	bQuit->setRenderer(customTheme.getRenderer("Button"));
 
 	bPlay->connect("pressed", [this] {menuChoice = "Play"; });
 	bOpti->connect("pressed", [this] {menuChoice = "Options"; });
@@ -187,4 +197,15 @@ void MainMenuState::createMenu()
 	window->addToGui(bPlay);
 	window->addToGui(bOpti);
 	window->addToGui(bQuit);
+}
+
+void MainMenuState::createMainTitle() const
+{
+	auto title = tgui::Label::create("Gangsta Hacker Simulator");
+	title->setTextSize(50);
+	title->setPosition(window->getSize().x / 2 - title->getSize().x / 2, 50);
+	title->setPosition(100, 50);
+	title->setRenderer(window->getTheme().getRenderer("Label"));
+
+	window->addToGui(title);
 }

@@ -3,7 +3,8 @@
 
 
 
-MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0"), gui{window}
+//MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0"), gui{ window }
+MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0", sf::Style::Fullscreen), gui{window}
 {
 	//window = new sf::RenderWindow(sf::VideoMode(800, 600), "Gangsta Hacker Simulator 1.0");
 	 
@@ -15,6 +16,7 @@ MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simu
 	hoveredClickableComponent = dummyComponent;
 	componentsAtLevel = std::vector<std::vector<Component*>>();
 
+	customTheme = { "ressources/themes/Custom.txt" };
 
 }
 
@@ -35,12 +37,7 @@ void MainWindow::update() {
 	//window->clear(sf::Color(52, 152, 219));
 	sf::Color windowBackgroundColor = sf::Color::Black;// sf::Color(44, 62, 80, 1.0);// sf::Color(10, 10, 10);
 	window.clear(windowBackgroundColor);
-	sf::Texture texture;
-	if (!texture.loadFromFile("ressources/city.jpg"))
-	{
-		std::cout << "Couldn't load background image " << std::endl;
-	}
-	sf::Sprite background(texture);
+	
 	window.draw(background);
 
 	for (std::vector<Component*> components : componentsAtLevel) {
@@ -314,4 +311,22 @@ void MainWindow::clearComponents()
 	for (auto level : componentsAtLevel)
 		for (auto elt : level)
 			delete elt;
+}
+
+void MainWindow::clearAll()
+{
+	gui.removeAllWidgets();
+}
+
+
+void MainWindow::setBackground(std::string path)
+{
+	sf::Texture newText = sf::Texture();
+	if (!newText.loadFromFile(path))
+	{
+		std::cout << "Couldn't load background image " << std::endl;
+	}
+	back_texture = newText;
+
+	background = sf::Sprite (back_texture);
 }

@@ -40,7 +40,7 @@ PlayingState::PlayingState()
 	auto end = std::chrono::steady_clock::now();
 	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start); //Why not as an object attribute
 																					   //Or multipliate the timer for every action (code, research,...) by a speed coef -> but wouldn't speed up animations ?
-
+	//window->setBackground("ressources/city.jpg");
 	//testMissions();
 	world->loadMissions();
 }
@@ -93,7 +93,7 @@ std::unique_ptr<GameState> PlayingState::update(std::chrono::microseconds elapse
 	return nullptr;
 }
 void PlayingState::draw() {
-
+	window->update();
 }
 
 //Company* PlayingState::createCompany() {

@@ -25,6 +25,10 @@ private:
 	std::vector<Component*> components;
 	std::vector<std::vector<Component*>> componentsAtLevel;
 
+	sf::Texture back_texture;
+	sf::Sprite background;
+	tgui::Theme customTheme;
+
 	void removeFromHoveredList(Component*);
 public:
 	MainWindow();
@@ -48,5 +52,10 @@ public:
 	void tguiHandle(sf::Event e) { gui.handleEvent(e); }
 	void addToGui(tgui::Widget::Ptr widget) { gui.add(widget); }
 	sf::Vector2u getSize() const { return window.getSize(); }
+
+	void setBackground(std::string path);
+	tgui::Theme& getTheme() { return customTheme; }
+
+	void clearAll();
 };
 

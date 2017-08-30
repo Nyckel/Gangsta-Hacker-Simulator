@@ -26,5 +26,6 @@ private:
 	std::string menuChoice;
 	void validateEntry();
 
+	void createMainTitle() const;
 	void createMenu();
 };
