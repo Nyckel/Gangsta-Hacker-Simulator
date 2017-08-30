@@ -269,3 +269,7 @@ void Character::checkLevels() {
 		//for each level check if xp > pallier for next level
 	}
 }
+
+void Character::createTechTree() {
+	technologyTree = TechTree("ressources/jsons/techTree.json");
+}

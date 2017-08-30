@@ -46,7 +46,7 @@ TechTreeElement* TechTree::createElement(Json::Value pElement){// Or do function
 void TechTree::createElement(Json::Value pJsonElement, TechTreeElement* pElement) {
 	pElement->setName(pJsonElement["name"].asString());
 	Json::Value eltSons = pJsonElement["sons"];
-	if (eltSons != NULL) {
+	if (eltSons != nullptr) {
 		//std::cout << "Element " << newElement.getName() << " has " << sons.size() << " sons" << std::endl;
 		for (int i = 0; i < eltSons.size(); i++) {
 			TechTreeElement* newSon = new TechTreeElement;

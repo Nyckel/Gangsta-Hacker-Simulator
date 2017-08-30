@@ -35,6 +35,13 @@ void MainWindow::update() {
 	//window->clear(sf::Color(52, 152, 219));
 	sf::Color windowBackgroundColor = sf::Color::Black;// sf::Color(44, 62, 80, 1.0);// sf::Color(10, 10, 10);
 	window.clear(windowBackgroundColor);
+	sf::Texture texture;
+	if (!texture.loadFromFile("ressources/city.jpg"))
+	{
+		std::cout << "Couldn't load background image " << std::endl;
+	}
+	sf::Sprite background(texture);
+	window.draw(background);
 
 	for (std::vector<Component*> components : componentsAtLevel) {
 		for (Component* comp : components) {
@@ -153,78 +160,78 @@ Menu* MainWindow::createMainMenu() {
 }
 
 
-
-void MainWindow::handleEvents() {
-	sf::Event event;
-	while (window.pollEvent(event)) {
-		switch (event.type) {
-			case sf::Event::Closed: {
-				window.close();
-				break;
-			}
-			case sf::Event::MouseMoved: {
-				sf::Vector2f mousePosition(event.mouseMove.x, event.mouseMove.y);
-
-				std::vector<Component*>::iterator it = hoveredComponents.begin();
-				while (it != hoveredComponents.end()) {
-					//If it's not in hovered anymore
-					if (!(*it)->isCursorHover(mousePosition)) {
-						(*it)->normalState();
-						it = hoveredComponents.erase(it);
-					}
-					else {
-						++it;
-					}
-					if (!hoveredClickableComponent->isCursorHover(mousePosition)) {
-						hoveredClickableComponent = dummyComponent;
-					}
-				}
-
-				bool hoveredElementFound = false;
-				std::vector<std::vector<Component*>>::reverse_iterator it2 = componentsAtLevel.rbegin();
-				while (!hoveredElementFound && it2 != componentsAtLevel.rend()) {
-					std::vector<Component*>::iterator it3 = (*it2).begin();
-					while (!hoveredElementFound && it3 != (*it2).end()) {
-						if ((*it3)->isCursorHover(mousePosition)) {
-							hoveredElementFound = true;
-							hoveredComponents.push_back(*it3);
-							if ((*it3)->hasHoverState()) {
-								(*it3)->hoverState();
-							}
-							if ((*it3)->hasChildElements()) {
-								(*it3)->getClickableAndHoveredComponents(mousePosition, &hoveredComponents, &hoveredClickableComponent);
-							}
-							if (hoveredClickableComponent != nullptr) {
-							}
-							else {
-							}
-						}
-						++it3;
-					}
-					it2++;
-				}
-				break;
-			}
-		
-			case sf::Event::MouseButtonReleased: {
-				if (hoveredClickableComponent != nullptr) {
-					//hoveredClickableComponent->click = &(hoveredClickableComponent->printName);
-					if (hoveredClickableComponent != dummyComponent) {
-						std::cout << "Clicked on " << hoveredClickableComponent->getName() << std::endl;
-						/*hoveredClickableComponent->click = [this]() { hoveredClickableComponent->printName(); };*/
-						hoveredClickableComponent->click;
-					}
-
-				}
-				else {
-					std::cout << "hoverClickableComponent is null" << std::endl;
-				}
-				break;
-			}
-		}
-	}
-	//gui.handleEvent(event);
-}
+//
+//void MainWindow::handleEvents() {
+//	sf::Event event;
+//	while (window.pollEvent(event)) {
+//		switch (event.type) {
+//			case sf::Event::Closed: {
+//				window.close();
+//				break;
+//			}
+//			case sf::Event::MouseMoved: {
+//				sf::Vector2f mousePosition(event.mouseMove.x, event.mouseMove.y);
+//
+//				std::vector<Component*>::iterator it = hoveredComponents.begin();
+//				while (it != hoveredComponents.end()) {
+//					//If it's not in hovered anymore
+//					if (!(*it)->isCursorHover(mousePosition)) {
+//						(*it)->normalState();
+//						it = hoveredComponents.erase(it);
+//					}
+//					else {
+//						++it;
+//					}
+//					if (!hoveredClickableComponent->isCursorHover(mousePosition)) {
+//						hoveredClickableComponent = dummyComponent;
+//					}
+//				}
+//
+//				bool hoveredElementFound = false;
+//				std::vector<std::vector<Component*>>::reverse_iterator it2 = componentsAtLevel.rbegin();
+//				while (!hoveredElementFound && it2 != componentsAtLevel.rend()) {
+//					std::vector<Component*>::iterator it3 = (*it2).begin();
+//					while (!hoveredElementFound && it3 != (*it2).end()) {
+//						if ((*it3)->isCursorHover(mousePosition)) {
+//							hoveredElementFound = true;
+//							hoveredComponents.push_back(*it3);
+//							if ((*it3)->hasHoverState()) {
+//								(*it3)->hoverState();
+//							}
+//							if ((*it3)->hasChildElements()) {
+//								(*it3)->getClickableAndHoveredComponents(mousePosition, &hoveredComponents, &hoveredClickableComponent);
+//							}
+//							if (hoveredClickableComponent != nullptr) {
+//							}
+//							else {
+//							}
+//						}
+//						++it3;
+//					}
+//					it2++;
+//				}
+//				break;
+//			}
+//		
+//			case sf::Event::MouseButtonReleased: {
+//				if (hoveredClickableComponent != nullptr) {
+//					//hoveredClickableComponent->click = &(hoveredClickableComponent->printName);
+//					if (hoveredClickableComponent != dummyComponent) {
+//						std::cout << "Clicked on " << hoveredClickableComponent->getName() << std::endl;
+//						/*hoveredClickableComponent->click = [this]() { hoveredClickableComponent->printName(); };*/
+//						hoveredClickableComponent->click;
+//					}
+//
+//				}
+//				else {
+//					std::cout << "hoverClickableComponent is null" << std::endl;
+//				}
+//				break;
+//			}
+//		}
+//	}
+//	//gui.handleEvent(event);
+//}
 
 std::vector<sf::Event> MainWindow::getEvents() {
 	std::vector<sf::Event> events;
@@ -293,29 +300,6 @@ Component* MainWindow::getDummyComponent() {
 
 std::vector<std::vector<Component*>>* MainWindow::getComponentsByLevel() {
 	return &componentsAtLevel;
-}
-
-Menu* MainWindow::createActivityMenu() {
-
-	sf::Font* titleFont = new sf::Font();
-	titleFont->loadFromFile("ressources/fonts/SourceCodePro-Regular.ttf");
-
-	dummyComponent = new Component();
-
-	sf::Vector2f buttonSize = sf::Vector2f(window.getSize().x - 300, window.getSize().y / 10);
-	std::vector<std::pair<std::string, std::function<void()>* >> menuParams;
-
-	std::function<void()> func = [this]() { hoveredClickableComponent->printName(); };
-	std::function<void()> funcExit = [this]() { std::cout << "Exiting game" << std::endl; };
-	std::function<void()> funcPlay = [this]() { std::cout << "Playing game" << std::endl; };
-	menuParams.push_back({ "Play", &funcPlay }); //Except here we will point to unhautorized memory
-	menuParams.push_back({ "Options", &func });
-	menuParams.push_back({ "Exit", &funcExit });
-
-	Menu* startMenu = new Menu(menuParams, "Activities", titleFont, sf::Color(228, 71, 98), buttonSize, 20, 5, sf::Vector2f(50, window.getSize().y * 1 / 3));
-	startMenu->setName("Game Menu");
-	return startMenu;
-	//addComponent(startMenu);
 }
 
 void MainWindow::clearComponents()

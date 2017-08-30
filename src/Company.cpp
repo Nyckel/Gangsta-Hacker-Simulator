@@ -89,7 +89,7 @@ Character Company::createFirstCharacter() {
 	Character newCharacter(name, gender, true);
 		
 	std::cout << std::endl << "\tWelcome to a whole new world bro, my world.." << std::endl << "\t";
-	system("pause");
+	/*system("pause");*/
 	return newCharacter;
 }
 
@@ -138,7 +138,7 @@ std::vector<Mission*> Company::getRunningMissions() {
 
 void Company::updateActivities(std::chrono::microseconds elapsed) {
 
-	for (Character& character : characters) {
+	for (auto& character : characters) {
 		if (character.isDoingSomething()) {
 			character.updateActivity(elapsed);//Add "characters.at(i)" param to get elements discovered by this character
 			// -> Things are discovered in updateActivity() in a function using randomness and skills
@@ -150,12 +150,6 @@ void Company::updateActivities(std::chrono::microseconds elapsed) {
 			//character.setCurrentActivity(&(possibleActivities[0]));
 		}
 	}
-}
-
-void Company::createTechTree() {
-	technologyTree = TechTree("ressources/jsons/techTree.json");
-	technologyTree.display();
-	system("pause");
 }
 
 void Company::initDefaultActivities()

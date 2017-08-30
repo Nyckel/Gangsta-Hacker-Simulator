@@ -41,7 +41,8 @@ bool Game::isRunning() {
 }
 
 void Game::draw() {
-	display->update();
+	//display->update();
+	currentState->draw();
 }
 
 void Game::update(std::chrono::microseconds elapsed) {

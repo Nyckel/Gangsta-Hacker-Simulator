@@ -9,7 +9,6 @@
 #include "IntAttribute.h"
 #include "Mission.h"
 #include "Entity.h"
-#include "TechTree.h"
 
 
 class Company : public Entity //Compagny data for other than targets will be loaded in data files
@@ -51,7 +50,6 @@ private:
 	//Moneymoney
 	IntAttribute dollars;
 	IntAttribute bitcoins;
-	TechTree technologyTree;
 
 	void initDefaultActivities();
 
@@ -65,7 +63,6 @@ public:
 	Character* getCharacter(int index);
 	std::vector<Character>& getCharacters() { return characters; }
 	void addCharacter(Character *pChar);
-	void createTechTree();
 	int getNbCharacters() const { return characters.size(); }
 	void displayStatistics();
 	//void displayAllMissions();

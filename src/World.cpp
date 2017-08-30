@@ -6,7 +6,7 @@ void World::createFirstCompany()
 	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
 	std::cin >> companyName;
 	auto company = Company(companyName);
-	company.createTechTree();
+	company.getCharacters()[0].createTechTree();
 	playableCompanies.push_back(company);
 }
 

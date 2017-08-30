@@ -34,10 +34,9 @@ public:
 	void addComponent(Component *pComp, unsigned int zIndex = 0);
 	void hoverElement(Component* elt);
 	void unHoverElement(Component* elt);
-	//int createMainMenu();
 	Menu* createMainMenu();
 	Label* createTitle();
-	void handleEvents();
+	//void handleEvents();
 	std::vector<sf::Event> getEvents();
 	std::vector<Component*>* getHoveredComponents();
 	Component** getHoveredClickable();
@@ -45,7 +44,9 @@ public:
 	std::vector<std::vector<Component*>>* getComponentsByLevel();
 	void clearComponents();
 
-	Menu* createActivityMenu();
 
+	void tguiHandle(sf::Event e) { gui.handleEvent(e); }
+	void addToGui(tgui::Widget::Ptr widget) { gui.add(widget); }
+	sf::Vector2u getSize() const { return window.getSize(); }
 };
 

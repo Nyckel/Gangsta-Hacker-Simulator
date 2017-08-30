@@ -11,7 +11,7 @@
 #include "StringAttribute.h"
 #include "IntAttribute.h"
 #include "LevelAttribute.h"
-
+#include "TechTree.h"
 
 //Ajouter un truc pour gérer le sommeil et la fatigue et un truc pour voir ses mails
 
@@ -49,6 +49,8 @@ private:
 
 	LevelAttribute level_global;
 
+	TechTree technologyTree;
+
 	/*Attribute level_recon;
 	Attribute level_scan;
 	Attribute level_exploit;
@@ -85,6 +87,8 @@ public:
 	bool isDoingSomething() const;
 
 	int getCharacterId() const { return characterId; }
+
+	void createTechTree();
 
 	static int characterIds;
 

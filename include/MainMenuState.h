@@ -25,4 +25,6 @@ private:
 	Label* title;
 	std::string menuChoice;
 	void validateEntry();
+
+	void createMenu();
 };

@@ -4,12 +4,12 @@
 
 MainMenuState::MainMenuState(MainWindow* pWindow) {
 	window = pWindow;
-	title = window->createTitle();
+	/*title = window->createTitle();
 	menu = window->createMainMenu();
 
 	window->addComponent(title);
-	window->addComponent(menu);
-
+	window->addComponent(menu);*/
+	createMenu();
 }
 
 
@@ -100,7 +100,7 @@ void MainMenuState::handleEvents() {
 				break;
 			}
 			case sf::Event::KeyReleased: {
-				if (event.key.code == sf::Keyboard::Down && menu->getChildElements().size() != 0) {
+				/*if (event.key.code == sf::Keyboard::Down && menu->getChildElements().size() != 0) {
 					Component** hoveredClickableComponent = window->getHoveredClickable();
 					int oldCursorPosition = menu->positionOf(*hoveredClickableComponent);
 					if (oldCursorPosition == -1) {
@@ -121,9 +121,10 @@ void MainMenuState::handleEvents() {
 						window->unHoverElement(menu->elementAt(oldCursorPosition));
 						window->hoverElement(menu->elementAt((oldCursorPosition - 1) % menu->getMenuButtons().size()));
 					}
-				}
+				}*/
 			}
 		}
+		window->tguiHandle(event);
 	}
 }
 std::unique_ptr<GameState> MainMenuState::update(std::chrono::microseconds elapsed) {
@@ -146,6 +147,7 @@ std::unique_ptr<GameState> MainMenuState::update(std::chrono::microseconds elaps
 }
 
 void MainMenuState::draw() {
+	window->update();
 
 }
 
@@ -155,9 +157,7 @@ void MainMenuState::validateEntry() {
 		//hoveredClickableComponent->click = &(hoveredClickableComponent->printName);
 		if (*hoveredClickableComponent != window->getDummyComponent()) {
 			std::cout << "(state) Clicked on " << (*hoveredClickableComponent)->getName() << std::endl;
-			/*hoveredClickableComponent->click = [this]() { hoveredClickableComponent->printName(); };*/
-			//(*hoveredClickableComponent)->click2;
-			//hoveredClickableComponent->click;
+
 			menuChoice = (*hoveredClickableComponent)->getName();
 		}
 
@@ -165,4 +165,26 @@ void MainMenuState::validateEntry() {
 	else {
 		std::cout << "hoverClickableComponent is null (in state)" << std::endl;
 	}
+}
+
+void MainMenuState::createMenu()
+{
+	auto bPlay = tgui::Button::create("Play");
+	auto bOpti = tgui::Button::create("Options");
+	auto bQuit = tgui::Button::create("Exit");
+
+	bPlay->connect("pressed", [this] {menuChoice = "Play"; });
+	bOpti->connect("pressed", [this] {menuChoice = "Options"; });
+	bQuit->connect("pressed", [this] {menuChoice = "Exit"; });
+
+	auto upperBound = window->getSize().y * 1 / 5;
+	auto shift = bOpti->getSize().y + 10;
+
+	bPlay->setPosition(100, upperBound);
+	bOpti->setPosition(100, upperBound + shift);
+	bQuit->setPosition(100, upperBound + 2 * shift);
+
+	window->addToGui(bPlay);
+	window->addToGui(bOpti);
+	window->addToGui(bQuit);
 }
