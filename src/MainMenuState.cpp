@@ -131,11 +131,11 @@ void MainMenuState::handleEvents() {
 }
 std::unique_ptr<GameState> MainMenuState::update(std::chrono::microseconds elapsed) {
 	if (&menuChoice != nullptr && menuChoice != "") {
-		if (menuChoice == "Play") {
+		if (menuChoice == "NewGame") {
 			window->clearAll();
-			auto ps = std::make_unique<PlayingState>();
-			ps->setWindow(window);//todo:replace by a move
-			return ps;// if we load a game we assign the saved file to the state before returning
+			return std::make_unique<PlayingState>(window);
+			//ps->setWindow(window);//todo:replace by a move
+			// if we load a game we assign the saved file to the state before returning
 
 		} if (menuChoice == "Options") {
 			//window->getMenuActions->showOptions();
@@ -175,26 +175,58 @@ void MainMenuState::createMenu()
 {
 	auto customTheme = window->getTheme();
 
-	auto bPlay = tgui::Button::create("Play");
+	auto bCont = tgui::Button::create("Continue");
+	auto bNew  = tgui::Button::create("New game");
+	auto bLoad = tgui::Button::create("Load game");
 	auto bOpti = tgui::Button::create("Options");
 	auto bQuit = tgui::Button::create("Exit");
 
-	bPlay->setRenderer(customTheme.getRenderer("Button"));
+	auto buttonWidth = window->getSize().x / 3;
+	auto buttonHeight = 30;
+	bCont->setSize(buttonWidth, buttonHeight);
+	bNew ->setSize(buttonWidth, buttonHeight);
+	bLoad->setSize(buttonWidth, buttonHeight);
+	bOpti->setSize(buttonWidth, buttonHeight);
+	bQuit->setSize(buttonWidth, buttonHeight);
+
+	bCont->setRenderer(customTheme.getRenderer("Button"));
+	bNew ->setRenderer(customTheme.getRenderer("Button"));
+	bLoad->setRenderer(customTheme.getRenderer("Button"));
 	bOpti->setRenderer(customTheme.getRenderer("Button"));
 	bQuit->setRenderer(customTheme.getRenderer("Button"));
 
-	bPlay->connect("pressed", [this] {menuChoice = "Play"; });
+	bCont->connect("pressed", [this] {menuChoice = "Continue"; });
+	bNew ->connect("pressed", [this] {menuChoice = "NewGame"; });
+	bLoad->connect("pressed", [this] {menuChoice = "LoadGame"; });
 	bOpti->connect("pressed", [this] {menuChoice = "Options"; });
 	bQuit->connect("pressed", [this] {menuChoice = "Exit"; });
 
-	auto upperBound = window->getSize().y * 1 / 5;
+	auto upperBound = window->getSize().y * 1 / 3;
 	auto shift = bOpti->getSize().y + 10;
+	auto xPos = window->getSize().x / 2 - bCont->getSize().x / 2;
 
-	bPlay->setPosition(100, upperBound);
-	bOpti->setPosition(100, upperBound + shift);
-	bQuit->setPosition(100, upperBound + 2 * shift);
+	bCont->setPosition(xPos, upperBound);
+	bNew ->setPosition(xPos, upperBound + shift);
+	bLoad->setPosition(xPos, upperBound + 2 * shift);
+	bOpti->setPosition(xPos, upperBound + 3 * shift);
+	bQuit->setPosition(xPos, upperBound + 4 * shift);
 
-	window->addToGui(bPlay);
+	bCont->showWithEffect(tgui::ShowAnimationType::Fade, sf::milliseconds(1000));/*
+	bNew ->showWithEffect(tgui::ShowAnimationType::Fade, sf::milliseconds(1000));
+	bLoad->showWithEffect(tgui::ShowAnimationType::Fade, sf::milliseconds(1200));
+	bOpti->showWithEffect(tgui::ShowAnimationType::Fade, sf::milliseconds(1400));
+	bQuit->showWithEffect(tgui::ShowAnimationType::Fade, sf::milliseconds(1600));*/
+
+	auto foundSavedGames = false;
+	if (!foundSavedGames)
+	{
+		bCont->disable();
+		bLoad->disable();
+	}
+
+	window->addToGui(bCont);
+	window->addToGui(bNew);
+	window->addToGui(bLoad);
 	window->addToGui(bOpti);
 	window->addToGui(bQuit);
 }
@@ -203,9 +235,10 @@ void MainMenuState::createMainTitle() const
 {
 	auto title = tgui::Label::create("Gangsta Hacker Simulator");
 	title->setTextSize(50);
-	title->setPosition(window->getSize().x / 2 - title->getSize().x / 2, 50);
-	title->setPosition(100, 50);
-	title->setRenderer(window->getTheme().getRenderer("Label"));
+
+	//title->setPosition(window->getSize().x / 2 - title->getFullSize().x / 2, 50);
+	title->setPosition(250, 50);
+	title->setRenderer(window->getTheme().getRenderer("Title"));
 
 	window->addToGui(title);
 }

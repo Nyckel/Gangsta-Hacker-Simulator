@@ -35,8 +35,10 @@ private:
 	//Techtree object;
 	//Characters characters;
 
+	tgui::ChatBox::Ptr messager; // to be replaced by mechanism on mainWindow (state shouldn't know about display details)
+
 public:
-	PlayingState();
+	PlayingState(MainWindow* pWindow);
 	~PlayingState();
 
 	void init() override;
@@ -50,5 +52,9 @@ public:
 	void displayMissionsOfCharacter(Character *pChar);
 	int getNbOfMissionsFor(Character *pChar);
 	void draw() override;
+
+	void askForNewAct() const;
+	void createFirstCompany(std::string companyName, std::string characterName, std::string sex);
+	void displayNewGameMenu();
 };
 

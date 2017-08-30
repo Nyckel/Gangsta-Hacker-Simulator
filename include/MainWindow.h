@@ -51,6 +51,7 @@ public:
 
 	void tguiHandle(sf::Event e) { gui.handleEvent(e); }
 	void addToGui(tgui::Widget::Ptr widget) { gui.add(widget); }
+	std::vector<tgui::Widget::Ptr> getGuiElements() const { return gui.getWidgets(); }
 	sf::Vector2u getSize() const { return window.getSize(); }
 
 	void setBackground(std::string path);

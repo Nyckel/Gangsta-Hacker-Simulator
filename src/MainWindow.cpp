@@ -3,12 +3,10 @@
 
 
 
-//MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0"), gui{ window }
-MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0", sf::Style::Fullscreen), gui{window}
+MainWindow::MainWindow() : window(sf::VideoMode(1200, 675), "Gangsta Hacker Simulator 1.0"), gui{ window }
+//MainWindow::MainWindow() : window(sf::VideoMode(1080, 720), "Gangsta Hacker Simulator 1.0", sf::Style::Fullscreen), gui{window}
 {
 	//window = new sf::RenderWindow(sf::VideoMode(800, 600), "Gangsta Hacker Simulator 1.0");
-	 
-
 	window.setPosition(sf::Vector2i(0, 0));
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
@@ -321,6 +319,8 @@ void MainWindow::clearAll()
 
 void MainWindow::setBackground(std::string path)
 {
+	if (path == "")
+		background = sf::Sprite();
 	sf::Texture newText = sf::Texture();
 	if (!newText.loadFromFile(path))
 	{

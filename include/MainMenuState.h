@@ -28,4 +28,5 @@ private:
 
 	void createMainTitle() const;
 	void createMenu();
+	void showGameMenu(); // New game or load
 };

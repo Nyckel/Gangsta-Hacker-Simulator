@@ -24,7 +24,7 @@ Company::Company()
 	companyId = Company::compannyIds++;
 }
 
-Company::Company(std::string pName) {//This is for the player
+Company::Company(std::string pName, std::string firstCharacterName, std::string hisSex) {//This is for the player
 	//name = pName;
 	name.setValue(pName);
 
@@ -34,7 +34,11 @@ Company::Company(std::string pName) {//This is for the player
 	acheivedGrey = 0;
 	acheivedBlack = 0;
 
-	Character firstCharacter = createFirstCharacter();
+	enum eGender gender;
+	hisSex == "M" || hisSex == "m" ? gender = Male : gender = Female;
+
+	Character firstCharacter(firstCharacterName, gender, true);
+	//Character firstCharacter = createFirstCharacter();
 	characters.push_back(firstCharacter);
 
 	dollars = { 0 };

@@ -55,7 +55,7 @@ private:
 
 public:
 	Company();
-	Company(std::string pName);
+	Company(std::string pName, std::string firstCharacterName, std::string hisSex);
 	Company::Company(std::string pName, int pRenown, int pBalance);
 	~Company();
 

@@ -1,14 +1,14 @@
 #include "World.h"
 
-void World::createFirstCompany()
-{
-	std::string companyName;
-	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
-	std::cin >> companyName;
-	auto company = Company(companyName);
-	company.getCharacters()[0].createTechTree();
-	playableCompanies.push_back(company);
-}
+//void World::createFirstCompany()
+//{
+//	std::string companyName;
+//	std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
+//	std::cin >> companyName;
+//	auto company = Company(companyName);
+//	company.getCharacters()[0].createTechTree();
+//	playableCompanies.push_back(company);
+//}
 
 void World::loadMissions()
 {

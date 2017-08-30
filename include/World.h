@@ -19,6 +19,6 @@ public:
 	void createFirstCompany();
 	void loadMissions();
 	std::vector<Company>& getPlayerCompanies() { return playableCompanies; };
-
+	void addPlayableCompany(Company&& comp) { playableCompanies.push_back(comp); }
 };
 
