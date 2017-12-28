@@ -1,27 +1,9 @@
 #include "PlayingState.h"
 
 
-void ClrScrn(char attrib) {
-	const int ROWS = 50;
-	const int COLS = 80;
-	COORD pos = { 0, 0 };
-	DWORD written;
-	CHAR_INFO disp[ROWS][COLS];
-	auto console = GetStdHandle(STD_OUTPUT_HANDLE);
-	//COORD size = { COLS, ROWS };
-	COORD src = { 0, 0 };
-	SMALL_RECT  dest = { 0, 0, COLS, ROWS };
-
-	unsigned size = ROWS * COLS;
-
-	FillConsoleOutputCharacter(console, ' ', size, pos, &written);
-	FillConsoleOutputAttribute(console, attrib, size, pos, &written);
-	SetConsoleCursorPosition(console, pos);
-}
-
-
 PlayingState::PlayingState(MainWindow* pWindow)
 {
+	inactivePlayerIds = {0};
 	window = pWindow;
 	world = std::make_unique<World>(World());
 
@@ -94,8 +76,6 @@ void PlayingState::handleEvents() {
 
 std::unique_ptr<GameState> PlayingState::update(std::chrono::microseconds elapsed) {
 	//system("cls");
-	//ClrScrn(0x71);
-	//std::cout << "At pos 1 elapsed = " << elapsed.count() << std::endl;
 	updateActivities(elapsed);
 	// Generate some random things happening ? Missions arriving, random events...
 
@@ -197,6 +177,12 @@ Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 void PlayingState::updateActivities(std::chrono::microseconds elapsed) {
 	for (Company& cmp : world->getPlayerCompanies()) {
 		cmp.updateActivities(elapsed);
+		// Maybe I should only display activity prompts for focused company
+		for (auto pl : cmp.getCharacters()) {
+			if (!pl.isDoingSomething()) {
+				askForNewAct(pl.getCharacterId());
+			}
+		}
 		cmp.getCharacters()[0].displayStatistics();
 	}
 }
@@ -231,18 +217,16 @@ int PlayingState::getNbOfMissionsFor(Character *pChar) {
 	return nbMissions;
 }
 
-void PlayingState::askForNewAct() const
-{
-	static int asked;
-	asked++;
-	if (!asked)
-	{
-		auto ask = tgui::Button::create("Start new Activity ? ");
-		ask->setRenderer(window->getTheme().getRenderer("Button"));
-		ask->setPosition(100, 100);
+void PlayingState::askForNewAct(int characterId) const {
 
-		window->addToGui(ask);
-	}
+	if (inactivePlayerIds.count(characterId)) return;
+
+	auto ask = tgui::Button::create("Start new Activity ? for player " + characterId);
+	ask->setRenderer(window->getTheme().getRenderer("Button"));
+	ask->setPosition(100, 100);
+
+	window->addToGui(ask);
+	inactivePlayerIds.insert(characterId);
 }
 
 void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex)
