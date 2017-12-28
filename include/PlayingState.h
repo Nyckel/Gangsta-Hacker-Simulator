@@ -5,6 +5,7 @@
 #include "GameState.h"
 #include "Company.h"
 #include "Mission.h"
+#include <set>
 
 class PlayingState : public GameState
 {
@@ -15,12 +16,14 @@ private:
 	std::vector<Company*>playerCompanies; //Can put a character in another company (time to change...)
 	std::vector<Company*> companies; //Every other company (bot, targets, other players...)
 	std::vector<Mission*> missions;
+
+	std::set<int> inactivePlayerIds;
 	
 	Company* createCompany();
 	void setCurrentMissionOf(Character *pChar, Mission *pMission);
 	Mission* getCurrentMissionOf(const Character* pChar);
 	void updateActivities(std::chrono::microseconds elapsed);
-
+	void openActivityTreeForCharacter(int);
 	//Tests
 	void testMissions();
 
@@ -53,8 +56,8 @@ public:
 	int getNbOfMissionsFor(Character *pChar);
 	void draw() override;
 
-	void askForNewAct() const;
-	void createFirstCompany(std::string companyName, std::string characterName, std::string sex);
+	void askForNewAct(Character& character);
+	void createFirstCompany(std::string companyName, std::string characterName, std::string sex) const;
 	void displayNewGameMenu();
 };
 

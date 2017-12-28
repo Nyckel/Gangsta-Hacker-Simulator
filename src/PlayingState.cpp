@@ -1,25 +1,6 @@
 #include "PlayingState.h"
 
 
-void ClrScrn(char attrib) {
-	const int ROWS = 50;
-	const int COLS = 80;
-	COORD pos = { 0, 0 };
-	DWORD written;
-	CHAR_INFO disp[ROWS][COLS];
-	auto console = GetStdHandle(STD_OUTPUT_HANDLE);
-	//COORD size = { COLS, ROWS };
-	COORD src = { 0, 0 };
-	SMALL_RECT  dest = { 0, 0, COLS, ROWS };
-
-	unsigned size = ROWS * COLS;
-
-	FillConsoleOutputCharacter(console, ' ', size, pos, &written);
-	FillConsoleOutputAttribute(console, attrib, size, pos, &written);
-	SetConsoleCursorPosition(console, pos);
-}
-
-
 PlayingState::PlayingState(MainWindow* pWindow)
 {
 	window = pWindow;
@@ -94,8 +75,6 @@ void PlayingState::handleEvents() {
 
 std::unique_ptr<GameState> PlayingState::update(std::chrono::microseconds elapsed) {
 	//system("cls");
-	//ClrScrn(0x71);
-	//std::cout << "At pos 1 elapsed = " << elapsed.count() << std::endl;
 	updateActivities(elapsed);
 	// Generate some random things happening ? Missions arriving, random events...
 
@@ -197,7 +176,13 @@ Mission* PlayingState::getCurrentMissionOf(const Character *pChar) {
 void PlayingState::updateActivities(std::chrono::microseconds elapsed) {
 	for (Company& cmp : world->getPlayerCompanies()) {
 		cmp.updateActivities(elapsed);
-		cmp.getCharacters()[0].displayStatistics();
+		// Maybe I should only display activity prompts for focused company
+		for (auto pl : cmp.getCharacters()) {
+			if (!pl.isDoingSomething()) {
+				askForNewAct(pl);
+			}
+		}
+		//cmp.getCharacters()[0].displayStatistics();
 	}
 }
 
@@ -231,21 +216,42 @@ int PlayingState::getNbOfMissionsFor(Character *pChar) {
 	return nbMissions;
 }
 
-void PlayingState::askForNewAct() const
-{
-	static int asked;
-	asked++;
-	if (!asked)
-	{
-		auto ask = tgui::Button::create("Start new Activity ? ");
-		ask->setRenderer(window->getTheme().getRenderer("Button"));
-		ask->setPosition(100, 100);
+void PlayingState::askForNewAct(Character& inactive) {
+	int characterId = inactive.getCharacterId();
+	if (inactivePlayerIds.count(characterId)) return;
 
-		window->addToGui(ask);
-	}
+	inactivePlayerIds.insert(characterId);
+	auto ask = tgui::Button::create(inactive.getName() + std::string(" is inactive"));
+	ask->setRenderer(window->getTheme().getRenderer("Button"));
+
+	auto buttonWidth = window->getSize().x / 5;
+	auto buttonHeight = 30;
+	ask->setSize(buttonWidth, buttonHeight);
+	ask->setPosition(100, 100 * inactivePlayerIds.size());
+	ask->connect("pressed", [=] {
+		openActivityTreeForCharacter(characterId);
+		window->removeFromGui(ask);
+	});
+
+	window->addToGui(ask);
 }
 
-void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex)
+void PlayingState::openActivityTreeForCharacter(int characterId) {
+	auto tree = tgui::Button::create("Foo Activity");
+	tree->setRenderer(window->getTheme().getRenderer("Button"));
+
+	auto buttonWidth = window->getSize().x / 5;
+	auto buttonHeight = 30;
+	tree->setSize(buttonWidth, buttonHeight);
+	tree->setPosition(100+ window->getSize().x / 5, 100);
+	tree->connect("pressed", [=] {
+		window->removeFromGui(tree);
+	});
+	
+	window->addToGui(tree);
+}
+
+void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex) const
 {
 	//std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
 	//std::cin >> companyName;
