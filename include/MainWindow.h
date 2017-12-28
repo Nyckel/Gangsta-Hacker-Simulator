@@ -51,6 +51,7 @@ public:
 
 	void tguiHandle(sf::Event e) { gui.handleEvent(e); }
 	void addToGui(tgui::Widget::Ptr widget) { gui.add(widget); }
+	void removeFromGui(tgui::Widget::Ptr widget) { gui.remove(widget); }
 	std::vector<tgui::Widget::Ptr> getGuiElements() const { return gui.getWidgets(); }
 	sf::Vector2u getSize() const { return window.getSize(); }
 

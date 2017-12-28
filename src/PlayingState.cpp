@@ -3,7 +3,6 @@
 
 PlayingState::PlayingState(MainWindow* pWindow)
 {
-	inactivePlayerIds = {0};
 	window = pWindow;
 	world = std::make_unique<World>(World());
 
@@ -180,10 +179,10 @@ void PlayingState::updateActivities(std::chrono::microseconds elapsed) {
 		// Maybe I should only display activity prompts for focused company
 		for (auto pl : cmp.getCharacters()) {
 			if (!pl.isDoingSomething()) {
-				askForNewAct(pl.getCharacterId());
+				askForNewAct(pl);
 			}
 		}
-		cmp.getCharacters()[0].displayStatistics();
+		//cmp.getCharacters()[0].displayStatistics();
 	}
 }
 
@@ -217,19 +216,42 @@ int PlayingState::getNbOfMissionsFor(Character *pChar) {
 	return nbMissions;
 }
 
-void PlayingState::askForNewAct(int characterId) const {
-
+void PlayingState::askForNewAct(Character& inactive) {
+	int characterId = inactive.getCharacterId();
 	if (inactivePlayerIds.count(characterId)) return;
 
-	auto ask = tgui::Button::create("Start new Activity ? for player " + characterId);
+	inactivePlayerIds.insert(characterId);
+	auto ask = tgui::Button::create(inactive.getName() + std::string(" is inactive"));
 	ask->setRenderer(window->getTheme().getRenderer("Button"));
-	ask->setPosition(100, 100);
+
+	auto buttonWidth = window->getSize().x / 5;
+	auto buttonHeight = 30;
+	ask->setSize(buttonWidth, buttonHeight);
+	ask->setPosition(100, 100 * inactivePlayerIds.size());
+	ask->connect("pressed", [=] {
+		openActivityTreeForCharacter(characterId);
+		window->removeFromGui(ask);
+	});
 
 	window->addToGui(ask);
-	inactivePlayerIds.insert(characterId);
 }
 
-void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex)
+void PlayingState::openActivityTreeForCharacter(int characterId) {
+	auto tree = tgui::Button::create("Foo Activity");
+	tree->setRenderer(window->getTheme().getRenderer("Button"));
+
+	auto buttonWidth = window->getSize().x / 5;
+	auto buttonHeight = 30;
+	tree->setSize(buttonWidth, buttonHeight);
+	tree->setPosition(100+ window->getSize().x / 5, 100);
+	tree->connect("pressed", [=] {
+		window->removeFromGui(tree);
+	});
+	
+	window->addToGui(tree);
+}
+
+void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex) const
 {
 	//std::cout << "\tWell, we are going to create your Company, what name did you think to ? ";
 	//std::cin >> companyName;

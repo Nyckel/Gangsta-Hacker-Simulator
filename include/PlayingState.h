@@ -23,7 +23,7 @@ private:
 	void setCurrentMissionOf(Character *pChar, Mission *pMission);
 	Mission* getCurrentMissionOf(const Character* pChar);
 	void updateActivities(std::chrono::microseconds elapsed);
-
+	void openActivityTreeForCharacter(int);
 	//Tests
 	void testMissions();
 
@@ -56,8 +56,8 @@ public:
 	int getNbOfMissionsFor(Character *pChar);
 	void draw() override;
 
-	void askForNewAct(int characterId) const;
-	void createFirstCompany(std::string companyName, std::string characterName, std::string sex);
+	void askForNewAct(Character& character);
+	void createFirstCompany(std::string companyName, std::string characterName, std::string sex) const;
 	void displayNewGameMenu();
 };
 
