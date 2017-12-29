@@ -217,13 +217,13 @@ int PlayingState::getNbOfMissionsFor(Character *pChar) {
 }
 
 void PlayingState::askForNewAct(Character& inactive) {
-	int characterId = inactive.getCharacterId();
+	auto characterId = inactive.getCharacterId();
 	if (inactivePlayerIds.count(characterId)) return;
 
 	inactivePlayerIds.insert(characterId);
 	auto ask = tgui::Button::create(inactive.getName() + std::string(" is inactive"));
 	ask->setRenderer(window->getTheme().getRenderer("Button"));
-
+	
 	auto buttonWidth = window->getSize().x / 5;
 	auto buttonHeight = 30;
 	ask->setSize(buttonWidth, buttonHeight);
@@ -237,18 +237,27 @@ void PlayingState::askForNewAct(Character& inactive) {
 }
 
 void PlayingState::openActivityTreeForCharacter(int characterId) {
-	auto tree = tgui::Button::create("Foo Activity");
-	tree->setRenderer(window->getTheme().getRenderer("Button"));
+	auto activities = this->world->getCompanyOfCharacterWithId(characterId).getAvailableActivities();
+	std::vector<tgui::Widget::Ptr> actButtons;
+	for (auto act : activities)
+	{
+		auto activityButton = tgui::Button::create(act.getName());
+		auto buttonWidth = window->getSize().x / 5;
+		auto buttonHeight = 30;
+		
+		activityButton->setRenderer(window->getTheme().getRenderer("Button"));
+		activityButton->setSize(buttonWidth, buttonHeight);
+		activityButton->setPosition(100 + window->getSize().x / 5, 100);
+		actButtons.push_back(activityButton);
 
-	auto buttonWidth = window->getSize().x / 5;
-	auto buttonHeight = 30;
-	tree->setSize(buttonWidth, buttonHeight);
-	tree->setPosition(100+ window->getSize().x / 5, 100);
-	tree->connect("pressed", [=] {
-		window->removeFromGui(tree);
-	});
-	
-	window->addToGui(tree);
+		activityButton->connect("pressed", [=] {
+			this->world->getCharacterWithId(characterId).setCurrentActivity(act);
+			window->removeFromGui(actButtons);
+		});
+
+		window->addToGui(activityButton);
+	}
+
 }
 
 void PlayingState::createFirstCompany(std::string companyName, std::string characterName, std::string sex) const

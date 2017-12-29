@@ -28,7 +28,7 @@ private:
 	bool playable;
 
 	StringAttribute name;
-	Activity* currentActivity; // replace by an observer_ptr when implemented
+	Activity currentActivity; // replace by an observer_ptr when implemented
 
 	int characterId;
 
@@ -67,7 +67,7 @@ public:
 	Character(bool pPlayable);
 	Character(std::string pName, enum eGender pGender, bool pPlayable);
 	~Character();
-	void displayStatistics();
+	void displayStatistics() const;
 	
 	void setName(std::string pName);
 	void setGender(enum eGender pGender);
@@ -79,11 +79,11 @@ public:
 	//Mission* getCurrentMission();
 
 	//void addPossibleActivity(const Activity* pAct);
-	void setCurrentActivity(Activity* pAct);
-	Activity* getCurrentActivity() const;
+	void setCurrentActivity(Activity pAct);
+	Activity getCurrentActivity() const;
 	//int getCurrentActivityIndex() const;
 	void updateActivity(std::chrono::microseconds elapsed);
-	void getActivityPoints(Activity *pAct);
+	void getActivityPoints();
 	bool isDoingSomething() const;
 
 	int getCharacterId() const { return characterId; }

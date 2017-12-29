@@ -8,7 +8,8 @@ Character::Character(bool pPlayable){
 
 	gender = Male;
 	playable = pPlayable;
-	currentActivity = nullptr;
+	currentActivity = {};
+	currentActivity.setFinished(true);
 
 	name = { "Chappie" };//*new Attribute(std::string("Chappie"));
 	renown = { 0 };
@@ -41,7 +42,8 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 
 	playable = { pPlayable };
 	name = { pName };
-	currentActivity = nullptr;
+	currentActivity = {};
+	currentActivity.setFinished(true);
 
 	gender = pGender;
 	renown = { 0 };
@@ -79,11 +81,11 @@ Character::Character(std::string pName, enum eGender pGender, bool pPlayable) {
 }
 
 
-void Character::displayStatistics() {
+void Character::displayStatistics() const {
 	std::cout << "\tName: " << name << std::endl;
-	if (currentActivity != nullptr) {
-		std::cout << "\tCurrent activity: " << getCurrentActivity()->getName() << std::endl;
-		std::cout << "\tTime elapsed: " << getCurrentActivity()->getTimeElapsed().count() << std::endl;
+	if (!currentActivity.isFinished()) {
+		std::cout << "\tCurrent activity: " << currentActivity.getName() << std::endl;
+		std::cout << "\tTime elapsed: " << currentActivity.getTimeElapsed().count() << std::endl;
 	}
 	//std::cout << "\tGender: ";
 	//if (gender == 0)
@@ -186,29 +188,28 @@ void Character::displayMissions() {
 //void Character::addPossibleActivity(const Activity* pAct) {
 //	possibleActivities.push_back(*pAct);
 //}
-void Character::setCurrentActivity(Activity* pAct) {
+void Character::setCurrentActivity(Activity pAct) {
 	currentActivity = { pAct };
-	std::cout << name << " is now doing " << pAct->getName() << std::endl;
+	std::cout << name << " is now doing " << pAct.getName() << std::endl;
 }
-Activity* Character::getCurrentActivity() const{
+Activity Character::getCurrentActivity() const{
 	return currentActivity;
 }
 //int Character::getCurrentActivityIndex() const { return currentActivityIndex; }
 
 void Character::updateActivity(std::chrono::microseconds elapsed){
-	if (currentActivity != nullptr) {
+	if (!currentActivity.isFinished()) {
 
-		currentActivity->update(elapsed);//Things are discovered in updateActivity() in a function using randomness and skills or only time (conf)	
+		currentActivity.update(elapsed);//Things are discovered in updateActivity() in a function using randomness and skills or only time (conf)	
 		//Maybe send back discovered things from here (send pointer to vector of discovered things) or 
-		if (currentActivity->isFinished()) {
-			getActivityPoints(currentActivity);//Will also  update levels
+		if (currentActivity.isFinished()) {
+			getActivityPoints();//Will also  update levels
 			// Check if that mission ended a mission (or a part ? -> Do a pentest report be the last activity, can go as far as wanted before ?)
 			// Detection current activity or finished activity was off contract -> (risk reaction ?)
 			// Advance missions status
 			
 			//deletePossibleActivity(currentActivityIndex);
 			std::cout << "Current activity finished" << std::endl;
-			currentActivity = nullptr;
 		}
 	}
 	else {
@@ -218,12 +219,12 @@ void Character::updateActivity(std::chrono::microseconds elapsed){
 }
 
 
-void Character::getActivityPoints(Activity *pAct) {
+void Character::getActivityPoints() {
 	//Add renown 
 
-	int earnedXp = pAct->getXp();
+	int earnedXp = currentActivity.getXp();
 	xpGlobal.setValue(xpGlobal.getValue() + earnedXp);
-	switch (pAct->getOrientation()) {
+	switch (currentActivity.getOrientation()) {
 	case White:	xpWhite.setValue(xpWhite.getValue() + earnedXp);
 		break;
 	case Grey: xpGrey.setValue(xpGrey.getValue() + earnedXp);
@@ -231,7 +232,7 @@ void Character::getActivityPoints(Activity *pAct) {
 	case Black:	xpBlack.setValue(xpBlack.getValue() + earnedXp);
 		break;
 	}
-	switch (pAct->getType()) {
+	switch (currentActivity.getType()) {
 	case Recon:	xpRecon.setValue(xpRecon.getValue() + earnedXp);
 		break;
 	case Scan: xpScan.setValue(xpScan.getValue() + earnedXp);
@@ -259,7 +260,7 @@ void Character::getActivityPoints(Activity *pAct) {
 
 bool Character::isDoingSomething() const
 {
-	return currentActivity != nullptr && currentActivity->isStarted();
+	return !currentActivity.isFinished();
 }
 
 

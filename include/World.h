@@ -16,7 +16,8 @@ class World
 
 public:
 
-	void createFirstCompany();
+	Character & getCharacterWithId(int id);
+	Company& getCompanyOfCharacterWithId(int id);
 	void loadMissions();
 	std::vector<Company>& getPlayerCompanies() { return playableCompanies; };
 	void addPlayableCompany(Company&& comp) { playableCompanies.push_back(comp); }

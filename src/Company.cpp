@@ -45,7 +45,6 @@ Company::Company(std::string pName, std::string firstCharacterName, std::string 
 	bitcoins = { 0 };
 	
 	initDefaultActivities();
-	//characters[0].setCurrentActivity(&possibleActivities[0]);
 
 	companyId = Company::compannyIds++;
 }
@@ -147,10 +146,10 @@ void Company::updateActivities(std::chrono::microseconds elapsed) {
 			character.updateActivity(elapsed);//Add "characters.at(i)" param to get elements discovered by this character
 			// -> Things are discovered in updateActivity() in a function using randomness and skills
 		}
-		else if (character.getCurrentActivity() != nullptr && !character.getCurrentActivity()->isStarted())	{
-			character.getCurrentActivity()->start();
+		else if (!character.getCurrentActivity().isFinished() && !character.getCurrentActivity().isStarted())	{
+			character.getCurrentActivity().start();
 		} else {
-			std::cout << character.getName() << " is not doing anything" << std::endl;
+			//std::cout << character.getName() << " is not doing anything" << std::endl;
 			//character.setCurrentActivity(&(possibleActivities[0]));
 		}
 	}

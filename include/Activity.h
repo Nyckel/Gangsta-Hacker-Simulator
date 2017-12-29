@@ -42,13 +42,15 @@ public:
 	void update(std::chrono::microseconds pElapsed);
 
 	bool started;
-	
+
 	std::string getName() const;
 	eActType getType() const;
 	eOrientation getOrientation();
 
 	int getXp() const { return xp; }// How is an activity grey ? Research, dev, hardwareInstall..
 	std::chrono::microseconds getTimeElapsed() const { return elapsed; }
+
+	void setFinished(bool f) { finished = {f}; }
 
 	void setAllowed(bool pAllowed);
 	bool isAllowed() const { return allowed; }

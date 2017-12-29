@@ -30,6 +30,25 @@ void World::loadMissions()
 	missions.push_back(defend);
 	knownCompanies[goodGuys->getCompanyId()] = move(goodGuys);
 
-	playableCompanies.at(0).getCharacter(0)->setCurrentActivity(&playableCompanies.at(0).getAvailableActivities()[0]);
+	playableCompanies.at(0).getCharacter(0)->setCurrentActivity(playableCompanies.at(0).getAvailableActivities()[0]);
 
+}
+
+Character& World::getCharacterWithId(int id)
+{
+	for (auto& cmp : this->playableCompanies) {
+		for (auto &pl : cmp.getCharacters()) {
+			if (pl.getCharacterId() == id)
+				return pl;
+		}
+	}
+}
+
+Company& World::getCompanyOfCharacterWithId(int id) {
+	for (auto& cmp : this->playableCompanies) {
+		for (auto &pl : cmp.getCharacters()) {
+			if (pl.getCharacterId() == id)
+				return cmp;
+		}
+	}
 }
